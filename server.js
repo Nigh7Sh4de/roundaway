@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var db = require('./db');
 
 var passport = require('passport');
 var Strategy = require('passport-facebook').Strategy;
@@ -27,6 +28,17 @@ app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveU
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static('public'));
+
+app.get('/api/users', function(req, res) {
+    db.find('users', {}, function(err, docs) {
+        if (err != null) {
+            res.send({err: err});
+        }
+        else {
+            res.send(docs);
+        }
+    })
+})
 
 app.get('/login/facebook', passport.authenticate('facebook'));
 
