@@ -7,7 +7,7 @@ roundawayApp.config(function($routeProvider, $locationProvider) {
     });
 
     $routeProvider
-        .when('/', {
+        .when('/home', {
             templateUrl: 'home.html',
             controller: 'homeCtrl'
         })
