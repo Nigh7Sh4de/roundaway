@@ -10,6 +10,8 @@ passport.use(new Strategy({
         callbackURL: '/login/facebook/return'
     },
     function(accessToken, refreshToken, profile, cb) {
+        // db.checkUser(profile);
+        console.log('Authenticated.');
         return cb(null, profile);
     }
 ));
@@ -29,7 +31,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static('public'));
 
-app.get('/api/users', function(req, res) {
+app.get('/api/users', checkAuth, function(req, res) {
+    console.log('Get request for /api/users');
     db.find('users', {}, function(err, docs) {
         if (err != null) {
             res.send({err: err});
@@ -38,6 +41,11 @@ app.get('/api/users', function(req, res) {
             res.send(docs);
         }
     })
+})
+
+app.get('/logout', function(req, res) {
+    req.logout();
+    res.redirect('/');
 })
 
 app.get('/login/facebook', passport.authenticate('facebook'));
@@ -65,6 +73,12 @@ app.get('/login', sendIndex);
 
 function sendIndex(req, res) {
     res.sendFile(__dirname + '/public/index.html');
+}
+
+function checkAuth(req, res, next) {
+    if (req.isAuthenticated())
+        return next();
+    res.redirect('/login');
 }
 
 app.listen(8080, function() {
