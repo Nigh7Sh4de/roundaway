@@ -7,21 +7,27 @@ var Strategy = require('passport-facebook').Strategy;
 passport.use(new Strategy({
         clientID: process.env.CLIENT_ID,
         clientSecret: process.env.CLIENT_SECRET,
-        callbackURL: '/login/facebook/return'
+        callbackURL: '/login/facebook/return',
+        profileFields: ['id', 'displayName']
     },
     function(accessToken, refreshToken, profile, cb) {
-        // db.checkUser(profile);
-        console.log('Authenticated.');
-        return cb(null, profile);
+        db.checkUser(profile, function(err, res) {
+            if (err)
+                throw err;
+            else {
+                return cb(null, res);
+            }
+        });
+
     }
 ));
 
 passport.serializeUser(function(user, cb) {
-    cb(null, user);
+    cb(null, user.id);
 });
 
 passport.deserializeUser(function(obj, cb) {
-    cb(null, obj);
+    db.findById('users', obj, cb);
 });
 
 app.use(require('cookie-parser')());
@@ -32,7 +38,6 @@ app.use(passport.session());
 app.use(express.static('public'));
 
 app.get('/api/users', checkAuth, function(req, res) {
-    console.log('Get request for /api/users');
     db.find('users', {}, function(err, docs) {
         if (err != null) {
             res.send({err: err});
@@ -41,6 +46,10 @@ app.get('/api/users', checkAuth, function(req, res) {
             res.send(docs);
         }
     })
+})
+
+app.get('/api/profile', checkAuth, function(req, res) {
+    res.send(req.user);
 })
 
 app.get('/logout', function(req, res) {
@@ -70,6 +79,7 @@ app.get('/node_modules/angular-route/angular-route.js', function(req, res) {
 app.get('/', sendIndex);
 app.get('/home', sendIndex);
 app.get('/login', sendIndex);
+app.get('/profile', sendIndex);
 
 function sendIndex(req, res) {
     res.sendFile(__dirname + '/public/index.html');

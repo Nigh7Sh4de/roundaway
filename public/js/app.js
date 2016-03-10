@@ -14,6 +14,10 @@ roundawayApp.config(function($routeProvider, $locationProvider) {
         .when('/login', {
             templateUrl: 'login.html',
             controller: 'loginCtrl'
+        })
+        .when('/profile', {
+            templateUrl: 'profile.html',
+            controller: 'profileCtrl'
         });
 })
 
@@ -29,6 +33,15 @@ var loginCtrl = function($scope) {
     console.log('Login page');
 };
 
+var profileCtrl = function($scope, $http) {
+    console.log('Profile page');
+    $http.get('/api/profile').then(function(res) {
+        var profile = res.data;
+        $scope.name = profile.name;
+    })
+};
+
 roundawayApp.controller('roundawayCtrl', roundawayCtrl);
 roundawayApp.controller('homeCtrl', homeCtrl);
 roundawayApp.controller('loginCtrl', loginCtrl);
+roundawayApp.controller('profileCtrl', profileCtrl);
