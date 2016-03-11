@@ -60,6 +60,25 @@ app.get('/api/parkades', checkAuth, checkAdmin, function(req, res) {
     });
 });
 
+app.get('/api/parkades/near', checkAuth, checkAdmin, function(req, res)  {
+    if (isNaN(req.query.long) || isNaN(req.query.lat))
+        res.send("Got invalid coordinates");
+
+    var coordinates = [
+        parseFloat(req.query.long),
+        parseFloat(req.query.lat)
+    ];
+
+    db.find('parkades', {location: {$near:{$geometry:{ type: "Point", coordinates: coordinates }}}}, function(err, doc) {
+        if (err != null)
+            res.send(err);
+        else {
+            res.send(doc);
+        }
+    });
+
+});
+
 app.put('/api/parkades', checkAuth, checkAdmin, bodyParser.json(), function(req, res) {
     if (req.body.address == null)
         res.send("address cannot be null");
