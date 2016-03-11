@@ -3,9 +3,11 @@ var Schema = mongoose.Scema;
 mongoose.connect('mongodb://localhost/roundaway');
 
 var User = require('./app/models/User')
+var Parkade = require('./app/models/Parkade')
 
 var collections = {
-    users: User
+    users: User,
+    parkades: Parkade
 }
 
 var _db = {
@@ -22,6 +24,14 @@ var _db = {
         //TODO: parse id
         collections[collection].find(search || {}, function (err, docs) {
             cb(err, docs);
+        });
+    },
+    createParkade: function(parkade, cb) {
+        var p = new Parkade();
+        p.address = parkade.address;
+        p.location.coordinates = parkade.coordinates;
+        p.save(function(err) {
+            cb(err);
         });
     },
     checkUser: function(profile, cb) {
