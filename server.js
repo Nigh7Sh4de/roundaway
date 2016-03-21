@@ -5,8 +5,8 @@ var db = require('./db');
 var passport = require('passport');
 var Strategy = require('passport-facebook').Strategy;
 passport.use(new Strategy({
-        clientID: process.env.CLIENT_ID,
-        clientSecret: process.env.CLIENT_SECRET,
+        clientID: process.env.FACEBOOK_CLIENT_ID,
+        clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
         callbackURL: '/login/facebook/return',
         profileFields: ['id', 'displayName']
     },
