@@ -78,8 +78,8 @@ app.get('/api/profile', checkAuth, function(req, res) {
 });
 
 app.get('/api/parkades', checkAuth, checkAdmin, function(req, res) {
-    db.find('parkades', {}, function(err, res) {
-        return res.send(res);
+    db.find('parkades', {}, function(err, docs) {
+        return res.send(docs);
     });
 });
 
