@@ -21,3 +21,13 @@ body {
     width: 40%;
     margin: auto;
 }
+
+#profilePage table {
+    width: 200px;
+    margin: auto;
+    background-color: light-blue;
+}
+
+#profilePage .alert {
+    margin: 0
+}

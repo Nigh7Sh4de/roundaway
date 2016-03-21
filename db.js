@@ -14,16 +14,16 @@ var _db = {
     findById: function(collection, id, cb) {
         collections[collection].findById(id, function(err, res) {
             if (err)
-                cb(err);
+                return cb(err);
             else {
-                cb(null, res);
+                return cb(null, res);
             }
         });
     },
     find: function(collection, search, cb) {
         //TODO: parse id
         collections[collection].find(search || {}, function (err, docs) {
-            cb(err, docs);
+            return cb(err, docs);
         });
     },
     createParkade: function(parkade, cb) {
@@ -31,26 +31,52 @@ var _db = {
         p.address = parkade.address;
         p.location.coordinates = parkade.coordinates;
         p.save(function(err) {
-            cb(err);
+            return cb(err);
         });
     },
-    checkUser: function(profile, cb) {
-        User.findOne({ facebookid: profile.id }, function(err, doc) {
+    checkUser: function(strategy, profile, cb) {
+        var searchProp = 'authid.' + strategy;
+        var search = {};
+        search[searchProp] = profile.id;
+
+        User.findOne(search, function(err, doc) {
             if (err != null)
                 throw err;
             if (doc)
-                cb(null, doc);
+                return cb(null, doc);
             else {
-                var newUser = new User({
-                    name: profile.displayName,
-                    facebookid: profile.id
-                });
+                search.name = profile.displayName;
+                var newUser = new User(search);
                 newUser.save(function(err) {
                     if (err)
                         throw err;
                 })
-                cb(null, newUser);
+                return cb(null, newUser);
             }
+        })
+    },
+    connect: function(user, strat, profile, cb) {
+        var searchProp = 'authid.' + strat;
+        var search = {};
+        search[searchProp] = profile.id;
+        User.findOne(search, function(err, doc) {
+            if (doc == null)
+                user.link(strat, profile.id, cb);
+            else
+                doc.remove(function(err) {
+                    if (err != null)
+                        return cb(err);
+                    else
+                        user.link(strat, profile.id, cb);
+                });
+                //TODO: proper user merges
+                // user.merge(doc, function(err) {
+                //     if (err == null)
+                //         return cb(err);
+                //     else {
+                //         return user.save(cb);
+                //     }
+                // }
         })
     }
 }

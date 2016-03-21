@@ -1,3 +1,37 @@
 <div id="profilePage">
     Name: {{name}}
+    <br />
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td colspan="3">Social Network</td>
+            </tr>
+            <tr>
+                <td colspan="3"><div class="alert alert-danger">Danger! Any previous accounts tied to the social network you connect to will be deleted.</div></td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Google</td>
+                <td>
+                    <span class="glyphicon glyphicon-check" ng-show="SocialNetworks.Google"></span>
+                    <span class="glyphicon glyphicon-unchecked" ng-hide="SocialNetworks.Google"></span>
+                </td>
+                <td>
+                    <a href="/connect/google" target="_self" class="btn btn-success btn-xs" ng-disabled="SocialNetworks.Google"><span class="glyphicon glyphicon-plus">Connect</span></a>
+                </td>
+            </tr>
+            <tr>
+                <td>Facebook</td>
+                <td>
+                    <span class="glyphicon glyphicon-check" ng-show="SocialNetworks.Facebook"></span>
+                    <span class="glyphicon glyphicon-unchecked" ng-hide="SocialNetworks.Facebook"></span>
+                </td>
+                <td>
+                    <a href="/connect/facebook" target="_self" class="btn btn-primary btn-xs" ng-disabled="SocialNetworks.Facebook"><span class="glyphicon glyphicon-plus">Connect</span></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
 </div>

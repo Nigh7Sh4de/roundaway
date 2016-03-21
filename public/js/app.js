@@ -36,8 +36,17 @@ var loginCtrl = function($scope) {
 var profileCtrl = function($scope, $http) {
     console.log('Profile page');
     $http.get('/api/profile').then(function(res) {
+        console.log(res);
         var profile = res.data;
+        if (typeof profile == 'string')
+            window.location = '/login';
+
         $scope.name = profile.name;
+        if (profile.authid != null)
+            $scope.SocialNetworks = {
+                Google: profile.authid.google != null,
+                Facebook: profile.authid.facebook != null
+            }
     })
 };
 
