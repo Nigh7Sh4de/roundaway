@@ -62,7 +62,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static('public'));
 
-app.get('/api/users', checkAuth, function(req, res) {
+app.get('/api/users', checkAuth, checkAdmin, function(req, res) {
     db.find('users', {}, function(err, docs) {
         if (err != null) {
             return res.send({err: err});
