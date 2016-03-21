@@ -21,8 +21,16 @@ roundawayApp.config(function($routeProvider, $locationProvider) {
         });
 })
 
-var roundawayCtrl = function($scope) {
+var roundawayCtrl = function($scope, $http) {
     console.log('App started.');
+    $http.get('/api/profile').then(function(res) {
+        var profile = res.data;
+        if (typeof profile == 'string')
+            $scope.loggedin = false;
+        else {
+            $scope.loggedin = true;
+        }
+    })
 }
 
 var homeCtrl = function($scope) {
@@ -34,7 +42,6 @@ var loginCtrl = function($scope) {
 };
 
 var profileCtrl = function($scope, $http) {
-    console.log('Profile page');
     $http.get('/api/profile').then(function(res) {
         console.log(res);
         var profile = res.data;
