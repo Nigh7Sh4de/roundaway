@@ -42,7 +42,7 @@ Returns the entire `users` collection.
 </table>
 Returns the current session user.
 
-#### GET `/api/parkades`
+#### GET `/api/spots`
 <table>
   <tr>
     <td><i>Requires auth</i></td>
@@ -53,9 +53,9 @@ Returns the current session user.
     <td>True</td>
   </tr>
 </table>
-Returns the entire `parkades` collection.
+Returns the entire `spots` collection.
 
-#### GET `/api/parkades/near?long=LONGITUDE&lat=LATITUDE`
+#### GET `/api/spots/near?long=LONGITUDE&lat=LATITUDE`
 <table>
   <tr>
     <td><i>Requires auth</i></td>
@@ -66,9 +66,9 @@ Returns the entire `parkades` collection.
     <td>True</td>
   </tr>
 </table>
-Returns the entire `parkades` collection sorting by shortest to longest distance away from the supplied `LATITUDE` and `LONGITUDE`
+Returns the entire `spots` collection sorting by shortest to longest distance away from the supplied `LATITUDE` and `LONGITUDE`
 
-#### PUT `/api/parkades`
+#### PUT `/api/spots`
 <table>
   <tr>
     <td><i>Requires auth</i></td>
@@ -87,4 +87,4 @@ Returns the entire `parkades` collection sorting by shortest to longest distance
     <td>Object containing <code>long</code> and <code>lat</code> properties describing the coordinates</td>
   </tr>
 </table>
-Creates a new `parkades` document with the given data.
+Creates a new `spots` document with the given data.

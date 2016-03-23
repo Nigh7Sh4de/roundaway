@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var parkadeSchema = new Schema({
+var spotSchema = new Schema({
     address: String,
     location: {
         type: {
@@ -12,6 +12,6 @@ var parkadeSchema = new Schema({
     }
 });
 
-var Parkade = mongoose.model('Parkade', parkadeSchema);
+var Spot = mongoose.model('Spot', spotSchema);
 
-module.exports = Parkade;
+module.exports = Spot;

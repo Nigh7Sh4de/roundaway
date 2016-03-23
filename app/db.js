@@ -3,11 +3,11 @@ var Schema = mongoose.Scema;
 mongoose.connect('mongodb://localhost/roundaway');
 
 var User = require('./models/User')
-var Parkade = require('./models/Parkade')
+var Spot = require('./models/Spot')
 
 var collections = {
     users: User,
-    parkades: Parkade
+    spots: Spot
 }
 
 var _db = {
@@ -25,10 +25,10 @@ var _db = {
             return cb(err, docs);
         });
     },
-    createParkade: function(parkade, cb) {
-        var p = new Parkade();
-        p.address = parkade.address;
-        p.location.coordinates = parkade.coordinates;
+    createSpot: function(spot, cb) {
+        var p = new Spot();
+        p.address = spot.address;
+        p.location.coordinates = spot.coordinates;
         p.save(function(err) {
             return cb(err);
         });

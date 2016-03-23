@@ -12,10 +12,10 @@ app.use(passport.session());
 app.use(express.static('public'));
 
 var userController = require('./app/controllers/userController');
-var parkadeController = require('./app/controllers/parkadeController');
+var spotController = require('./app/controllers/spotController');
 var authController = require('./app/controllers/authController');
 userController.init(app, db, checkAuth, checkAdmin);
-parkadeController.init(app, db, checkAuth, checkAdmin, bodyParser);
+spotController.init(app, db, checkAuth, checkAdmin, bodyParser);
 authController.init(app, db, checkAuth, checkAdmin, passport);
 
 app.get('/', checkAuth, sendIndex);
