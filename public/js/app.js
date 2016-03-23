@@ -8,22 +8,22 @@ roundawayApp.config(function($routeProvider, $locationProvider) {
 
     $routeProvider
         .when('/home', {
-            templateUrl: 'home.html',
+            templateUrl: 'views/home.html',
             controller: 'homeCtrl'
         })
         .when('/login', {
-            templateUrl: 'login.html',
+            templateUrl: 'views/login.html',
             controller: 'loginCtrl'
         })
         .when('/profile', {
-            templateUrl: 'profile.html',
+            templateUrl: 'views/profile.html',
             controller: 'profileCtrl'
         });
 })
 
 var roundawayCtrl = function($scope, $http) {
     console.log('App started.');
-    $http.get('/api/profile').then(function(res) {
+    $http.get('/api/users/profile').then(function(res) {
         var profile = res.data;
         if (typeof profile == 'string')
             $scope.loggedin = false;
@@ -42,7 +42,7 @@ var loginCtrl = function($scope) {
 };
 
 var profileCtrl = function($scope, $http) {
-    $http.get('/api/profile').then(function(res) {
+    $http.get('/api/users/profile').then(function(res) {
         console.log(res);
         var profile = res.data;
         if (typeof profile == 'string')

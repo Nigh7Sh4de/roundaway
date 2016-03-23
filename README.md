@@ -24,12 +24,12 @@ Roundaway
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td>True</td>
   </tr>
 </table>
 Returns the entire `users` collection.
 
-#### GET `/api/profile`
+#### GET `/api/users/profile`
 <table>
   <tr>
     <td><i>Requires auth</i></td>

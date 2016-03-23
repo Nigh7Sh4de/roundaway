@@ -2,8 +2,8 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Scema;
 mongoose.connect('mongodb://localhost/roundaway');
 
-var User = require('./app/models/User')
-var Parkade = require('./app/models/Parkade')
+var User = require('./models/User')
+var Parkade = require('./models/Parkade')
 
 var collections = {
     users: User,
@@ -21,7 +21,6 @@ var _db = {
         });
     },
     find: function(collection, search, cb) {
-        //TODO: parse id
         collections[collection].find(search || {}, function (err, docs) {
             return cb(err, docs);
         });
