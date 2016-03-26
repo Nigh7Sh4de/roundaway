@@ -1,0 +1,15 @@
+{
+  "version": "0.1.0",
+  "command": "npm",
+  "windows": {
+    "command": "npm.cmd"
+  },
+  "tasks": [
+    {
+      // Test task, Ctrl+Shift+T
+      // "npm test"
+      "taskName": "test",
+      "isTestCommand": true
+    }
+  ]
+}
