@@ -1,60 +1,58 @@
-var express = require('express');
-var app = express();
-var db = require('./app/db');
-var passport = require('./app/passport')(db);
-var bodyParser = require('body-parser');
+var app = function(inject) {
+    var express = require('express');
+    var app = express();
+    app.db = inject.db;
+    app.passport = inject.passport(app.db);
+    app.bodyParser = require('body-parser');
+    inject.helper(app);
 
-app.use(require('cookie-parser')());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(express.static('public'));
 
-var userController = require('./app/controllers/userController');
-var spotController = require('./app/controllers/spotController');
-var authController = require('./app/controllers/authController');
-userController.init(app, db, checkAuth, checkAdmin);
-spotController.init(app, db, checkAuth, checkAdmin, bodyParser);
-authController.init(app, db, checkAuth, checkAdmin, passport);
+    app.use(require('cookie-parser')());
+    app.use(app.bodyParser.urlencoded({ extended: true }));
+    app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+    app.use(app.passport.initialize());
+    app.use(app.passport.session());
+    app.use(express.static('public'));
 
-app.get('/', checkAuth, sendIndex);
-app.get('/home', checkAuth, sendIndex);
-app.get('/login', sendIndex);
-app.get('/profile', checkAuth, sendIndex);
-app.get('/404', function(req, res) {
-    return res.send('404');
-});
+    app.userController = inject.userController;
+    app.spotController = inject.spotController;
+    app.authController = inject.authController;
+    app.userController.init(app);
+    app.spotController.init(app);
+    app.authController.init(app);
 
-[
-    '/node_modules/angular/angular.js',
-    '/node_modules/angular-route/angular-route.js'
-].forEach(function (asset) {
-    allowGet(asset);
-});
-
-function allowGet(file) {
-    app.get(file, function(req, res) {
-        return res.sendFile(__dirname + file);
+    app.get('/', app.checkAuth, app.sendIndex);
+    app.get('/home', app.checkAuth, app.sendIndex);
+    app.get('/login', app.sendIndex);
+    app.get('/profile', app.checkAuth, app.sendIndex);
+    app.get('/404', function(req, res) {
+        return res.send('404');
     });
+
+    [
+        '/node_modules/angular/angular.js',
+        '/node_modules/angular-route/angular-route.js'
+    ].forEach(function (asset) {
+        app.allowGet(asset);
+    });
+    
+    return app;    
 }
 
-function sendIndex(req, res) {
-    return res.sendFile(__dirname + '/public/index.html');
+app.GetDefaultInjection = function() {
+    return {
+        db: require('./app/db'),
+        passport: require('./app/passport'),
+        helper: require('./app/helper'),
+        userController: require('./app/controllers/userController'),
+        spotController: require('./app/controllers/spotController'),
+        authController: require('./app/controllers/authController')
+    }
 }
 
-function checkAuth(req, res, next) {
-    if (req.isAuthenticated())
-        return next();
-    res.redirect('/login');
-}
-
-function checkAdmin(req, res, next) {
-    if (req.user.admin)
-        return next();
-    res.redirect('/home');
-}
-
-app.listen(8080, function() {
-    console.log('App started. Listening on port 8080!');
-});
+if (require.main == module)
+    app(app.GetDefaultInjection()).listen(8080, function() {
+        console.log('App started. Listening on port 8080!');
+    });
+else
+    module.exports = app;

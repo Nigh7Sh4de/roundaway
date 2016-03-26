@@ -1,40 +1,49 @@
-var init = function(app, db, checkAuth, checkAdmin, passport) {
-    app.get('/logout', function(req, res) {
+var authController = {
+    app: null,
+    strategies: {
+        google: {
+            authProps: { scope: ['profile'] }
+        },
+        facebook: {}
+    },
+    Logout: function(req, res) {
         req.logout();
         res.redirect('/');
-    });
-
-    app.get('/login/google', passport.authenticate('google', { scope: ['profile'] }));
-    app.get('/login/google/return',
-        passport.authenticate('google', {
+    },
+    Login: function(strat) {
+        return this.app.passport.authenticate(strat, this.strategies[strat].authProps);    
+    },
+    LoginReturn: function(strat) {
+        return this.app.passport.authenticate(strat, {
             failureRedirect: '/login',
             successRedirect: '/home'
         })
-    );
-    app.get('/connect/google', passport.authorize('google', { scope: ['profile'] }));
-    app.get('/connect/google/return',
-        passport.authorize('google', {
+    },
+    Connect: function(strat) {
+        return this.app.passport.authorize(strat, this.strategies[strat].authProps);
+    },
+    ConnectReturn: function(strat) {
+        return this.app.passport.authorize(strat, {
             failureRedirect: '/login',
             successRedirect: '/profile'
         })
-    );
+    },
+    init: function(app) {
+        this.app = app;
+        app.get('/logout', this.Logout);
 
-    app.get('/login/facebook', passport.authenticate('facebook'));
-    app.get('/login/facebook/return',
-        passport.authenticate('facebook', {
-            failureRedirect: '/login',
-            successRedirect: '/home'
-        })
-    );
-    app.get('/connect/facebook', passport.authorize('facebook'));
-    app.get('/connect/facebook/return',
-        passport.authenticate('facebook', {
-            failureRedirect: '/login',
-            successRedirect: '/profile'
-        })
-    );
+        app.get('/login/google', this.Login('google'));
+        app.get('/login/google/return', this.LoginReturn('google'));
+        app.get('/connect/google', this.Connect('google'));
+        app.get('/connect/google/return', this.ConnectReturn('google'));
+
+        app.get('/login/facebook', this.Login('facebook'));
+        app.get('/login/facebook/return', this.LoginReturn('facebook'));
+        app.get('/connect/facebook', this.Connect('facebook'));
+        app.get('/connect/facebook/return', this.ConnectReturn('facebook'));
+    }
 }
 
-module.exports = {
-    init: init
-}
+
+
+module.exports = authController;

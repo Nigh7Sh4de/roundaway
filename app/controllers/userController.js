@@ -1,6 +1,6 @@
-var init = function(app, db, checkAuth, checkAdmin) {
-    app.get('/api/users', checkAuth, checkAdmin, function(req, res) {
-        db.find('users', {}, function(err, docs) {
+var init = function(app) {
+    app.get('/api/users', app.checkAuth, app.checkAdmin, function(req, res) {
+        app.db.find('users', {}, function(err, docs) {
             if (err != null) {
                 return res.send({err: err});
             }
@@ -10,7 +10,7 @@ var init = function(app, db, checkAuth, checkAdmin) {
         })
     });
     
-    app.get('/api/users/profile', checkAuth, function(req, res) {
+    app.get('/api/users/profile', app.checkAuth, function(req, res) {
         return res.send(req.user);
     });
 }
