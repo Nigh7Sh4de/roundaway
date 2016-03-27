@@ -62,13 +62,13 @@ var _db = {
         search[searchProp] = profile.id;
         User.findOne(search, function(err, doc) {
             if (doc == null)
-                user.link(strat, profile.id, cb);
+                user.addAuth(strat, { id: profile.id }, cb);
             else
                 doc.remove(function(err) {
                     if (err != null)
                         return cb(err);
                     else
-                        user.link(strat, profile.id, cb);
+                        user.addAuth(strat, { id: profile.id }, cb);
                 });
                 //TODO: proper user merges
                 // user.merge(doc, function(err) {
