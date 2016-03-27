@@ -44,7 +44,9 @@ var _db = {
             if (doc)
                 return cb(null, doc);
             else {
-                search.name = profile.displayName;
+                search.profile = {
+                    name: profile.displayName
+                }
                 var newUser = new User(search);
                 newUser.save(function(err) {
                     if (err)

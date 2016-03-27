@@ -11,7 +11,7 @@ var init = function(app) {
     });
     
     app.get('/api/users/profile', app.checkAuth, function(req, res) {
-        return res.send(req.user);
+        return res.send(Object.assign({}, req.user.profile.toJSON(), {authid: req.user.authid.toJSON()}));
     });
 }
 
