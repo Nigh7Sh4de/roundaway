@@ -1,11 +1,14 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var request = require('supertest');
+var server = require('./../../server');
+var inject = server.GetDefaultInjection();
 var User = require('./../models/User');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe.only('userController', function() {
+describe('User schema', function() {
     
     before(function() {
         sinon.stub(User.prototype, 'save', function(cb) { cb() });
@@ -492,4 +495,51 @@ describe.only('userController', function() {
             });
         })
     })
+})
+
+describe('userController', function() {
+    beforeEach(function() {
+        inject = new server.GetDefaultInjection();
+        inject.userController = Object.assign({}, inject.userController);
+    })
+    
+    describe('route', function() {
+        describe('GET /api/users', function() {
+            it('should call correct method', function(done) {
+                var funcs = [
+                    sinon.spy(inject.userController, 'GetAllUsers'),
+                    sinon.spy(inject.helper, 'checkAuth'),
+                    sinon.spy(inject.helper, 'checkAdmin')
+                ] 
+                
+                
+                request(server(inject)).get('/api/users')
+                    .expect(302)
+                    .end(function (err) {
+                        expect(err).to.not.be.ok;
+                        funcs.forEach(function (spy) {
+                            expect(spy.calledOnce).to.be.true;
+                        })
+                        done();
+                    })
+            })
+            
+        })
+    })
+    
+    
+    // describe('/api/users', function() {
+    //     it('should return all users for user with correct permission', function(done) {
+    //         var  
+    //     })
+        
+    //     it('should error whenn user is not authenticated', function(done) {
+            
+    //     })
+        
+    //     it('should error when user is not admin', function(done) {
+            
+    //     })
+    // })
+    
 })
