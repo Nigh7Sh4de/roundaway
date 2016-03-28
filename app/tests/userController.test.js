@@ -514,6 +514,7 @@ describe('userController', function() {
         inject = new server.GetDefaultInjection();
         inject.userController = Object.assign({}, inject.userController);
         inject.helper = Object.assign({}, inject.helper);
+        inject.db = Object.assign({}, inject.db);
     })
     
     describe('route', function() {
@@ -522,7 +523,7 @@ describe('userController', function() {
                 var funcs = [
                     sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }),
                     sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }),
-                    sinon.spy(inject.userController, 'GetAllUsers')
+                    sinon.stub(inject.userController, 'GetAllUsers', function(q,s) { s.sendStatus(200) })
                 ] 
                 
                 request(server(inject)).get('/api/users')
@@ -586,14 +587,14 @@ describe('userController', function() {
     describe('GetAllUsers', function() {
         it('should return all users', function() {
             var users = [new User(), new User()];
-            var app = { db: {} };
-            app.db.find = function(collection, obj, cb) {
+            inject.db.find = function(collection, obj, cb) {
                 cb(null, users);
             }
             var res = {
                 send: sinon.spy() 
-            } 
-            inject.userController.GetAllUsers(app)(null, res);
+            }
+            var app = server(inject);
+            app.userController.GetAllUsers(null, res);
             expect(res.send.calledOnce).to.be.true;
             expect(res.send.calledWith(users)).to.be.true;
             
