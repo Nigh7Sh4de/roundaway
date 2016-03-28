@@ -19,6 +19,18 @@ describe('User schema', function() {
     })
     
     describe('addLot', function() {
+        it('should add the given lot array to the user', function(done) {
+            var lot = new Lot();
+            var user = new User();
+            expect(user.lotIds).to.be.empty;
+            
+            user.addLot([lot.id], function(err) {
+                expect(err).to.not.be.ok;
+                expect(user.lotIds).to.have.length(1).and.to.contain(lot.id);
+                done();
+            });;
+        })
+        
         it('should add the given lotId to the user', function(done) {
             var lot = new Lot();
             var user = new User();
@@ -501,45 +513,121 @@ describe('userController', function() {
     beforeEach(function() {
         inject = new server.GetDefaultInjection();
         inject.userController = Object.assign({}, inject.userController);
+        inject.helper = Object.assign({}, inject.helper);
     })
     
     describe('route', function() {
         describe('GET /api/users', function() {
             it('should call correct method', function(done) {
                 var funcs = [
-                    sinon.spy(inject.userController, 'GetAllUsers'),
-                    sinon.spy(inject.helper, 'checkAuth'),
-                    sinon.spy(inject.helper, 'checkAdmin')
+                    sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }),
+                    sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }),
+                    sinon.spy(inject.userController, 'GetAllUsers')
                 ] 
                 
-                
                 request(server(inject)).get('/api/users')
-                    .expect(302)
+                    .expect(200)
                     .end(function (err) {
                         expect(err).to.not.be.ok;
                         funcs.forEach(function (spy) {
-                            expect(spy.calledOnce).to.be.true;
+                            expect(spy.calledOnce, spy).to.be.true;
                         })
                         done();
                     })
             })
-            
+        })
+        
+        describe('GET /api/users/profile', function() {
+            it('shoulld call correct method', function(done) {
+                var funcs = [
+                    sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }),
+                    sinon.stub(inject.userController, 'GetProfileForSessionUser', 
+                        function() {
+                            return function(q,s,n) { s.sendStatus(200) }
+                        })
+                ] 
+                
+                request(server(inject)).get('/api/users/profile')
+                    .expect(200)
+                    .end(function (err) {
+                        expect(err).to.not.be.ok;
+                        funcs.forEach(function (spy) {
+                            expect(spy.calledOnce, spy).to.be.true;
+                        })
+                        done();
+                    })
+            })
+        })
+        
+        describe('PUT /api/users/:userid/lots', function() {
+            it('should call correct method', function(done) {
+                var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
+                var func = sinon.stub(inject.userController, 'AddLotsToUser', function(q,s) { s.sendStatus(200); });
+                var lots = {
+                    someProp: 'some value'
+                }
+                var userId = '1z2x3c4v5b6n7m8';                
+                request(server(inject)).put('/api/users/' + userId + '/lots')
+                    .set('Content-Type', 'application/json')
+                    .send(JSON.stringify(lots))
+                    .expect(200)
+                    .end(function(err) {
+                        expect(err).to.not.be.ok;
+                        expect(checkAuth.calledOnce).to.be.true;
+                        expect(func.firstCall.args[0].params.userid).to.equal(userId);
+                        expect(func.firstCall.args[0].body).to.eql(lots);
+                        done();
+                    });
+            });
         })
     })
     
     
-    // describe('/api/users', function() {
-    //     it('should return all users for user with correct permission', function(done) {
-    //         var  
-    //     })
-        
-    //     it('should error whenn user is not authenticated', function(done) {
+    describe('GetAllUsers', function() {
+        it('should return all users', function() {
+            var users = [new User(), new User()];
+            var app = { db: {} };
+            app.db.find = function(collection, obj, cb) {
+                cb(null, users);
+            }
+            var res = {
+                send: sinon.spy() 
+            } 
+            inject.userController.GetAllUsers(app)(null, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.send.calledWith(users)).to.be.true;
             
-    //     })
-        
-    //     it('should error when user is not admin', function(done) {
-            
-    //     })
-    // })
+        })
+    })
+    
+    describe('GetProfileForSessionUser', function() {
+        it('should return session user profile and authid', function() {
+            var user = {
+                profile: {
+                    name: 'some name'
+                },
+                authid: {
+                    twitter: {
+                        someProp: 'some value'
+                    }
+                },
+                badProp: 'some value'
+            }
+            user.profile.toJSON = function() {
+                return user.profile;
+            }
+            user.authid.toJSON = function() {
+                return user.authid;
+            }
+            var req = { user: user }
+            var res = { send: sinon.spy() }
+            inject.userController.GetProfileForSessionUser()(req, res);
+            expect(res.send.calledOnce, 'res.send').to.be.true;
+            var args = res.send.firstCall.args[0];
+            expect(args.name).to.equal(user.profile.name);
+            expect(args.authid).to.equal(user.authid);
+        })
+    })
+    
     
 })

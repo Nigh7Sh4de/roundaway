@@ -20,15 +20,21 @@ var userSchema = new Schema({
     timestamps: true
 });
 
-userSchema.methods.addLot = function(lot, cb) {
-    if (typeof lot === 'object')
-        lot = lot.id;
-    if (lot == null)
-        return cb(new Error('Failed to add lot. Lot id cannot be null.'));
-    if (typeof lot !== 'string')
-        return cb(new Error('Failed to add lot. Lot id must be a valid id.'));
-    this.lotIds.push(lot);
-    this.save(cb);
+userSchema.methods.addLot = function(lots, cb) {
+    if (!(lots instanceof Array))
+        lots = [ lots ];
+    var self = this;
+    lots.forEach(function(lot) {
+        if (typeof lot === 'object')
+            lot = lot.id;
+        if (lot == null)
+            return cb(new Error('Failed to add lot. Lot id cannot be null.'));
+        if (typeof lot !== 'string')
+            return cb(new Error('Failed to add lot. Lot id must be a valid id.'));
+        
+        self.lotIds.push(lot);
+        self.save(cb);
+    })
 }
 
 userSchema.methods.addSpot = function(spot, cb) {

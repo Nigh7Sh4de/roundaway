@@ -1,8 +1,13 @@
-var helper = function(obj) {
-    Object.assign(obj, exts);
-}
+// var helper = function(obj) {
+//     Object.assign(obj, exts);
+// }
 
 var exts = {
+    init: function(obj) {
+        var x = Object.assign({}, this);
+        delete x.init;
+        Object.assign(obj, x);
+    },
     allowGet: function(file) {
         this.get(file, function(req, res) {
             return res.sendFile(file, { root: __dirname + '/..' });
@@ -26,4 +31,5 @@ var exts = {
     }
 }
 
-module.exports = Object.assign(helper, exts);
+module.exports = exts;
+// module.exports = Object.assign(helper, exts);

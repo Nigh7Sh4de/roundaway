@@ -4,7 +4,8 @@ var app = function(inject) {
     app.db = inject.db;
     app.passport = inject.passport(app.db);
     app.bodyParser = require('body-parser');
-    inject.helper(app);
+    inject.helper.init(app);
+    // inject.helper(app);
 
 
     app.use(require('cookie-parser')());
