@@ -4,11 +4,7 @@ mongoose.connect('mongodb://localhost/roundaway');
 
 var User = require('./models/User')
 var Spot = require('./models/Spot')
-
-var collections = {
-    users: User,
-    spots: Spot
-}
+var Lot = require('./models/Lot');
 
 var _db = {
     findById: function(collection, id, cb) {
@@ -38,7 +34,7 @@ var _db = {
         var search = {};
         search[searchProp] = profile.id;
 
-        User.findOne(search, function(err, doc) {
+        collections.users.findOne(search, function(err, doc) {
             if (err != null)
                 throw err;
             if (doc)
@@ -82,4 +78,12 @@ var _db = {
     }
 }
 
-module.exports = _db;
+var collections = {
+    users: User,
+    spots: Spot,
+    lots: Lot,
+    checkUser: _db.checkUser
+}
+
+module.exports = collections;
+// module.exports = _db;

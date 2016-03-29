@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 
 var userSchema = new Schema({
     profile: {
-        name: String
+        name: String,
+        someProp: String
     },
     authid: {
         facebook: String,
@@ -24,16 +25,28 @@ userSchema.methods.addLot = function(lots, cb) {
     if (!(lots instanceof Array))
         lots = [ lots ];
     var self = this;
+    var errors = [];
+    var added = 0;
+    var count = 0;
+    var next = function(err) {
+        if (err != null)
+            errors.push(err);
+        if (++count >= lots.length)
+            cb(errors.length > 0 ? errors : null, added);
+    }
     lots.forEach(function(lot) {
-        if (typeof lot === 'object')
+        if (typeof lot === 'object' && lot != null)
             lot = lot.id;
         if (lot == null)
-            return cb(new Error('Failed to add lot. Lot id cannot be null.'));
+            return next(new Error('Failed to add lot. Lot id cannot be null.'));
         if (typeof lot !== 'string')
-            return cb(new Error('Failed to add lot. Lot id must be a valid id.'));
+            return next(new Error('Failed to add lot. Lot id must be a valid id.'));
+        if (self.hasLot(lot))
+            return next(new Error('Failed to add lot. User already has this lot.'));
         
+        added++;
         self.lotIds.push(lot);
-        self.save(cb);
+        self.save(next);
     })
 }
 
@@ -56,6 +69,15 @@ userSchema.methods.addBooking = function(booking, cb) {
     if (typeof booking !== 'string')
         return cb(new Error('Failed to add booking. Booking id must be a valid id.'));
     this.bookingIds.push(booking);
+    this.save(cb);
+}
+
+userSchema.methods.updateProfile = function(profile, cb) {
+    for (var prop in profile)
+        if (this.schema.tree.profile[prop] === undefined)
+            return cb(new Error('Schema does not contain a definition for profile field [' + prop + '].'));
+        else
+            this.profile[prop] = profile[prop];
     this.save(cb);
 }
 

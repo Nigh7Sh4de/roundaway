@@ -47,7 +47,7 @@ module.exports = function(db) {
     });
 
     passport.deserializeUser(function(obj, cb) {
-        db.findById('users', obj, cb);
+        db.users.findById(obj, cb);
     });
     
     return passport;
