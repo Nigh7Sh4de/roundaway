@@ -631,7 +631,39 @@ describe('userController', function() {
             }
         ]);
         
-        
+        describe.only('GET /api/users', function() {
+            it('should send success on proper input', function(done) {
+                var users = [{
+                    someProp: 'some value'
+                }, {
+                    someProp: 'some other value'
+                }]
+                var send;
+                var request = require('supertest');
+                var stubs = [];
+                stubs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
+                stubs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { send = sinon.spy(s, 'send'); n(); }));
+                inject.db = {
+                    users: {
+                        find: sinon.spy(function(search, cb) {
+                            expect(search).to.eql({});
+                            cb(null, users);
+                        })
+                    }
+                }
+                app = server(inject);
+                
+                request(app).get('/api/users')
+                    .end(function(err) {
+                        expect(err).to.not.be.ok;
+                        expect(send.calledWith(users)).to.be.true;
+                        done();
+                    })
+                
+                
+                
+            })
+        })
     })
     
     describe('method', function() {

@@ -19,6 +19,14 @@ afterEach(function() {
     });
 })
 
+function HappyPathRouteTest() {
+    throw new Error('Not implemented.');
+}
+
+function SadPathRouteTest() {
+    throw new Error('Not implemented.');
+}
+
 function RouteTest(ctrl, verb, route, ignoreUserId, ignoreAdmin, ignoreAuth, method, methodParams, done) {
     funcs = [];
     if (!ignoreAuth)
@@ -84,6 +92,14 @@ var RouteTestBase = function(controller, tests) {
         describe(test.verb + ' ' + test.route, function() {
             it('should call correct method', function(done) {
                 RouteTest(controller, test.verb, route, test.ignoreUserId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
+            })
+            
+            it('should send success on happy path', function(done) {
+                HappyPathRouteTest(done);
+            })
+            
+            it('should send error on sad path', function(done) {
+                SadPathRouteTest(done);
             })
         })
     })
