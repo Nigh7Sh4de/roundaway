@@ -15,10 +15,9 @@ var app = function(inject) {
     app.use(app.passport.session());
     app.use(express.static('public'));
 
-    app.userController = inject.userController;
+    app.userController = new inject.userController(app);
     app.spotController = inject.spotController;
     app.authController = inject.authController;
-    app.userController.init(app);
     app.spotController.init(app);
     app.authController.init(app);
 
