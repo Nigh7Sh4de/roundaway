@@ -1,4 +1,19 @@
-var authController = {
+var authController = function(app) {
+        this.app = app;
+        app.get('/logout', this.Logout);
+
+        app.get('/login/google', this.Login('google'));
+        app.get('/login/google/return', this.LoginReturn('google'));
+        app.get('/connect/google', this.Connect('google'));
+        app.get('/connect/google/return', this.ConnectReturn('google'));
+
+        app.get('/login/facebook', this.Login('facebook'));
+        app.get('/login/facebook/return', this.LoginReturn('facebook'));
+        app.get('/connect/facebook', this.Connect('facebook'));
+        app.get('/connect/facebook/return', this.ConnectReturn('facebook'));
+    }
+
+authController.prototype = {
     app: null,
     strategies: {
         google: {
@@ -28,20 +43,20 @@ var authController = {
             successRedirect: '/profile'
         })
     },
-    init: function(app) {
-        this.app = app;
-        app.get('/logout', this.Logout);
+    // init: function(app) {
+    //     this.app = app;
+    //     app.get('/logout', this.Logout);
 
-        app.get('/login/google', this.Login('google'));
-        app.get('/login/google/return', this.LoginReturn('google'));
-        app.get('/connect/google', this.Connect('google'));
-        app.get('/connect/google/return', this.ConnectReturn('google'));
+    //     app.get('/login/google', this.Login('google'));
+    //     app.get('/login/google/return', this.LoginReturn('google'));
+    //     app.get('/connect/google', this.Connect('google'));
+    //     app.get('/connect/google/return', this.ConnectReturn('google'));
 
-        app.get('/login/facebook', this.Login('facebook'));
-        app.get('/login/facebook/return', this.LoginReturn('facebook'));
-        app.get('/connect/facebook', this.Connect('facebook'));
-        app.get('/connect/facebook/return', this.ConnectReturn('facebook'));
-    }
+    //     app.get('/login/facebook', this.Login('facebook'));
+    //     app.get('/login/facebook/return', this.LoginReturn('facebook'));
+    //     app.get('/connect/facebook', this.Connect('facebook'));
+    //     app.get('/connect/facebook/return', this.ConnectReturn('facebook'));
+    // }
 }
 
 

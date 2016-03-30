@@ -1,6 +1,7 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
-var request = require('supertest');
+var routeTest = require('./routeTestBase');
+var verbs = routeTest.verbs;
 var server = require('./../../server');
 var User = require('./../models/User');
 var Lot = require('./../models/Lot');
@@ -583,119 +584,54 @@ describe('userController', function() {
     var app;
     
     describe('route', function() {
-        
-        var funcs = [];
-        var verbs = {
-            GET: 'GET',
-            PUT: 'PUT',
-            PATCH: 'PATCH'
-        }
-        var userId = '12a34567b8901c234d5e6789';
-        
-        afterEach(function() {
-            funcs.forEach(function(func) {
-                func.restore();
-            });
-        })
-        
-        
-        
-        function RouteTest(verb, route, ignoreUserId, ignoreAdmin, method, done) {
-            funcs = [
-                sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }),
-            ]
-            
-            if (!ignoreAdmin)
-                funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
-                    
-            var func;
-            funcs.push(func = sinon.stub(inject.userController.prototype, method, function(q,s) { s.sendStatus(200) }));
-            
-            var body = {
-                someObject: {
-                    someProp: 'some value'
-                }
+        routeTest('userController', [
+            {
+                verb: verbs.GET,
+                route: '/api/users',
+                method: 'GetAllUsers',
+                ignoreUserId: true
+            }, {
+                verb: verbs.GET,
+                route: '/api/users/profile',
+                method: 'GetProfileForSessionUser',
+                ignoreUserId: true,
+                ignoreAdmin: true
+            }, {
+                verb: verbs.GET,
+                route: '/api/users/:userid/lots',
+                method: 'GetLotsForUser'
+            }, {
+                verb: verbs.PUT,
+                route: '/api/users/:userid/lots',
+                method: 'AddLotsToUser'
+            }, {
+                verb: verbs.GET,
+                route: '/api/users/:userid/spots',
+                method: 'GetSpotsForUser'
+            }, {
+                verb: verbs.PUT,
+                route: '/api/users/:userid/spots',
+                method: 'AddSpotsToUser'
+            }, {
+                verb: verbs.GET,
+                route: '/api/users/:userid/bookings',
+                method: 'GetBookingsForUser'
+            }, {
+                verb: verbs.PUT,
+                route: '/api/users/:userid/bookings',
+                method: 'AddBookingsToUser'
+            }, {
+                verb: verbs.GET,
+                route: '/api/users/:userid/profile',
+                method: 'GetProfileForUser'
+            }, {
+                verb: verbs.PATCH,
+                route: '/api/users/:userid/profile',
+                method: 'UpdateProfileForfUser'
             }
-            
-            var st = null;
-            if (verb == verbs.GET)
-                st = request(server(inject)).get(route)
-            else {
-                if (verb == verbs.PUT)
-                    st = request(server(inject)).put(route)
-                else
-                    st = request(server(inject)).patch(route)
-                st.set('Content-Type', 'application/json')
-                st.send(JSON.stringify(body))
-            }
-                
-            expect(st).to.be.not.null;
-            st.expect(200).end(function (err) {
-                expect(err).to.not.be.ok;
-                funcs.forEach(function (spy) {
-                    expect(spy.calledOnce, spy).to.be.true;
-                })
-                if (!ignoreUserId)
-                    expect(func.firstCall.args[0].params.userid).to.equal(userId);
-                if (verb != verbs.GET)
-                    expect(func.firstCall.args[0].body).to.eql(body);
-                done();
-            })
-        }
+        ]);
         
-        tests = [{
-            verb: verbs.GET,
-            route: '/api/users',
-            method: 'GetAllUsers',
-            ignoreUserId: true
-        }, {
-            verb: verbs.GET,
-            route: '/api/users/profile',
-            method: 'GetProfileForSessionUser',
-            ignoreUserId: true,
-            ignoreAdmin: true
-        }, {
-            verb: verbs.GET,
-            route: '/api/users/:userid/lots',
-            method: 'GetLotsForUser'
-        }, {
-            verb: verbs.PUT,
-            route: '/api/users/:userid/lots',
-            method: 'AddLotsToUser'
-        }, {
-            verb: verbs.GET,
-            route: '/api/users/:userid/spots',
-            method: 'GetSpotsForUser'
-        }, {
-            verb: verbs.PUT,
-            route: '/api/users/:userid/spots',
-            method: 'AddSpotsToUser'
-        }, {
-            verb: verbs.GET,
-            route: '/api/users/:userid/bookings',
-            method: 'GetBookingsForUser'
-        }, {
-            verb: verbs.PUT,
-            route: '/api/users/:userid/bookings',
-            method: 'AddBookingsToUser'
-        }, {
-            verb: verbs.GET,
-            route: '/api/users/:userid/profile',
-            method: 'GetProfileForUser'
-        }, {
-            verb: verbs.PATCH,
-            route: '/api/users/:userid/profile',
-            method: 'UpdateProfileForfUser'
-        }]
         
-        tests.forEach(function(test) {
-            var route = test.route.replace(':userid', userId);
-            describe(test.verb + ' ' + test.route, function() {
-                it('should call correct method', function(done) {
-                    RouteTest(test.verb, route, test.ignoreUserId, test.ignoreAdmin, test.method, done);
-                })
-            })
-        })
     })
     
     describe('method', function() {
