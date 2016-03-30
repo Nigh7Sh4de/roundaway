@@ -629,6 +629,24 @@ describe('userController', function() {
             })
         })
         
+        describe('GET /api/users/:userid/lots', function() {
+            it('should call correct method', function(done) {
+                var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
+                var func = sinon.spy(function(q,s) { s.sendStatus(200) });
+                sinon.stub(inject.userController, 'GetLotsForUser', function(a) { return func });
+
+                var userId = '1z2x3c4v5b6n7m8';                
+                request(server(inject)).get('/api/users/' + userId + '/lots')
+                    .expect(200)
+                    .end(function(err) {
+                        expect(err).to.not.be.ok;
+                        expect(checkAuth.calledOnce).to.be.true;
+                        expect(func.firstCall.args[0].params.userid).to.equal(userId);
+                        done();
+                    });
+            });
+        })
+        
         describe('PUT /api/users/:userid/lots', function() {
             it('should call correct method', function(done) {
                 var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
@@ -648,6 +666,24 @@ describe('userController', function() {
                         expect(checkAuth.calledOnce).to.be.true;
                         expect(func.firstCall.args[0].params.userid).to.equal(userId);
                         expect(func.firstCall.args[0].body).to.eql(lots);
+                        done();
+                    });
+            });
+        })
+        
+        describe('GET /api/users/:userid/spots', function() {
+            it('should call correct method', function(done) {
+                var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
+                var func = sinon.spy(function(q,s) { s.sendStatus(200) });
+                sinon.stub(inject.userController, 'GetSpotsForUser', function(a) { return func });
+
+                var userId = '1z2x3c4v5b6n7m8';                
+                request(server(inject)).get('/api/users/' + userId + '/spots')
+                    .expect(200)
+                    .end(function(err) {
+                        expect(err).to.not.be.ok;
+                        expect(checkAuth.calledOnce).to.be.true;
+                        expect(func.firstCall.args[0].params.userid).to.equal(userId);
                         done();
                     });
             });
@@ -677,6 +713,24 @@ describe('userController', function() {
             });
         })
         
+        describe('GET /api/users/:userid/bookings', function() {
+            it('should call correct method', function(done) {
+                var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
+                var func = sinon.spy(function(q,s) { s.sendStatus(200) });
+                sinon.stub(inject.userController, 'GetBookingsForUser', function(a) { return func });
+
+                var userId = '1z2x3c4v5b6n7m8';                
+                request(server(inject)).get('/api/users/' + userId + '/bookings')
+                    .expect(200)
+                    .end(function(err) {
+                        expect(err).to.not.be.ok;
+                        expect(checkAuth.calledOnce).to.be.true;
+                        expect(func.firstCall.args[0].params.userid).to.equal(userId);
+                        done();
+                    });
+            });
+        })
+        
         describe('PUT /api/users/:userid/bookings', function() {
             it('should call correct method', function(done) {
                 var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
@@ -701,11 +755,29 @@ describe('userController', function() {
             });
         })
         
+        describe('GET /api/users/:userid/profile', function() {
+            it('should call correct method', function(done) {
+                var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
+                var func = sinon.spy(function(q,s) { s.sendStatus(200) });
+                sinon.stub(inject.userController, 'GetProfileForUser', function(a) { return func });
+
+                var userId = '1z2x3c4v5b6n7m8';                
+                request(server(inject)).get('/api/users/' + userId + '/profile')
+                    .expect(200)
+                    .end(function(err) {
+                        expect(err).to.not.be.ok;
+                        expect(checkAuth.calledOnce).to.be.true;
+                        expect(func.firstCall.args[0].params.userid).to.equal(userId);
+                        done();
+                    });
+            });
+        })
+
         describe('PATCH /api/users/:userid/profile', function() {
             it('should call correct method', function(done) {
                 var checkAuth = sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); });
                 var func = sinon.spy(function(q,s) { s.sendStatus(200) });
-                sinon.stub(inject.userController, 'UpdateProfileOfUser', function(a) { return func });
+                sinon.stub(inject.userController, 'UpdateProfileForfUser', function(a) { return func });
                 var profile = {
                     name: 'some new value'
                 }
@@ -724,6 +796,7 @@ describe('userController', function() {
                     });
             });
         })
+        
     })
     
     describe('method', function() {
@@ -753,9 +826,6 @@ describe('userController', function() {
                 var users = [new User(), new User()];
                 inject.db.users.find = function(obj, cb) {
                     cb(null, users);
-                }
-                var res = {
-                    send: sinon.spy() 
                 }
                 var app = server(inject);
                 app.userController.GetAllUsers(app)(null, res);
@@ -1078,7 +1148,7 @@ describe('userController', function() {
             })
         })
         
-        describe('UpdateProfileOfUser', function() {
+        describe('UpdateProfileForfUser', function() {
             it('should call user updateProfile given good input', function(done) {
                 var updateProfile = {
                     name: 'some new value'
@@ -1098,7 +1168,7 @@ describe('userController', function() {
                     })
                 }
                 req.body = updateProfile;
-                inject.userController.UpdateProfileOfUser(server(inject))(req, res);
+                inject.userController.UpdateProfileForfUser(server(inject))(req, res);
             })
             
             it('should respond with an error if user updateProfile failed', function() {
@@ -1119,7 +1189,7 @@ describe('userController', function() {
                     })
                 }
                 req.body = updateProfile;
-                inject.userController.UpdateProfileOfUser(server(inject))(req, res);
+                inject.userController.UpdateProfileForfUser(server(inject))(req, res);
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;
@@ -1132,7 +1202,125 @@ describe('userController', function() {
                         return cb(null, null);
                     })
                 }
-                inject.userController.UpdateProfileOfUser(server(inject))(req, res);
+                inject.userController.UpdateProfileForfUser(server(inject))(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetProfileForUser', function() {
+            
+            it('should return user profile', function() {
+                var user = {
+                    profile: {
+                        someProp: 'some value'
+                    }
+                }
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, user);
+                    })
+                }
+                inject.userController.GetProfileForUser(server(inject))(req,res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(user.profile)).to.be.true;
+            })
+            
+            it('should error on bad id', function() {
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, null);
+                    })
+                }
+                inject.userController.GetProfileForUser(server(inject))(req,res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetLotsForUser', function() {
+            
+            it('should return user\'s lots', function() {
+                var user = {
+                    lotIds: [ '1', '2' ,'3' ]
+                }
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, user);
+                    })
+                }
+                inject.userController.GetLotsForUser(server(inject))(req,res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(user.lotIds)).to.be.true;
+            })
+            
+            it('should error on bad id', function() {
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, null);
+                    })
+                }
+                inject.userController.GetLotsForUser(server(inject))(req,res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetSpotsForUser', function() {
+            
+            it('should return user\'s spots', function() {
+                var user = {
+                    spotIds: [ '1', '2' ,'3' ]
+                }
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, user);
+                    })
+                }
+                inject.userController.GetSpotsForUser(server(inject))(req,res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(user.spotIds)).to.be.true;
+            })
+            
+            it('should error on bad id', function() {
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, null);
+                    })
+                }
+                inject.userController.GetSpotsForUser(server(inject))(req,res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetBookingsForUser', function() {
+            
+            it('should return user\'s spots', function() {
+                var user = {
+                    bookingIds: [ '1', '2' ,'3' ]
+                }
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, user);
+                    })
+                }
+                inject.userController.GetBookingsForUser(server(inject))(req,res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(user.bookingIds)).to.be.true;
+            })
+            
+            it('should error on bad id', function() {
+                inject.db.users = {
+                    findById: sinon.spy(function(id, cb) {
+                        cb(null, null);
+                    })
+                }
+                inject.userController.GetBookingsForUser(server(inject))(req,res);
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;

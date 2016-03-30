@@ -19,6 +19,18 @@ var userController = {
             return res.send(Object.assign({}, req.user.profile.toJSON(), {authid: req.user.authid.toJSON()}));
         }
     },
+    GetLotsForUser: function(app) {
+        return function(req, res) {
+            app.db.users.findById(req.params.id, function(err, doc) {
+                if (err != null)
+                    return res.status(500).send(err.message);
+                if (doc == null)
+                    return res.status(500).send('Could not get lots for user. User not found.');
+                                    
+                res.send(doc.lotIds);
+            })
+        }
+    },
     AddLotsToUser: function(app) {
         return function(req, res) {
             if (req.body.lots == null)
@@ -61,6 +73,18 @@ var userController = {
                     return res.status(500).send('Could not add lot. Lot not found.');
                 lots = docs;
                 next();
+            })
+        }
+    },
+    GetSpotsForUser: function(app) {
+        return function(req, res) {
+            app.db.users.findById(req.params.id, function(err, doc) {
+                if (err != null)
+                    return res.status(500).send(err.message);
+                if (doc == null)
+                    return res.status(500).send('Could not get lots for user. User not found.');
+                                    
+                res.send(doc.spotIds);
             })
         }
     },
@@ -109,6 +133,18 @@ var userController = {
             })
         }
     },
+    GetBookingsForUser: function(app) {
+        return function(req, res) {
+            app.db.users.findById(req.params.id, function(err, doc) {
+                if (err != null)
+                    return res.status(500).send(err.message);
+                if (doc == null)
+                    return res.status(500).send('Could not get lots for user. User not found.');
+                                    
+                res.send(doc.bookingIds);
+            })
+        }
+    },
     AddBookingsToUser: function(app) {
         return function(req, res) {
             if (req.body.bookings == null)
@@ -154,7 +190,7 @@ var userController = {
             })
         }
     },
-    UpdateProfileOfUser: function(app) {
+    UpdateProfileForfUser: function(app) {
         return function(req, res) {
             app.db.users.findById(req.params.userid, function(err, user) {
                 if (err != null)
@@ -170,15 +206,35 @@ var userController = {
             })
         }
     },
+    GetProfileForUser: function(app) {
+        return function(req, res) {
+            app.db.users.findById(req.params.id, function(err, doc) {
+                if (err != null)
+                    return res.status(500).send(err.message);
+                if (doc == null)
+                    return res.status(500).send('Could not get profile for user. User not found.');
+                                    
+                res.send(doc.profile);
+            })
+        }
+    },
     init: function(app) {
         this.app = app;
         
         app.get('/api/users', app.checkAuth, app.checkAdmin, this.GetAllUsers(app));
         app.get('/api/users/profile', app.checkAuth, this.GetProfileForSessionUser());
+
+        app.get('/api/users/:userid/lots', app.checkAuth, app.bodyParser.json(), this.GetLotsForUser(app));
         app.put('/api/users/:userid/lots', app.checkAuth, app.bodyParser.json(), this.AddLotsToUser(app));
+
+        app.get('/api/users/:userid/spots', app.checkAuth, app.bodyParser.json(), this.GetSpotsForUser(app));
         app.put('/api/users/:userid/spots', app.checkAuth, app.bodyParser.json(), this.AddSpotsToUser(app));
+        
+        app.get('/api/users/:userid/bookings', app.checkAuth, app.bodyParser.json(), this.GetBookingsForUser(app));
         app.put('/api/users/:userid/bookings', app.checkAuth, app.bodyParser.json(), this.AddBookingsToUser(app));
-        app.patch('/api/users/:userid/profile', app.checkAuth, app.bodyParser.json(), this.UpdateProfileOfUser(app));
+        
+        app.get('/api/users/:userid/profile', app.checkAuth, app.bodyParser.json(), this.GetProfileForUser(app));
+        app.patch('/api/users/:userid/profile', app.checkAuth, app.bodyParser.json(), this.UpdateProfileForfUser(app));
         
     }
 }
