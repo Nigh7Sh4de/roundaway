@@ -583,87 +583,82 @@ describe('userController', function() {
     var inject = server.GetDefaultInjection();
     var app;
     
-    describe('route', function() {
+    describe.only('route', function() {
         routeTest('userController', [
             {
                 verb: verbs.GET,
                 route: '/api/users',
                 method: 'GetAllUsers',
-                ignoreUserId: true
+                dbInjection: {
+                    users: {
+                        find: sinon.spy(function(search, cb) {
+                            expect(search).to.eql({});
+                            cb(null, [{someProp:'some value'},{someProp:'some other value'}]);
+                        })
+                    }
+                },
+                output: [{someProp:'some value'},{someProp:'some other value'}],
+                ignoreUserId: true,
+                ignoreSadPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/profile',
                 method: 'GetProfileForSessionUser',
                 ignoreUserId: true,
-                ignoreAdmin: true
+                ignoreAdmin: true,
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/lots',
-                method: 'GetLotsForUser'
+                method: 'GetLotsForUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/lots',
-                method: 'AddLotsToUser'
+                method: 'AddLotsToUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/spots',
-                method: 'GetSpotsForUser'
+                method: 'GetSpotsForUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/spots',
-                method: 'AddSpotsToUser'
+                method: 'AddSpotsToUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/bookings',
-                method: 'GetBookingsForUser'
+                method: 'GetBookingsForUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/bookings',
-                method: 'AddBookingsToUser'
+                method: 'AddBookingsToUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/profile',
-                method: 'GetProfileForUser'
+                method: 'GetProfileForUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }, {
                 verb: verbs.PATCH,
                 route: '/api/users/:userid/profile',
-                method: 'UpdateProfileForfUser'
+                method: 'UpdateProfileForfUser',
+                ignoreSadPath: true,
+                ignoreHappyPath: true
             }
         ]);
         
-        describe.only('GET /api/users', function() {
-            it('should send success on proper input', function(done) {
-                var users = [{
-                    someProp: 'some value'
-                }, {
-                    someProp: 'some other value'
-                }]
-                var send;
-                var request = require('supertest');
-                var stubs = [];
-                stubs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
-                stubs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { send = sinon.spy(s, 'send'); n(); }));
-                inject.db = {
-                    users: {
-                        find: sinon.spy(function(search, cb) {
-                            expect(search).to.eql({});
-                            cb(null, users);
-                        })
-                    }
-                }
-                app = server(inject);
-                
-                request(app).get('/api/users')
-                    .end(function(err) {
-                        expect(err).to.not.be.ok;
-                        expect(send.calledWith(users)).to.be.true;
-                        done();
-                    })
-                
-                
-                
-            })
-        })
     })
     
     describe('method', function() {

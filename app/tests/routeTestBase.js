@@ -19,8 +19,37 @@ afterEach(function() {
     });
 })
 
-function HappyPathRouteTest() {
-    throw new Error('Not implemented.');
+function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, dbInjection, testOutput, assertions, done) {
+    // var _method = inject[ctrl].prototype[method];
+    // var send;
+    // funcs.push(inject[ctrl].prototype[method] = function(q,s) { send = s; _method(q,s); });
+    if (!ignoreAuth)
+        funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
+    if (!ignoreAdmin)
+        funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
+    
+    inject.db = dbInjection;
+    var app = server(inject);
+    var st = null;
+    if (verb == verbs.GET)
+        st = request(app).get(route)
+    else {
+        if (verb == verbs.PUT)
+            st = request(app).put(route)
+        else
+            st = request(app).patch(route)
+        st.set('Content-Type', 'application/json')
+        st.send(JSON.stringify(body))
+    } 
+    expect(st).to.be.not.null;
+    st.expect(200).end(function (err, res) {
+        expect(err).to.not.be.ok;
+        expect(res.body).to.eql(testOutput);
+        if (assertions != null && typeof assertions === 'function')
+            assertions();
+        done();
+    });
+
 }
 
 function SadPathRouteTest() {
@@ -94,13 +123,15 @@ var RouteTestBase = function(controller, tests) {
                 RouteTest(controller, test.verb, route, test.ignoreUserId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
             })
             
-            it('should send success on happy path', function(done) {
-                HappyPathRouteTest(done);
-            })
-            
-            it('should send error on sad path', function(done) {
-                SadPathRouteTest(done);
-            })
+            if (!test.ignoreHappyPath)
+                it('should send success on happy path', function(done) {
+                    HappyPathRouteTest(controller, test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.method, test.dbInjection, test.output, test.assertions, done);
+                })
+
+            if (!test.ignoreSadPath)
+                it('should send error on sad path', function(done) {
+                    SadPathRouteTest(done);
+                })
         })
     })
 } 

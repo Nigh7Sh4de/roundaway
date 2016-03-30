@@ -17,7 +17,9 @@ describe('authController', function() {
                 method: 'Logout',
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -26,7 +28,9 @@ describe('authController', function() {
                 methodParams: ['google'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -35,7 +39,9 @@ describe('authController', function() {
                 methodParams: ['google'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -44,7 +50,9 @@ describe('authController', function() {
                 methodParams: ['facebook'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -53,7 +61,9 @@ describe('authController', function() {
                 methodParams: ['facebook'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -62,7 +72,9 @@ describe('authController', function() {
                 methodParams: ['google'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -71,7 +83,9 @@ describe('authController', function() {
                 methodParams: ['google'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -80,7 +94,9 @@ describe('authController', function() {
                 methodParams: ['facebook'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.GET,
@@ -89,7 +105,9 @@ describe('authController', function() {
                 methodParams: ['facebook'],
                 ignoreAdmin: true,
                 ignoreAuth: true,
-                ignoreUserId: true
+                ignoreUserId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             }
         ])
     });
