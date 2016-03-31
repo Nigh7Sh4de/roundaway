@@ -19,10 +19,12 @@ afterEach(function() {
     });
 })
 
-function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, dbInjection, testOutput, assertions, done) {
-    // var _method = inject[ctrl].prototype[method];
-    // var send;
-    // funcs.push(inject[ctrl].prototype[method] = function(q,s) { send = s; _method(q,s); });
+function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, reqMock, body, dbInjection, testOutput, assertions, done) {
+    if (reqMock != null) {
+        var _method = inject[ctrl].prototype[method];
+        funcs.push(sinon.stub(inject[ctrl].prototype, method, function(q,s) { _method(reqMock,s); }));
+    }
+    
     if (!ignoreAuth)
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     if (!ignoreAdmin)
@@ -44,7 +46,8 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
     expect(st).to.be.not.null;
     st.expect(200).end(function (err, res) {
         expect(err).to.not.be.ok;
-        expect(res.body).to.eql(testOutput);
+        if (testOutput != null)
+            expect(res.body).to.eql(testOutput);
         if (assertions != null && typeof assertions === 'function')
             assertions();
         done();
@@ -125,7 +128,7 @@ var RouteTestBase = function(controller, tests) {
             
             if (!test.ignoreHappyPath)
                 it('should send success on happy path', function(done) {
-                    HappyPathRouteTest(controller, test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.method, test.dbInjection, test.output, test.assertions, done);
+                    HappyPathRouteTest(controller, test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.method, test.req, test.body, test.dbInjection, test.output, test.assertions, done);
                 })
 
             if (!test.ignoreSadPath)
@@ -138,5 +141,6 @@ var RouteTestBase = function(controller, tests) {
 
 RouteTestBase.verbs = verbs;
 RouteTestBase.RouteTest = RouteTest;
+RouteTestBase.userid = userId;
 
 module.exports = RouteTestBase;

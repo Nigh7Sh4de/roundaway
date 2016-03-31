@@ -604,58 +604,219 @@ describe('userController', function() {
                 verb: verbs.GET,
                 route: '/api/users/profile',
                 method: 'GetProfileForSessionUser',
+                dbInjection: {},
+                req: {
+                    user: {
+                        profile: {
+                            toJSON: function() {
+                                return {
+                                    someProp: 'some value'
+                                }
+                            }
+                        },
+                        authid: {
+                            toJSON: function() {
+                                return {
+                                    someOtherProp: 'some other value'
+                                }
+                            }
+                        }
+                    }
+                },
+                output: {
+                    someProp: 'some value',
+                    authid: {
+                        someOtherProp: 'some other value'
+                    }
+                },
                 ignoreUserId: true,
                 ignoreAdmin: true,
                 ignoreSadPath: true,
-                ignoreHappyPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/lots',
                 method: 'GetLotsForUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                id: routeTest.userid,
+                                lotIds: ['123','456','789']
+                            })
+                        }
+                    }
+                },
+                output: ['123','456','789'],
+                ignoreSadPath: true
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/lots',
                 method: 'AddLotsToUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                id: id,
+                                addLot: function(lots, cb) {
+                                    expect(lots).to.have.length(1);
+                                    expect(lots).to.deep.include({id:'123'});
+                                    cb(null, 1);
+                                }
+                            })
+                        }
+                    },
+                    lots: {
+                        find: function(search, cb) {
+                            expect(search._id.$in).to.eql(['123']);
+                            cb(null, [{
+                                id: '123'
+                            }])
+                        }
+                    }
+                },
+                body: {
+                    lots: ['123']
+                },
+                ignoreSadPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/spots',
                 method: 'GetSpotsForUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                id: routeTest.userid,
+                                spotIds: ['123','456','789']
+                            })
+                        }
+                    }
+                },
+                output: ['123','456','789'],
+                ignoreSadPath: true
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/spots',
                 method: 'AddSpotsToUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                id: id,
+                                addSpot: function(spots, cb) {
+                                    expect(spots).to.have.length(1);
+                                    expect(spots).to.deep.include({id:'123'});
+                                    cb(null, 1);
+                                }
+                            })
+                        }
+                    },
+                    spots: {
+                        find: function(search, cb) {
+                            expect(search._id.$in).to.eql(['123']);
+                            cb(null, [{
+                                id: '123'
+                            }])
+                        }
+                    }
+                },
+                body: {
+                    spots: ['123']
+                },
+                ignoreSadPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/bookings',
                 method: 'GetBookingsForUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                id: routeTest.userid,
+                                bookingIds: ['123','456','789']
+                            })
+                        }
+                    }
+                },
+                output: ['123','456','789'],
+                ignoreSadPath: true
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/bookings',
                 method: 'AddBookingsToUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                id: id,
+                                addBooking: function(bookings, cb) {
+                                    expect(bookings).to.have.length(1);
+                                    expect(bookings).to.deep.include({id:'123'});
+                                    cb(null, 1);
+                                }
+                            })
+                        }
+                    },
+                    bookings: {
+                        find: function(search, cb) {
+                            expect(search._id.$in).to.eql(['123']);
+                            cb(null, [{
+                                id: '123'
+                            }])
+                        }
+                    }
+                },
+                body: {
+                    bookings: ['123']
+                },
+                ignoreSadPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/profile',
                 method: 'GetProfileForUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                id: routeTest.userid,
+                                profile: {
+                                    someProp: 'some value'   
+                                }
+                            })
+                        }
+                    }
+                },
+                output: {someProp: 'some value'},
+                ignoreSadPath: true
             }, {
                 verb: verbs.PATCH,
                 route: '/api/users/:userid/profile',
                 method: 'UpdateProfileForfUser',
-                ignoreSadPath: true,
-                ignoreHappyPath: true
+                dbInjection: {
+                    users: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal(routeTest.userid);
+                            cb(null, {
+                                profile: {},
+                                updateProfile: function(obj, cb) {
+                                    expect(obj).to.eql({someProp: 'some value'});
+                                    cb(null);
+                                }
+                            })
+                        }
+                    }
+                },
+                body: {
+                    someProp: 'some value'
+                },
+                ignoreSadPath: true
             }
         ]);
         
