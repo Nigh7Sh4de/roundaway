@@ -636,12 +636,18 @@ describe('userController', function() {
                     }
                 },
                 ignoreUserId: true,
-                ignoreAdmin: true,
-                ignoreSadPath: true
+                ignoreAdmin: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/lots',
                 method: 'GetLotsForUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -653,12 +659,23 @@ describe('userController', function() {
                         }
                     }
                 },
-                output: ['123','456','789'],
-                ignoreSadPath: true
+                output: ['123','456','789']
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/lots',
                 method: 'AddLotsToUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    },
+                    lots: {
+                        find: function(search,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -684,12 +701,18 @@ describe('userController', function() {
                 },
                 body: {
                     lots: ['123']
-                },
-                ignoreSadPath: true
+                }
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/spots',
                 method: 'GetSpotsForUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -701,12 +724,23 @@ describe('userController', function() {
                         }
                     }
                 },
-                output: ['123','456','789'],
-                ignoreSadPath: true
+                output: ['123','456','789']
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/spots',
                 method: 'AddSpotsToUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    },
+                    spots: {
+                        find: function(search,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -732,12 +766,18 @@ describe('userController', function() {
                 },
                 body: {
                     spots: ['123']
-                },
-                ignoreSadPath: true
+                }
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/bookings',
                 method: 'GetBookingsForUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -749,12 +789,23 @@ describe('userController', function() {
                         }
                     }
                 },
-                output: ['123','456','789'],
-                ignoreSadPath: true
+                output: ['123','456','789']
             }, {
                 verb: verbs.PUT,
                 route: '/api/users/:userid/bookings',
                 method: 'AddBookingsToUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    },
+                    bookings: {
+                        find: function(search,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -780,12 +831,18 @@ describe('userController', function() {
                 },
                 body: {
                     bookings: ['123']
-                },
-                ignoreSadPath: true
+                }
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/profile',
                 method: 'GetProfileForUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -799,12 +856,18 @@ describe('userController', function() {
                         }
                     }
                 },
-                output: {someProp: 'some value'},
-                ignoreSadPath: true
+                output: {someProp: 'some value'}
             }, {
                 verb: verbs.PATCH,
                 route: '/api/users/:userid/profile',
                 method: 'UpdateProfileForfUser',
+                sadDbInjection: {
+                    users: {
+                        findById: function(id,cb) {
+                            cb(new Error())
+                        }
+                    }
+                },
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
@@ -821,8 +884,7 @@ describe('userController', function() {
                 },
                 body: {
                     someProp: 'some value'
-                },
-                ignoreSadPath: true
+                }
             }
         ]);
         

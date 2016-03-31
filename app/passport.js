@@ -33,7 +33,7 @@ module.exports = function(db) {
                 }
             });
         else
-            db.connect(req.user, strat, profile, function(err, res) {
+            db.connectUser(req.user, strat, profile, function(err, res) {
                 if (err)
                     throw err;
                 else {

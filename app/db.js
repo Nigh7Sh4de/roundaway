@@ -57,13 +57,13 @@ var _db = {
         search[searchProp] = profile.id;
         User.findOne(search, function(err, doc) {
             if (doc == null)
-                user.addAuth(strat, { id: profile.id }, cb);
+                user.addAuth(strat, profile.id, cb);
             else
                 doc.remove(function(err) {
                     if (err != null)
                         return cb(err);
                     else
-                        user.addAuth(strat, { id: profile.id }, cb);
+                        user.addAuth(strat, profile.id, cb);
                 });
                 //TODO: proper user merges
                 // user.merge(doc, function(err) {
@@ -84,7 +84,8 @@ var collections = {
     users: User,
     spots: Spot,
     lots: Lot,
-    checkUser: _db.checkUser
+    checkUser: _db.checkUser,
+    connectUser: _db.connect
 }
 
 module.exports = collections;

@@ -97,7 +97,6 @@ userSchema.methods.addAuth = function(strategy, obj, cb) {
     }
     if (typeof strategy !== 'string')
         return cb(new Error('Failed to add auth. "' + strategy + '" is not a valid auth.')); 
-    
     if (this.authid[strategy] != null)
         return cb(new Error('Failed to add auth for ' + strategy + '. This auth already exists.'));
     this.authid[strategy] = obj;

@@ -49,8 +49,12 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
 
 }
 
-function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, dbInjection, done) {
-    var inject = server.GetDefaultInjection();
+function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, reqMock, dbInjection, done) {
+    if (reqMock != null) {
+        var _method = inject[ctrl].prototype[method];
+        funcs.push(sinon.stub(inject[ctrl].prototype, method, function(q,s) { _method(reqMock,s); }));
+    }
+    
     if (!ignoreAuth)
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     if (!ignoreAdmin)
@@ -66,7 +70,7 @@ function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, dbInjection, don
         else
             st = request(app).patch(route)
         st.set('Content-Type', 'application/json')
-        st.send(JSON.stringify(body))
+        st.send(JSON.stringify({}))
     } 
     expect(st).to.be.not.null;
     st.expect(500).end(function() {
@@ -161,7 +165,7 @@ var RouteTestBase = function(controller, tests) {
 
             if (!test.ignoreSadPath)
                 it('should send error on sad path', function(done) {
-                    SadPathRouteTest(test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.sadDbInjection, done);
+                    SadPathRouteTest(test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.sadReq, test.sadDbInjection, done);
                 })
         })
     })
