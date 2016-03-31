@@ -583,7 +583,7 @@ describe('userController', function() {
     var inject = server.GetDefaultInjection();
     var app;
     
-    describe.only('route', function() {
+    describe('route', function() {
         routeTest('userController', [
             {
                 verb: verbs.GET,
@@ -597,9 +597,15 @@ describe('userController', function() {
                         })
                     }
                 },
+                sadDbInjection: {
+                    users: {
+                        find: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
                 output: [{someProp:'some value'},{someProp:'some other value'}],
-                ignoreUserId: true,
-                ignoreSadPath: true
+                ignoreUserId: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/profile',
@@ -631,7 +637,7 @@ describe('userController', function() {
                 },
                 ignoreUserId: true,
                 ignoreAdmin: true,
-                ignoreSadPath: true,
+                ignoreSadPath: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/:userid/lots',

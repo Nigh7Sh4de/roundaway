@@ -2,6 +2,8 @@ var app = function(inject) {
     var express = require('express');
     var app = express();
     app.db = inject.db;
+    if (app.db.connect != null && typeof app.db.connect === 'function')
+        app.db.connect();
     app.passport = inject.passport(app.db);
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
@@ -39,8 +41,8 @@ var app = function(inject) {
     return app;    
 }
 
-app.GetDefaultInjection = function() {
-    return {
+app.GetDefaultInjection = function(allowConnect) {
+    var inject = {
         db: require('./app/db'),
         passport: require('./app/passport'),
         helper: require('./app/helper'),
@@ -48,10 +50,13 @@ app.GetDefaultInjection = function() {
         spotController: require('./app/controllers/spotController'),
         authController: require('./app/controllers/authController')
     }
+    if (!allowConnect)
+        inject.db.connect = null;
+    return inject;
 }
 
 if (require.main == module)
-    app(app.GetDefaultInjection()).listen(8080, function() {
+    app(app.GetDefaultInjection(true)).listen(8080, function() {
         console.log('App started. Listening on port 8080!');
     });
 else

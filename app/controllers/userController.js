@@ -20,7 +20,7 @@ controller.prototype = {
     GetAllUsers: function(req, res) {
         this.app.db.users.find({}, function(err, docs) {
             if (err != null) {
-                return res.send({err: err});
+                return res.status(500).send(err.message);
             }
             else {
                 return res.send(docs);

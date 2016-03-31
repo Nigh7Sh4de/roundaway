@@ -1,6 +1,5 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Scema;
-mongoose.connect('mongodb://localhost/roundaway');
 
 var User = require('./models/User')
 var Spot = require('./models/Spot')
@@ -79,6 +78,9 @@ var _db = {
 }
 
 var collections = {
+    connect: function() {
+        mongoose.connect('mongodb://localhost/roundaway');
+    },
     users: User,
     spots: Spot,
     lots: Lot,

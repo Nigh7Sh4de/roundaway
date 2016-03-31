@@ -2,8 +2,7 @@ var sinon = require('sinon');
 var request = require('supertest');
 var expect = require('chai').expect;
 var server = require('./../../server');
-var inject = server.GetDefaultInjection();
-
+var inject;
 var funcs = [];
 var verbs = {
     GET: 'GET',
@@ -12,12 +11,7 @@ var verbs = {
 }
 var userId = '12a34567b8901c234d5e6789';
 
-afterEach(function() {
-    funcs.forEach(function(func) {
-        if (func.restore)
-            func.restore();
-    });
-})
+
 
 function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, reqMock, body, dbInjection, testOutput, assertions, done) {
     if (reqMock != null) {
@@ -30,7 +24,7 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
     if (!ignoreAdmin)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
     
-    inject.db = dbInjection;
+    inject.db = dbInjection || {};
     var app = server(inject);
     var st = null;
     if (verb == verbs.GET)
@@ -55,12 +49,32 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
 
 }
 
-function SadPathRouteTest() {
-    throw new Error('Not implemented.');
+function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, dbInjection, done) {
+    var inject = server.GetDefaultInjection();
+    if (!ignoreAuth)
+        funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
+    if (!ignoreAdmin)
+        funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
+    inject.db = dbInjection || {};
+    var app = server(inject);
+    var st = null;
+    if (verb == verbs.GET)
+        st = request(app).get(route)
+    else {
+        if (verb == verbs.PUT)
+            st = request(app).put(route)
+        else
+            st = request(app).patch(route)
+        st.set('Content-Type', 'application/json')
+        st.send(JSON.stringify(body))
+    } 
+    expect(st).to.be.not.null;
+    st.expect(500).end(function() {
+        done();
+    });
 }
 
 function RouteTest(ctrl, verb, route, ignoreUserId, ignoreAdmin, ignoreAuth, method, methodParams, done) {
-    funcs = [];
     if (!ignoreAuth)
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     
@@ -114,6 +128,7 @@ function RouteTest(ctrl, verb, route, ignoreUserId, ignoreAdmin, ignoreAuth, met
             expect(func.firstCall.args[0].params.userid).to.equal(userId);
         if (verb != verbs.GET)
             expect(func.firstCall.args[0].body).to.eql(body);
+        
         done();
     })
 }
@@ -122,6 +137,19 @@ var RouteTestBase = function(controller, tests) {
     tests.forEach(function(test) {
         var route = test.route.replace(':userid', userId);
         describe(test.verb + ' ' + test.route, function() {
+            
+            beforeEach(function() {
+                inject = server.GetDefaultInjection();
+            })
+            
+            afterEach(function() {
+                while(funcs.length > 0) {
+                    var func = funcs.pop();
+                    if (func.restore)
+                        func.restore();
+                }
+            })
+            
             it('should call correct method', function(done) {
                 RouteTest(controller, test.verb, route, test.ignoreUserId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
             })
@@ -133,7 +161,7 @@ var RouteTestBase = function(controller, tests) {
 
             if (!test.ignoreSadPath)
                 it('should send error on sad path', function(done) {
-                    SadPathRouteTest(done);
+                    SadPathRouteTest(test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.sadDbInjection, done);
                 })
         })
     })
