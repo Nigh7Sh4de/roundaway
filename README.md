@@ -42,6 +42,129 @@ Returns the entire `users` collection.
 </table>
 Returns the current session user.
 
+#### GET `/api/users/:userid/lots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the given user's lot ids.
+
+#### PUT `/api/users/:userid/lots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>Lots</td>
+    <td>Array of lot id's as strings</td>
+  </tr>
+</table>
+Appends the given id's to the user's lots array if those lots exist. Responds with message containing count.
+
+#### GET `/api/users/:userid/spots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the given user's spot ids.
+
+#### PUT `/api/users/:userid/spots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>Lots</td>
+    <td>Array of spot id's as strings</td>
+  </tr>
+</table>
+Appends the given id's to the user's spots array if those bookings exist. Responds with message containing count.
+
+#### GET `/api/users/:userid/bookings`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the given user's booking ids.
+
+#### PUT `/api/users/:userid/bookings`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>Lots</td>
+    <td>Array of booking id's as strings</td>
+  </tr>
+</table>
+Appends the given id's to the user's bookings array if those bookings exist. Responds with message containing count.
+
+#### GET `/api/users/:userid/profile`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the given user's profile.
+
+#### PATCH `/api/users/:userid/profile`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td colspan="2">Profile properties</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>Name of the user</td>
+  </tr>
+</table>
+Updates the specified fields of the user's profile.
+
 #### GET `/api/spots`
 <table>
   <tr>
