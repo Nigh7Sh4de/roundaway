@@ -9,7 +9,7 @@ var verbs = {
     PUT: 'PUT',
     PATCH: 'PATCH'
 }
-var userId = '12a34567b8901c234d5e6789';
+var id = '12a34567b8901c234d5e6789';
 
 
 
@@ -78,7 +78,7 @@ function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, reqMock, dbInjec
     });
 }
 
-function RouteTest(ctrl, verb, route, ignoreUserId, ignoreAdmin, ignoreAuth, method, methodParams, done) {
+function RouteTest(ctrl, verb, route, ignoreId, ignoreAdmin, ignoreAuth, method, methodParams, done) {
     if (!ignoreAuth)
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     
@@ -128,8 +128,8 @@ function RouteTest(ctrl, verb, route, ignoreUserId, ignoreAdmin, ignoreAuth, met
             else
                 expect(spy.args).to.deep.include.members([methodParams]);
         })
-        if (!ignoreUserId)
-            expect(func.firstCall.args[0].params.userid).to.equal(userId);
+        if (!ignoreId)
+            expect(func.firstCall.args[0].params.id).to.equal(id);
         if (verb != verbs.GET)
             expect(func.firstCall.args[0].body).to.eql(body);
         
@@ -139,7 +139,7 @@ function RouteTest(ctrl, verb, route, ignoreUserId, ignoreAdmin, ignoreAuth, met
 
 var RouteTestBase = function(controller, tests) {
     tests.forEach(function(test) {
-        var route = test.route.replace(':userid', userId);
+        var route = test.route.replace(':id', id);
         describe(test.verb + ' ' + test.route, function() {
             
             beforeEach(function() {
@@ -155,7 +155,7 @@ var RouteTestBase = function(controller, tests) {
             })
             
             it('should call correct method', function(done) {
-                RouteTest(controller, test.verb, route, test.ignoreUserId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
+                RouteTest(controller, test.verb, route, test.ignoreId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
             })
             
             if (!test.ignoreHappyPath)
@@ -173,6 +173,6 @@ var RouteTestBase = function(controller, tests) {
 
 RouteTestBase.verbs = verbs;
 RouteTestBase.RouteTest = RouteTest;
-RouteTestBase.userid = userId;
+RouteTestBase.id = id;
 
 module.exports = RouteTestBase;

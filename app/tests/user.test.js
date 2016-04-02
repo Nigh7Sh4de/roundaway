@@ -605,7 +605,7 @@ describe('userController', function() {
                     }
                 },
                 output: [{someProp:'some value'},{someProp:'some other value'}],
-                ignoreUserId: true
+                ignoreId: true
             }, {
                 verb: verbs.GET,
                 route: '/api/users/profile',
@@ -635,11 +635,11 @@ describe('userController', function() {
                         someOtherProp: 'some other value'
                     }
                 },
-                ignoreUserId: true,
+                ignoreId: true,
                 ignoreAdmin: true
             }, {
                 verb: verbs.GET,
-                route: '/api/users/:userid/lots',
+                route: '/api/users/:id/lots',
                 method: 'GetLotsForUser',
                 sadDbInjection: {
                     users: {
@@ -651,9 +651,9 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
-                                id: routeTest.userid,
+                                id: routeTest.id,
                                 lotIds: ['123','456','789']
                             })
                         }
@@ -662,7 +662,7 @@ describe('userController', function() {
                 output: ['123','456','789']
             }, {
                 verb: verbs.PUT,
-                route: '/api/users/:userid/lots',
+                route: '/api/users/:id/lots',
                 method: 'AddLotsToUser',
                 sadDbInjection: {
                     users: {
@@ -679,7 +679,7 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
                                 id: id,
                                 addLot: function(lots, cb) {
@@ -704,7 +704,7 @@ describe('userController', function() {
                 }
             }, {
                 verb: verbs.GET,
-                route: '/api/users/:userid/spots',
+                route: '/api/users/:id/spots',
                 method: 'GetSpotsForUser',
                 sadDbInjection: {
                     users: {
@@ -716,9 +716,9 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
-                                id: routeTest.userid,
+                                id: routeTest.id,
                                 spotIds: ['123','456','789']
                             })
                         }
@@ -727,7 +727,7 @@ describe('userController', function() {
                 output: ['123','456','789']
             }, {
                 verb: verbs.PUT,
-                route: '/api/users/:userid/spots',
+                route: '/api/users/:id/spots',
                 method: 'AddSpotsToUser',
                 sadDbInjection: {
                     users: {
@@ -744,7 +744,7 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
                                 id: id,
                                 addSpot: function(spots, cb) {
@@ -769,7 +769,7 @@ describe('userController', function() {
                 }
             }, {
                 verb: verbs.GET,
-                route: '/api/users/:userid/bookings',
+                route: '/api/users/:id/bookings',
                 method: 'GetBookingsForUser',
                 sadDbInjection: {
                     users: {
@@ -781,9 +781,9 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
-                                id: routeTest.userid,
+                                id: routeTest.id,
                                 bookingIds: ['123','456','789']
                             })
                         }
@@ -792,7 +792,7 @@ describe('userController', function() {
                 output: ['123','456','789']
             }, {
                 verb: verbs.PUT,
-                route: '/api/users/:userid/bookings',
+                route: '/api/users/:id/bookings',
                 method: 'AddBookingsToUser',
                 sadDbInjection: {
                     users: {
@@ -809,7 +809,7 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
                                 id: id,
                                 addBooking: function(bookings, cb) {
@@ -834,7 +834,7 @@ describe('userController', function() {
                 }
             }, {
                 verb: verbs.GET,
-                route: '/api/users/:userid/profile',
+                route: '/api/users/:id/profile',
                 method: 'GetProfileForUser',
                 sadDbInjection: {
                     users: {
@@ -846,9 +846,9 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
-                                id: routeTest.userid,
+                                id: routeTest.id,
                                 profile: {
                                     someProp: 'some value'   
                                 }
@@ -859,7 +859,7 @@ describe('userController', function() {
                 output: {someProp: 'some value'}
             }, {
                 verb: verbs.PATCH,
-                route: '/api/users/:userid/profile',
+                route: '/api/users/:id/profile',
                 method: 'UpdateProfileForfUser',
                 sadDbInjection: {
                     users: {
@@ -871,7 +871,7 @@ describe('userController', function() {
                 dbInjection: {
                     users: {
                         findById: function(id, cb) {
-                            expect(id).to.equal(routeTest.userid);
+                            expect(id).to.equal(routeTest.id);
                             cb(null, {
                                 profile: {},
                                 updateProfile: function(obj, cb) {
@@ -899,7 +899,7 @@ describe('userController', function() {
             req = {
                 body: {},
                 params: {
-                    userid: 'user.id'
+                    id: 'user.id'
                 }
             }
             res = {

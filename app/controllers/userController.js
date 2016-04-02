@@ -3,17 +3,17 @@ var controller = function(app) {
     app.get('/api/users', app.checkAuth, app.checkAdmin, this.GetAllUsers.bind(this));
     app.get('/api/users/profile', app.checkAuth, this.GetProfileForSessionUser.bind(this));
 
-    app.get('/api/users/:userid/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetLotsForUser.bind(this));
-    app.put('/api/users/:userid/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddLotsToUser.bind(this));
+    app.get('/api/users/:id/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetLotsForUser.bind(this));
+    app.put('/api/users/:id/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddLotsToUser.bind(this));
 
-    app.get('/api/users/:userid/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetSpotsForUser.bind(this));
-    app.put('/api/users/:userid/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddSpotsToUser.bind(this));
+    app.get('/api/users/:id/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetSpotsForUser.bind(this));
+    app.put('/api/users/:id/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddSpotsToUser.bind(this));
     
-    app.get('/api/users/:userid/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetBookingsForUser.bind(this));
-    app.put('/api/users/:userid/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddBookingsToUser.bind(this));
+    app.get('/api/users/:id/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetBookingsForUser.bind(this));
+    app.put('/api/users/:id/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddBookingsToUser.bind(this));
     
-    app.get('/api/users/:userid/profile', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetProfileForUser.bind(this));
-    app.patch('/api/users/:userid/profile', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.UpdateProfileForfUser.bind(this));
+    app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetProfileForUser.bind(this));
+    app.patch('/api/users/:id/profile', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.UpdateProfileForfUser.bind(this));
 }
 
 controller.prototype = {
@@ -33,7 +33,7 @@ controller.prototype = {
         return res.send(Object.assign({}, req.user.profile.toJSON(), {authid: req.user.authid.toJSON()}));
     },
     GetLotsForUser: function(req, res) {
-        this.app.db.users.findById(req.params.userid, function(err, doc) {
+        this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.status(500).send(err.message);
             if (doc == null)
@@ -66,7 +66,7 @@ controller.prototype = {
         }
         var user = null;
         var lots = null;
-        this.app.db.users.findById(req.params.userid, function(err, doc) {
+        this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.send(err);
             if (doc == null)
@@ -86,7 +86,7 @@ controller.prototype = {
         })
     },
     GetSpotsForUser: function(req, res) {
-        this.app.db.users.findById(req.params.userid, function(err, doc) {
+        this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.status(500).send(err.message);
             if (doc == null)
@@ -119,7 +119,7 @@ controller.prototype = {
         }
         var user = null;
         var spots = null;
-        this.app.db.users.findById(req.params.userid, function(err, doc) {
+        this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.send(err);
             if (doc == null)
@@ -139,7 +139,7 @@ controller.prototype = {
         })
     },
     GetBookingsForUser: function(req, res) {
-        this.app.db.users.findById(req.params.userid, function(err, doc) {
+        this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.status(500).send(err.message);
             if (doc == null)
@@ -172,7 +172,7 @@ controller.prototype = {
         }
         var user = null;
         var bookings = null;
-        this.app.db.users.findById(req.params.userid, function(err, doc) {
+        this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.send(err);
             if (doc == null)
@@ -192,7 +192,7 @@ controller.prototype = {
         })
     },
     UpdateProfileForfUser: function(req, res) {
-        this.app.db.users.findById(req.params.userid, function(err, user) {
+        this.app.db.users.findById(req.params.id, function(err, user) {
             if (err != null)
                 return res.status(500).send(err.message);
             if (user == null)
@@ -206,7 +206,7 @@ controller.prototype = {
         })
     },
     GetProfileForUser: function(req, res) {
-        this.app.db.users.findById(req.params.userid, function(err, doc) {
+        this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.status(500).send(err.message);
             if (doc == null)
