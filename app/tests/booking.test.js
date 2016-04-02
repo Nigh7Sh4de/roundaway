@@ -217,7 +217,7 @@ describe('Booking schema', function() {
     })
 })
 
-describe.only('bookingController', function() {
+describe('bookingController', function() {
     var app;
     
     describe('route', function() {
@@ -228,7 +228,70 @@ describe.only('bookingController', function() {
                 method: 'GetAllBookings',
                 ignoreHappyPath: true,
                 ignoreSadPath: true,
-                ignoreUserId: true
+                ignoreId: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/bookings/:id',
+                method: 'GetBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/bookings/:id/spot',
+                method: 'GetSpotForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/bookings/:id/spot',
+                method: 'SetSpotForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/bookings/:id/start',
+                method: 'GetStartTimeForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/bookings/:id/start',
+                method: 'SetStartTimeForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/bookings/:id/duration',
+                method: 'GetDurationForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/bookings/:id/duration',
+                method: 'SetDurationForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/bookings/:id/end',
+                method: 'GetEndTimeForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/bookings/:id/end',
+                method: 'SetEndTimeForBooking',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             }
         ])
     })
