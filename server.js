@@ -18,6 +18,7 @@ var app = function(inject) {
     app.use(express.static('public'));
 
     app.userController = new inject.userController(app);
+    app.bookingController = new inject.bookingController(app);
     app.spotController = inject.spotController;
     app.authController = new inject.authController(app);
     app.spotController.init(app);
@@ -47,6 +48,7 @@ app.GetDefaultInjection = function(allowConnect) {
         passport: require('./app/passport'),
         helper: require('./app/helper'),
         userController: require('./app/controllers/userController'),
+        bookingController: require('./app/controllers/bookingController'),
         spotController: require('./app/controllers/spotController'),
         authController: require('./app/controllers/authController')
     }

@@ -1,5 +1,7 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var routeTest = require('./routeTestBase');
+var verbs = routeTest.verbs;
 var Booking = require('./../models/Booking');
 
 describe('Booking schema', function() {
@@ -212,5 +214,22 @@ describe('Booking schema', function() {
                 }));
             })
         })
+    })
+})
+
+describe.only('bookingController', function() {
+    var app;
+    
+    describe('route', function() {
+        routeTest('bookingController', [
+            {
+                verb: verbs.GET,
+                route: '/api/bookings',
+                method: 'GetAllBookings',
+                ignoreHappyPath: true,
+                ignoreSadPath: true,
+                ignoreUserId: true
+            }
+        ])
     })
 })
