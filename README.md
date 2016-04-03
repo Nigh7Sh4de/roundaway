@@ -165,6 +165,152 @@ Returns the given user's profile.
 </table>
 Updates the specified fields of the user's profile.
 
+#### GET `/api/bookings`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the entire bookings collection.
+
+#### GET `/api/bookings/:id`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the booking with the specified id.
+
+#### GET `/api/bookings/:id/spot`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the spot id associated with the specified booking.
+
+#### PUT `/api/bookings/:id/spot`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>Id of the spot</td>
+  </tr>
+</table>
+Sets the specified id as the booking's spot if it exists.
+
+#### GET `/api/bookings/:id/start`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the start of the specified booking.
+
+#### PUT `/api/bookings/:id/start`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>JSON Date object to be set as the start</td>
+  </tr>
+</table>
+Sets the start of the booking.
+
+#### GET `/api/bookings/:id/duration`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the duration of the specified booking.
+
+#### PUT `/api/bookings/:id/duration`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>duration</td>
+    <td>Number of milliseconds of the bookings duration</td>
+  </tr>
+</table>
+Sets the duration of the booking.
+
+#### GET `/api/bookings/:id/end`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the end of the specified booking.
+
+#### PUT `/api/bookings/:id/end`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>JSON Date object to be set as the end</td>
+  </tr>
+</table>
+Sets the end of the booking.
+
 #### GET `/api/spots`
 <table>
   <tr>
