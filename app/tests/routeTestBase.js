@@ -24,7 +24,7 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
     if (!ignoreAdmin)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
     
-    inject.db = dbInjection || {};
+    inject.db.prototype = dbInjection || {};
     var app = server(inject);
     var st = null;
     if (verb == verbs.GET)
@@ -59,7 +59,7 @@ function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, reqMock, dbInjec
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     if (!ignoreAdmin)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
-    inject.db = dbInjection || {};
+    inject.db.prototype = dbInjection || {};
     var app = server(inject);
     var st = null;
     if (verb == verbs.GET)

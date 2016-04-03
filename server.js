@@ -1,7 +1,7 @@
 var app = function(inject) {
     var express = require('express');
     var app = express();
-    app.db = inject.db;
+    app.db = new inject.db();
     if (app.db.connect != null && typeof app.db.connect === 'function')
         app.db.connect();
     app.passport = inject.passport(app.db);
@@ -53,7 +53,7 @@ app.GetDefaultInjection = function(allowConnect) {
         authController: require('./app/controllers/authController')
     }
     if (!allowConnect)
-        inject.db.connect = null;
+        inject.db.prototype.connect = null;
     return inject;
 }
 

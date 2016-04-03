@@ -4,44 +4,154 @@ var controller = function(app) {
     app.get('/api/bookings/:id', app.checkAuth, app.checkAdmin, this.GetBooking.bind(this));
     app.get('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, this.GetSpotForBooking.bind(this));
     app.put('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetSpotForBooking.bind(this));
-    app.get('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, this.GetStartTimeForBooking.bind(this));
-    app.put('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetStartTimeForBooking.bind(this));
+    app.get('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, this.GetStartOfBooking.bind(this));
+    app.put('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetStartOfBooking.bind(this));
     app.get('/api/bookings/:id/duration', app.checkAuth, app.checkAdmin, this.GetDurationForBooking.bind(this));
     app.put('/api/bookings/:id/duration', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetDurationForBooking.bind(this));
-    app.get('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, this.GetEndTimeForBooking.bind(this));
-    app.put('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetEndTimeForBooking.bind(this));
+    app.get('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, this.GetEndOfBooking.bind(this));
+    app.put('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetEndOfBooking.bind(this));
 }
 
 controller.prototype = {
     GetAllBookings: function(req, res) {
-        res.status(500).send('Not implemented.');
+        this.app.db.bookings.find({}, function(err, docs) {
+            if (err != null) {
+                return res.status(500).send(err.message);
+            }
+            else {
+                return res.send(docs);
+            }
+        });
     },
     GetBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            else
+                return res.send(doc);
+        })
     },
     GetSpotForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            var spotId = doc.getSpot();
+            if (spotId instanceof Error)
+                return res.status(500).send(spotId.message);
+            this.app.db.spots.findById(spotId, function(spotErr, spotDoc) {
+                if (spotErr != null)
+                    return res.status(500).send(spotErr.message);
+                else if (spotDoc == null)
+                    return res.status(500).send('The spot associated with this booking does not exist.');
+                else
+                    return res.send(spotDoc);
+            })
+        }.bind(this))
     },
     SetSpotForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+        var booking, spot;
+        var i = 0;
+        var total = 2;
+        var next = function() {
+            if (++i >= total)
+                done();
+        }
+        var done = function() {
+            booking.setSpot(spot, function(err) {
+                if (err != null)
+                    res.status(500).send(err.message);    
+                res.sendStatus(200);                
+            });
+        }
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            booking = doc;
+            next();
+        });
+        this.app.db.spots.findById(req.body.id, function(spotErr, spotDoc) {
+            if (spotErr != null)
+                return res.status(500).send(spotErr.message);
+            else if (spotDoc == null)
+                return res.status(500).send('The spot associated with this booking does not exist.');
+            spot = spotDoc;
+            next();
+        })
     },
-    GetStartTimeForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+    GetStartOfBooking: function(req, res) {
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            res.send(doc.getStart());
+        });
     },
-    SetStartTimeForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+    SetStartOfBooking: function(req, res) {
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            doc.setStart(req.body.start, function(err) {
+                if (err != null)
+                    return res.status(500).send(err.message);
+                res.sendStatus(200);
+            })
+        });
     },
     GetDurationForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            var dur = doc.getDuration();
+            if (dur instanceof Error)
+                return res.status(500).send(dur.message);
+            res.send(dur.toString());
+        })
     },
     SetDurationForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            doc.setDuration(req.body.duration, function(err) {
+                    if (err != null)
+                    return res.status(500).send(err.message);
+                res.sendStatus(200);
+            });
+        })
     },
-    GetEndTimeForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+    GetEndOfBooking: function(req, res) {
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            res.send(doc.getEnd());
+        });
     },
-    SetEndTimeForBooking: function(req, res) {
-        res.status(500).send('Not implemented.');
+    SetEndOfBooking: function(req, res) {
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            doc.setEnd(req.body.end, function(err) {
+                if (err != null)
+                    return res.status(500).send(err.message);
+                res.sendStatus(200);
+            })
+        });
     }
 }
 

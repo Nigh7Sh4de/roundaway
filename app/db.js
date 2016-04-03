@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Scema;
 
 var User = require('./models/User')
+var Booking = require('./models/Booking');
 var Spot = require('./models/Spot')
 var Lot = require('./models/Lot');
 
@@ -33,7 +34,7 @@ var _db = {
         var search = {};
         search[searchProp] = profile.id;
 
-        collections.users.findOne(search, function(err, doc) {
+        collections.prototype.users.findOne(search, function(err, doc) {
             if (err != null)
                 throw err;
             if (doc)
@@ -77,11 +78,15 @@ var _db = {
     }
 }
 
-var collections = {
+var collections = function() {}
+
+collections.prototype = {
+    
     connect: function() {
         mongoose.connect('mongodb://localhost/roundaway');
     },
     users: User,
+    bookings: Booking,
     spots: Spot,
     lots: Lot,
     checkUser: _db.checkUser,
