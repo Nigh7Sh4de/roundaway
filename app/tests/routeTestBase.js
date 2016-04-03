@@ -23,7 +23,7 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     if (!ignoreAdmin)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
-    
+    inject.db = function() {};
     inject.db.prototype = dbInjection || {};
     var app = server(inject);
     var st = null;
@@ -40,8 +40,9 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
     expect(st).to.be.not.null;
     st.expect(200).end(function (err, res) {
         expect(err).to.not.be.ok;
-        if (testOutput != null)
-            expect(res.body).to.eql(testOutput);
+        if (testOutput != null) {
+            expect(res.text).to.eql(JSON.stringify(testOutput));
+        }
         if (assertions != null && typeof assertions === 'function')
             assertions();
         done();
@@ -59,6 +60,7 @@ function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, reqMock, dbInjec
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     if (!ignoreAdmin)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
+    inject.db = function() {};
     inject.db.prototype = dbInjection || {};
     var app = server(inject);
     var st = null;
