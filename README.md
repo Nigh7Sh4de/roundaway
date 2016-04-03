@@ -202,7 +202,7 @@ Returns the booking with the specified id.
     <td>True</td>
   </tr>
 </table>
-Returns the spot id associated with the specified booking.
+Returns the spot object whose id is associated with the specified booking.
 
 #### PUT `/api/bookings/:id/spot`
 <table>
