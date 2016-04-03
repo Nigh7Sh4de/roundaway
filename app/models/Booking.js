@@ -45,10 +45,11 @@ bookingSchema.methods.setDuration = function(dur, cb) {
 }
 
 bookingSchema.methods.getDuration = function() {
-    if (this.duration != null && this.start != null)
-        return this.duration;
-    else
-        return new Error('This booking does not have either a duration or a start time set.');
+    if (this.duration == null)
+        return new Error('This booking does not have a duration set.');
+    if (this.start == null)
+        return new Error('Could not get duration. This booking does not have a start set.');
+    return this.duration;
 }
 
 bookingSchema.methods.setStart = function(time, cb) {

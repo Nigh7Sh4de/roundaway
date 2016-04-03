@@ -877,7 +877,7 @@ describe('bookingController', function() {
         })
         
         describe('GetDurationForBooking', function() {
-            it('should return the booking start time', function() {
+            it('should return the booking duration', function() {
                 var b = new Booking();
                 var duration = 123456789;
                 b.duration = duration;
@@ -938,7 +938,7 @@ describe('bookingController', function() {
         })
         
         describe('SetDurationForBooking', function() {
-            it('should set start time for booking', function() {
+            it('should set duration for booking', function() {
                 var duration = 123456789;
                 var b = new Booking();
                 sinon.stub(b, 'setDuration', function(t, cb) {

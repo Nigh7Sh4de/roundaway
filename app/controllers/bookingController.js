@@ -84,7 +84,7 @@ controller.prototype = {
             if (spotErr != null)
                 return next(spotErr.message);
             else if (spotDoc == null)
-                return next('The spot associated with this booking does not exist.');
+                return next('The spot you are trying to set does not exist.');
             spot = spotDoc;
             next();
         })
