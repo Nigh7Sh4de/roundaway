@@ -56,11 +56,16 @@ controller.prototype = {
         var booking, spot;
         var i = 0;
         var total = 2;
-        var next = function() {
+        var next = function(err) {
+            if (err != null) {
+                res.status(500).send(err);
+                done = function() {}
+                next = function() {}
+            }
             if (++i >= total)
                 done();
         }
-        var done = function() {
+        var done = function(err) {
             booking.setSpot(spot, function(err) {
                 if (err != null)
                     res.status(500).send(err.message);    
@@ -69,17 +74,17 @@ controller.prototype = {
         }
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return next(err.message);
             else if (doc == null)
-                return res.status(500).send('Booking not found.');
+                return next('Booking not found.');
             booking = doc;
             next();
         });
         this.app.db.spots.findById(req.body.id, function(spotErr, spotDoc) {
             if (spotErr != null)
-                return res.status(500).send(spotErr.message);
+                return next(spotErr.message);
             else if (spotDoc == null)
-                return res.status(500).send('The spot associated with this booking does not exist.');
+                return next('The spot associated with this booking does not exist.');
             spot = spotDoc;
             next();
         })

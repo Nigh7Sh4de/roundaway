@@ -289,72 +289,256 @@ describe('bookingController', function() {
                 verb: verbs.GET,
                 route: '/api/bookings',
                 method: 'GetAllBookings',
-                ignoreHappyPath: true,
-                ignoreSadPath: true,
+                dbInjection: {
+                    bookings: {
+                        find: sinon.spy(function(search, cb) {
+                            expect(search).to.eql({});
+                            cb(null, [{someProp:'some value'},{someProp:'some other value'}]);
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        find: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: [{someProp:'some value'},{someProp:'some other value'}],
                 ignoreId: true
             },
             {
                 verb: verbs.GET,
                 route: '/api/bookings/:id',
                 method: 'GetBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {someProp:'some value'});
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: {someProp:'some value'}
             },
             {
                 verb: verbs.GET,
                 route: '/api/bookings/:id/spot',
                 method: 'GetSpotForBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                getSpot: function() { return '1z2x3c' }
+                            });
+                        })
+                    },
+                    spots: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal('1z2x3c');
+                            cb(null, {someProp: 'some value'});
+                        }
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: {someProp:'some value'}
             },
             {
                 verb: verbs.PUT,
                 route: '/api/bookings/:id/spot',
                 method: 'SetSpotForBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                body: {
+                    id: '1z2x3c'
+                },
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                setSpot: function(spot, finish) {
+                                    expect(spot).to.deep.equal({someProp: 'some value'}); 
+                                    finish();
+                                }
+                            });
+                        })
+                    },
+                    spots: {
+                        findById: function(id, cb) {
+                            expect(id).to.equal('1z2x3c');
+                            cb(null, {someProp: 'some value'});
+                        }
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    },
+                    spots: {
+                        findById: function(id, cb) {
+                            cb(new Error());
+                        }
+                    }
+                }
             },
             {
                 verb: verbs.GET,
                 route: '/api/bookings/:id/start',
                 method: 'GetStartOfBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                getStart: function() { return new Date('01/01/2000'); }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: new Date('01/01/2000').toJSON()
             },
             {
                 verb: verbs.PUT,
                 route: '/api/bookings/:id/start',
                 method: 'SetStartOfBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                body: {
+                    start: new Date('01/01/2000')
+                },
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                setStart: function(date, cb) { 
+                                    expect(date).to.deep.equal(new Date('01/01/2000').toJSON());
+                                    cb();    
+                                }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(new Error());
+                        })
+                    }
+                }
             },
             {
                 verb: verbs.GET,
                 route: '/api/bookings/:id/duration',
                 method: 'GetDurationForBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                getDuration: function() { return 123456789 }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: 123456789
             },
             {
                 verb: verbs.PUT,
                 route: '/api/bookings/:id/duration',
                 method: 'SetDurationForBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                body: {
+                    duration: 123456789
+                },
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                setDuration: function(duration, cb) { 
+                                    expect(duration).to.deep.equal(123456789);
+                                    cb();    
+                                }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(new Error());
+                        })
+                    }
+                }
             },
             {
                 verb: verbs.GET,
                 route: '/api/bookings/:id/end',
                 method: 'GetEndOfBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                getEnd: function() { return new Date('01/01/2000'); }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: new Date('01/01/2000').toJSON()
             },
             {
                 verb: verbs.PUT,
                 route: '/api/bookings/:id/end',
                 method: 'SetEndOfBooking',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                body: {
+                    end: new Date('01/01/2000')
+                },
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                setEnd: function(date, cb) { 
+                                    expect(date).to.deep.equal(new Date('01/01/2000').toJSON());
+                                    cb();
+                                }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(new Error());
+                        })
+                    }
+                }
             }
         ])
     })
