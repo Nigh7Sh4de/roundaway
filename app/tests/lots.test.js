@@ -104,4 +104,216 @@ describe.only('Lot schema', function() {
             
         })
     })
+    
+    describe('getAddress', function() {
+        it('should return the address of the lot', function() {
+            var l = new Lot();
+            var address = '123 some st'; 
+            l.address = address;
+            expect(l.getAddress()).to.deep.equal(address);
+        });
+    })
+    
+    describe('getLocation', function() {
+        it('should return an array with the lat and long', function() {
+            var l = new Lot();
+            var coords = [123,456];
+            l.location.coordinates = coords;
+            expect(l.getLocation()).to.include.all.members(coords);
+        })
+        
+        it('should have the long and lat as props', function() {
+            var l = new Lot();
+            var coords_g = 123;
+            var coords_t = 456;
+            var coords = [coords_g, coords_t];
+            l.location.coordinates = coords;
+            var loc = l.getLocation();
+            expect(loc.long).to.equal(coords_g);
+            expect(loc.lat).to.equal(coords_t);
+        })
+    })
+    
+    describe('setAddress', function() {
+        it('should set address given good input', function(done) {
+            var l = new Lot();
+            var a = '123 some st';
+            expect(l.address).to.not.be.ok;
+            l.setAddress(a, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.address).to.equal(a);
+                done();
+            })
+        })
+        
+        it('should fail if given bad input', function(done) {
+            var l = new Lot();
+            expect(l.address).to.not.be.ok;
+            [
+                null,
+                undefined,
+                123,
+                function(){expect.fail()},
+                {},
+                {id:123},
+                {id:null},
+                {id:function(){expect.fail()}},
+                ''
+            ].forEach(function(input, i, arr) {
+                l.setAddress(input, function(err) {
+                    expect(err).to.be.ok;
+                    expect(l.address).to.not.be.ok;
+                    if (i+1 >= arr.length)
+                        done();
+                })
+            })
+            
+        })
+        
+    });
+    
+    describe('setLocation', function() {
+        it('should set the location given an array', function(done) {
+            var l = new Lot();
+            var coords = [123, 456];
+            l.setLocation(coords, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.location.coordinates).to.include.all.members(coords);
+                done();
+            })
+        })
+        
+        it('should fail given a small array', function(done) {
+            var l = new Lot();
+            var coords = [123];
+            expect(l.location.coordinates).to.have.length(0);
+            l.setLocation(coords, function(err) {
+                expect(err).to.be.ok;
+                expect(l.location.coordinates).to.have.length(0);
+                done();
+            })
+        })
+        
+        it('should fail given a large array', function(done) {
+            var l = new Lot();
+            var coords = [123,456,789];
+            expect(l.location.coordinates).to.have.length(0);
+            l.setLocation(coords, function(err) {
+                expect(err).to.be.ok;
+                expect(l.location.coordinates).to.have.length(0);
+                done();
+            })
+        })
+        
+        it('should fail if array does not contain numbers', function(done) {
+            var l = new Lot();
+            expect(l.location.coordinates).have.length(0);
+            [
+                null,
+                undefined,
+                function(){expect.fail()},
+                {},
+                {id:123},
+                {id:null},
+                {id:function(){expect.fail()}},
+                ''
+            ].forEach(function(input, i, arr) {
+                l.setLocation([input,input], function(err) {
+                    expect(err).to.be.ok;
+                    expect(l.location.coordinates).have.length(0);
+                    if (i+1 >= arr.length)
+                        done();
+                })
+            })
+        })
+        
+        it('should parse strings into numbers for arrays', function(done) {
+            var l = new Lot();
+            var coords_g = '123';
+            var coords_t = '456';
+            var coords = [coords_g, coords_t];
+            l.setLocation(coords, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.location.coordinates).to.include.all.members([
+                    parseInt(coords_g),
+                    parseInt(coords_t)
+                ]);
+                done();
+            })
+        })
+        
+        it('should set the location given an object', function(done) {
+            var l = new Lot();
+            var coords_g = 123;
+            var coords_t = 456;
+            var coords = {
+                long: coords_g,
+                lat: coords_t
+        };
+            l.setLocation(coords, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.location.coordinates).to.include.all.members([coords_g,coords_t]);
+                done();
+            })
+        })
+        
+        it('should fail if not given good input', function(done) {
+            var l = new Lot();
+            expect(l.location.coordinates).have.length(0);
+            [
+                null,
+                undefined,
+                '123',
+                function(){expect.fail()},
+                {},
+                {id:123},
+                {id:null},
+                {id:function(){expect.fail()}}
+            ].forEach(function(input, i, arr) {
+                l.setLocation(input, function(err) {
+                    expect(err).to.be.ok;
+                    expect(l.location.coordinates).have.length(0);
+                    if (i+1 >= arr.length)
+                        done();
+                })
+            })
+        })
+        
+        it('should fail if object does not have long lat props', function(done) {
+            var l = new Lot();
+            expect(l.location.coordinates).to.have.length(0);
+            [
+                null,
+                undefined,
+                function(){expect.fail()},
+                {},
+                {id:123},
+                {id:null},
+                {id:function(){expect.fail()}},
+                ''
+            ].forEach(function(input, i, arr) {
+                l.setLocation({long:input,lat:input}, function(err) {
+                    expect(err).to.be.ok;
+                    expect(l.location.coordinates).have.length(0);
+                    if (i+1 >= arr.length)
+                        done();
+                })
+            })
+        })
+        
+        it('should parse strings into numbers for objects', function(done) {
+            var l = new Lot();
+            var coords_g = '123';
+            var coords_t = '456';
+            var coords = {
+                long: coords_g,
+                lat: coords_t
+        };
+            l.setLocation(coords, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.location.coordinates).to.include.all.members([coords_g,coords_t]);
+                done();
+            })
+        })
+    })
 })

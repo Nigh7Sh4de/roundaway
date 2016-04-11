@@ -2,7 +2,15 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var lotSchema = new Schema({
-    spots: []
+    spots: [],
+    address: String,
+    location: {
+        type: {
+            type: String,
+            default: 'Point'
+        },
+        coordinates: [Number]
+    }
 });
 
 lotSchema.methods.getSpots = function() {
@@ -27,6 +35,48 @@ lotSchema.methods.addSpots = function(spots, cb) {
             errs.push(err);
         cb(errs);
     });
+}
+
+lotSchema.methods.getAddress = function() {
+    return this.address;
+}
+
+lotSchema.methods.setAddress = function(address, cb) {
+    if (typeof address !== 'string' || address == '')
+        return cb(new Error('Cannot set address. Provided address is invlaid.'));
+    this.address = address;
+    this.save(cb);
+}
+
+lotSchema.methods.getLocation = function() {
+    return Object.assign([], this.location.coordinates, {
+        long: this.location.coordinates[0],
+        lat: this.location.coordinates[1]
+    });
+}
+
+lotSchema.methods.setLocation = function(location, cb) {
+    if (location instanceof Array) {
+        if (location.length != 2)
+            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+        var long = parseInt(location[0]);            
+        var lat = parseInt(location[1]);            
+        if (isNaN(long) ||
+            isNaN(lat))
+            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+        this.location.coordinates = [long, lat];
+    }
+    else {
+        if (typeof location !== 'object' || location == null)
+            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+        location.long = parseInt(location.long);
+        location.lat = parseInt(location.lat);
+        if (isNaN(location.long) ||
+            isNaN(location.lat))
+            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+        this.location.coordinates = [location.long, location.lat];
+    }
+    this.save(cb);
 }
 
 var Lot = mongoose.model('Lot', lotSchema);
