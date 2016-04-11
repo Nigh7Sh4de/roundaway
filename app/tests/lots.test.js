@@ -2,6 +2,7 @@ var expect = require('chai').expect;
 var sinon = require('sinon');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var server = require('./../../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 
@@ -327,10 +328,60 @@ describe.only('lotController', function() {
                 verb: verbs.GET,
                 route: '/api/lots',
                 method: 'GetAllLots',
-                ignoreId: true,
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    lots: {
+                        find: sinon.spy(function(search, cb) {
+                            expect(search).to.eql({});
+                            cb(null, [{someProp:'some value'},{someProp:'some other value'}]);
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    lots: {
+                        find: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: [{someProp:'some value'},{someProp:'some other value'}],
+                ignoreId: true
             }
         ])
     });
+    
+    describe('method', function() {
+        var req = {},
+            res = {};
+        
+        beforeEach(function() {
+            app = server(server.GetDefaultInjection());
+            req = {
+                body: {},
+                params: {
+                    id: 'user.id'
+                }
+            }
+            res = {
+                status: sinon.spy(function(s) {
+                    return this;
+                }),
+                send: sinon.spy(),
+                sendStatus: sinon.spy()
+            }
+        })
+        
+        describe('GetAllLots', function() {
+            it('should return all lots', function() {
+                var lots = [new Lot(), new Lot()];
+                app.db.lots = {
+                    find: function(obj, cb) {
+                        cb(null, lots);
+                    }
+                }
+                app.lotController.GetAllLots(null, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(lots)).to.be.true;
+            })
+        })
+    })
 })

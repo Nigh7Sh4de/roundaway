@@ -5,7 +5,14 @@ var controller = function(app) {
 
 controller.prototype = {
     GetAllLots: function(req, res) {
-        res.sendStatus(501);
+        this.app.db.lots.find({}, function(err, docs) {
+            if (err != null) {
+                return res.status(500).send(err.message);
+            }
+            else {
+                return res.send(docs);
+            }
+        })
     }
 }
 
