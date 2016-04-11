@@ -1,9 +1,11 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var routeTest = require('./routeTestBase');
+var verbs = routeTest.verbs;
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 
-describe.only('Lot schema', function() {
+describe('Lot schema', function() {
     before(function() {
         sinon.stub(Lot.prototype, 'save', function(cb) { cb() });
     })
@@ -316,4 +318,19 @@ describe.only('Lot schema', function() {
             })
         })
     })
+})
+
+describe.only('lotController', function() {
+    describe('route', function() {
+        routeTest('lotController', [
+            {
+                verb: verbs.GET,
+                route: '/api/lots',
+                method: 'GetAllLots',
+                ignoreId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            }
+        ])
+    });
 })
