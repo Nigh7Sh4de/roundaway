@@ -133,7 +133,7 @@ function RouteTest(ctrl, verb, route, ignoreId, ignoreAdmin, ignoreAuth, method,
         if (!ignoreId)
             expect(func.firstCall.args[0].params.id).to.equal(id);
         if (verb != verbs.GET)
-            expect(func.firstCall.args[0].body).to.eql(body);
+            expect(func.firstCall.args[0].body, 'request body was not parsed/passed correctly').to.eql(body);
         
         done();
     })
