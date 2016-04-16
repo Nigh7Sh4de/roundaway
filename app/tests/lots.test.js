@@ -345,6 +345,13 @@ describe.only('lotController', function() {
                 },
                 output: [{someProp:'some value'},{someProp:'some other value'}],
                 ignoreId: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/lots/:id/location',
+                method: 'SetLocationOfLot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             }
         ])
     });
@@ -381,6 +388,40 @@ describe.only('lotController', function() {
                 app.lotController.GetAllLots(null, res);
                 expect(res.send.calledOnce).to.be.true;
                 expect(res.send.calledWith(lots)).to.be.true;
+            })
+        })
+        
+        describe('SetLocationOfLot', function() {
+            it('should set location given coordinates', function(done) {
+                var l = new Lot();
+                sinon.stub(l, 'setLocation', function(l,cb) {
+                    cb();
+                })
+                sinon.stub(l, 'setAddress', function(l,cb) {
+                    cb();
+                })
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(l.id);
+                        cb(null, l);
+                    }
+                }
+                var coords = [123, 456];
+                var address = '123 fake street';
+                req.body = {
+                    coordinates: coords
+                }
+                res.sendStatus = function() {
+                    expect(l.setLocation.calledOnce).to.be.true;
+                    expect(l.setLocation.calledWith(coords)).to.be.true;
+                    expect(l.setAddress.calledOnce).to.be.true;
+                    expect(l.setAddress.calledWith(address)).to.be.true;
+                    expect(res.sendStatus.calledOnce)
+                    expect(res.sendStatus.calledWith(200)).to.be.true;    
+                    done();
+                }
+                app.lotController.SetLocationOfLot(req, res);
+                
             })
         })
     })
