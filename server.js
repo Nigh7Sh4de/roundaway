@@ -5,6 +5,9 @@ var app = function(inject) {
     if (app.db.connect != null && typeof app.db.connect === 'function')
         app.db.connect();
     app.passport = inject.passport(app.db);
+    app.geocoder = require('node-geocoder')('google','https',{
+        apiKey: process.env.GOOGLE_API_KEY
+    });
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
     // inject.helper(app);

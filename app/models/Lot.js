@@ -70,7 +70,10 @@ lotSchema.methods.setLocation = function(location, cb) {
         if (typeof location !== 'object' || location == null)
             return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
         location.long = parseInt(location.long);
+        location.lon = parseInt(location.lon);
         location.lat = parseInt(location.lat);
+        if (isNaN(location.long))
+            location.long = location.lon;
         if (isNaN(location.long) ||
             isNaN(location.lat))
             return cb(new Error('Cannot set location. Specified coordinates are invalid.'));

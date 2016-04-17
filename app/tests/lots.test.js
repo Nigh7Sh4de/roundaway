@@ -304,6 +304,21 @@ describe('Lot schema', function() {
             })
         })
         
+        it('should accept lon as long prop', function(done) {
+            var l = new Lot();
+            var coords_g = 123;
+            var coords_t = 456;
+            var coords = {
+                lon: coords_g,
+                lat: coords_t
+        };
+            l.setLocation(coords, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.location.coordinates).to.include.all.members([coords_g,coords_t]);
+                done();
+            })
+        })
+        
         it('should parse strings into numbers for objects', function(done) {
             var l = new Lot();
             var coords_g = '123';
@@ -345,6 +360,33 @@ describe.only('lotController', function() {
                 },
                 output: [{someProp:'some value'},{someProp:'some other value'}],
                 ignoreId: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/lots/:id',
+                method: 'GetLot',
+                dbInjection: {
+                    lots: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {someProp:'some value'});
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    lots: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: {someProp:'some value'}
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/lots/:id/location',
+                method: 'GetLocationOfLot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             },
             {
                 verb: verbs.PUT,
@@ -391,14 +433,112 @@ describe.only('lotController', function() {
             })
         })
         
-        describe('SetLocationOfLot', function() {
-            it('should set location given coordinates', function(done) {
+        describe('GetLot', function() {
+            it('should get lot with specified id', function() {
+                var lot = new Lot();
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(lot.id);
+                        cb(null, lot);
+                    }
+                }
+                req.params.id = lot.id;
+                app.lotController.GetLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(lot)).to.be.true;
+            })
+            
+            it('should error if db encountered error', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.lotController.GetLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if lot found is null', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.lotController.GetLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetLocationOfLot', function() {
+            it('should return the lot\' location', function() {
                 var l = new Lot();
+                l.address = '123 fake st';
+                l.location.coordinates = [123, 456];
+                var expected = {
+                    address: l.getAddress(),
+                    coordinates: l.getLocation()
+                }
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(l.id);
+                        cb(null, l);
+                    }
+                }
+                req.params.id = l.id;
+                app.lotController.GetLocationOfLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(expected), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
+            });
+            
+            it('should error if db encountered error', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.lotController.GetLocationOfLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if lot found is null', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.lotController.GetLocationOfLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('SetLocationOfLot', function() {
+            var l = new Lot();
+            var coords = {
+                long: 123,
+                lat: 456
+            };
+            var address = '123 fake st';
+            
+            beforeEach(function() {
+                l = new Lot();
                 sinon.stub(l, 'setLocation', function(l,cb) {
                     cb();
                 })
                 sinon.stub(l, 'setAddress', function(l,cb) {
                     cb();
+                })
+                sinon.stub(app.geocoder, 'reverse', function(opt, cb) {
+                    expect(opt.lat).to.equal(coords.lat);
+                    expect(opt.lon).to.equal(coords.long);
+                    cb(null, [{formattedAddress: address}]);
                 })
                 app.db.lots = {
                     findById: function(id, cb) {
@@ -406,22 +546,58 @@ describe.only('lotController', function() {
                         cb(null, l);
                     }
                 }
-                var coords = [123, 456];
-                var address = '123 fake street';
+                req.params.id = l.id;
+            })
+            
+            it('should set location given coordinates as array', function(done) {
                 req.body = {
-                    coordinates: coords
+                    coordinates: [coords.lat, coords.long]
                 }
-                res.sendStatus = function() {
+                res.sendStatus = function(status) {
                     expect(l.setLocation.calledOnce).to.be.true;
-                    expect(l.setLocation.calledWith(coords)).to.be.true;
+                    expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
                     expect(l.setAddress.calledOnce).to.be.true;
                     expect(l.setAddress.calledWith(address)).to.be.true;
-                    expect(res.sendStatus.calledOnce)
-                    expect(res.sendStatus.calledWith(200)).to.be.true;    
+                    expect(status).to.equal(200);
                     done();
                 }
                 app.lotController.SetLocationOfLot(req, res);
-                
+            })
+            
+            it('should set location given lon and lat as object', function(done) {
+                req.body = {
+                    coordinates: {
+                        lon: coords.long,
+                        lat: coords.lat
+                    }
+                }
+                res.sendStatus = function(status) {
+                    expect(l.setLocation.calledOnce).to.be.true;
+                    expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
+                    expect(l.setAddress.calledOnce).to.be.true;
+                    expect(l.setAddress.calledWith(address)).to.be.true;
+                    expect(status).to.equal(200);
+                    done();
+                }
+                app.lotController.SetLocationOfLot(req, res);
+            })
+            
+            it('should set location given long and lat as object', function(done) {
+                req.body = {
+                    coordinates: {
+                        long: coords.long,
+                        lat: coords.lat
+                    }
+                }
+                res.sendStatus = function(status) {
+                    expect(l.setLocation.calledOnce).to.be.true;
+                    expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
+                    expect(l.setAddress.calledOnce).to.be.true;
+                    expect(l.setAddress.calledWith(address)).to.be.true;
+                    expect(status).to.equal(200);
+                    done();
+                }
+                app.lotController.SetLocationOfLot(req, res);
             })
         })
     })

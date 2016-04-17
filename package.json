@@ -14,10 +14,10 @@
     "later": "^1.2.0",
     "mocha": "^2.4.5",
     "mongoose": "^4.4.6",
+    "node-geocoder": "^3.9.1",
     "passport": "^0.3.2",
     "passport-facebook": "^2.1.0",
     "passport-google-oauth20": "^1.0.0",
-    "request": "^2.71.0",
     "sinon": "^1.17.3",
     "supertest": "^1.2.0"
   },
