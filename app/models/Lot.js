@@ -10,8 +10,16 @@ var lotSchema = new Schema({
             default: 'Point'
         },
         coordinates: [Number]
+    },
+    spotNumbers: {
+        type: [Number]
     }
 });
+
+lotSchema.statics.spotNumbersRange = {
+    min: 1,
+    max: 9999
+}
 
 lotSchema.methods.getSpots = function() {
     return this.spots;
@@ -80,6 +88,37 @@ lotSchema.methods.setLocation = function(location, cb) {
         this.location.coordinates = [location.long, location.lat];
     }
     this.save(cb);
+}
+
+lotSchema.methods.claimSpotNumbers = function(nums, cb) {
+    var error = [];
+    var added = [];
+    if (nums == null)
+        for (var i = lotSchema.statics.spotNumbersRange.min; i < lotSchema.statics.spotNumbersRange.max; i++)
+            if (this.spotNumbers.indexOf(i) < 0) {
+                nums = i;
+                break;                
+            }
+    if(!(nums instanceof Array))
+        nums = [nums];
+        
+    nums.forEach(function(num) {
+        if (isNaN(num))
+            return error.push(new Error('Could not claim spot number #' + num + ' as this is not a valid spot'));
+        if (this.spotNumbers.indexOf(num) >= 0)
+            return error.push(new Error('Spot number #' + num + ' already claimed.'));
+        if (num < lotSchema.statics.spotNumbersRange.min ||
+            num > lotSchema.statics.spotNumbersRange.max)
+            return error.push(new Error('Spot number #' + num + ' is out of range.'));
+        added.push(num);
+        this.spotNumbers.push(num);
+    }.bind(this))       
+    
+    this.save(function(err) {
+        if (err != null)
+            error.push(err);
+        cb(error.length == 0 ? null : error, added)
+    });
 }
 
 var Lot = mongoose.model('Lot', lotSchema);

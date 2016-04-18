@@ -1,5 +1,5 @@
 // var request = require('request');
-
+var Spot = require('./../models/Spot');
 
 var controller = function(app) {
     this.app = app;
@@ -109,7 +109,59 @@ controller.prototype = {
         })
     },
     AddSpotsToLot: function(req, res) {
-        res.sendStatus(501);
+        this.app.db.lots.findById(req.params.id, function(err, lot) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (lot == null)
+                return res.status(500).send('Lot not found.');
+            else {
+                var spots = [];
+                var done = function() {
+                    lot.addSpots(spots, function(err) {
+                        if (err != null)
+                            return res.status(500).send(err.message);
+                        lot.save(function(err) {
+                            if (err != null)
+                                return res.status(500).send(err.message);
+                            res.sendStatus(200);
+                        })
+                    })
+                }
+                if (req.body.spots != null && req.body.spots instanceof Array) {
+                    var i = 0;
+                    lot.claimSpotNumbers(null, function(err, num) {
+                        req.body.spots[i].location = lot.location;
+                        req.body.spots[i].number = num[0];
+                        req.body.spots[i].save(function(err, savedSpot) {
+                            if (err != null)
+                                return res.status(500).send(err.message);
+                            spots.push(savedSpot);
+                            if (++i >= req.body.spots.length)
+                                done();
+                        })
+                    })
+                }
+                else if (req.body.count != null)
+                    for (var i=0; i < req.body.count; i++) {
+                        lot.claimSpotNumbers(null, function(err, num) {
+                            if (err != null)
+                                return res.status(500).send(err.message);
+                            var spot = new Spot();
+                            spot.location = lot.location;
+                            spot.number = num[0];
+                            spot.save(function(err, savedSpot) {
+                                if (err != null)
+                                    return res.status(500).send(err.message);
+                                spots.push(savedSpot);
+                                if (spots.length >= req.body.count)
+                                    done();
+                            });
+                        })
+                    }
+                else
+                    return res.status(400).send('Your request was bad.')
+            }
+        });
     },
     RemoveSpotsFromLot: function(req, res) {
         res.sendStatus(501);

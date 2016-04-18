@@ -334,6 +334,103 @@ describe('Lot schema', function() {
             })
         })
     })
+    
+    describe('claimSpotNumbers', function(done) {
+        it('should pass added numbers to callback', function(done) {
+            var l = new Lot();
+            var nums = [1,2,3];
+            expect(l.spotNumbers).to.have.length(0);
+            l.claimSpotNumbers(nums, function(err, n) {
+                expect(err).to.not.be.ok;
+                expect(n).to.include.all.members(nums);
+                expect(l.spotNumbers).to.have.length(3);
+                done();
+            })
+        })
+        it('should claim next spot number given no input', function(done) {
+            var l =  new Lot();
+            expect(l.spotNumbers).to.have.length(0);
+            l.claimSpotNumbers(null, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.spotNumbers).to.have.length(1);
+                expect(l.spotNumbers[0]).to.equal(1);
+                done();
+            })
+        })
+        
+        it('should claim given spot number', function(done) {
+            var l =  new Lot();
+            var num = 666;
+            expect(l.spotNumbers).to.have.length(0);
+            l.claimSpotNumbers(num, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.spotNumbers).to.have.length(1);
+                expect(l.spotNumbers[0]).to.equal(num);
+                done();
+            })
+        })
+        
+        it('should error if trying to claim taken number', function(done) {
+            var l =  new Lot();
+            var num = 666;
+            l.spotNumbers.push(num);
+            expect(l.spotNumbers).to.have.length(1);
+            expect(l.spotNumbers[0]).to.equal(num);
+            l.claimSpotNumbers(num, function(err) {
+                expect(err).to.be.ok;
+                expect(l.spotNumbers).to.have.length(1);
+                expect(l.spotNumbers[0]).to.equal(num);
+                done();
+            })
+        })
+        
+        it('should claim multiple spot numbers given an array', function(done) {
+            var l =  new Lot();
+            var nums = [1, 2, 3, 4, 5];
+            expect(l.spotNumbers).to.have.length(0);
+            l.claimSpotNumbers(nums, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.spotNumbers).to.have.length(nums.length);
+                nums.forEach(function(num, i) {
+                    expect(l.spotNumbers[i]).to.equal(num);
+                });
+                done();
+            })
+        })
+        
+        it('should still save passing numbers and error failures', function(done) {
+            var l = new Lot();
+            var nums = [1, 2, 3, 4, 5, 5];
+            expect(l.spotNumbers).to.have.length(0);
+            l.claimSpotNumbers(nums, function(err) {
+                expect(err).to.be.ok;
+                expect(err).to.have.length(1);
+                expect(l.spotNumbers).to.have.length(nums.length - 1);
+                for (var i = 0;i < nums.length - 1; i++)
+                    expect(l.spotNumbers[i]).to.equal(nums[i]);
+                done();
+            })
+        })
+        
+        it('should fail given bad input', function(done) {
+            var l = new Lot();
+            expect(l.spotNumbers).to.have.length(0);
+            [
+                {},
+                'abc',
+                Lot.spotNumbersRange.min - 1,
+                Lot.spotNumbersRange.max + 1,
+                function(){expect.fail()}
+            ].forEach(function(input, i, arr) {
+                l.claimSpotNumbers(input, function(err) {
+                    expect(err).to.be.ok;
+                    expect(l.spotNumbers).to.have.length(0);
+                    if (i >= arr.length - 1)
+                        done();
+                })
+            })
+        })
+    })
 })
 
 describe('lotController', function() {
@@ -622,7 +719,7 @@ describe('lotController', function() {
             })
         })
         
-        describe.only('GetSpotsForLot', function(done) {
+        describe('GetSpotsForLot', function(done) {
             it('should return the lot\'s spots', function() {
                 var l = new Lot();
                 var expected = [
@@ -697,6 +794,129 @@ describe('lotController', function() {
                     }
                 }
                 app.lotController.GetSpotsForLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })          
+        })
+        
+        describe.only('AddSpotsToLot', function(done) {
+            xit('should add the required number of spots given a count', function(done) {
+                var l = new Lot();
+                sinon.stub(l, 'addSpots', function(spots, cb) {
+                    cb(null);
+                });
+                sinon.stub(l, 'save', function(cb) {
+                    cb(null);
+                })
+                l.location.coordinates = [123, 456];
+                var newSpots = [
+                    new Spot(), new Spot()
+                ]
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(l.id);
+                        cb(null, l);
+                    }
+                }
+                sinon.stub(Spot.prototype, 'save', function(cb) {
+                    cb(null, this);
+                })
+                sinon.stub(l, 'claimSpotNumbers', function(nums, cb) {
+                    cb(null, [l.claimSpotNumbers.callCount]);
+                })
+                req.params.id = l.id;
+                req.body = {
+                    count: 2
+                }
+                res.sendStatus = function(status) {
+                    expect(status).to.equal(200);
+                    expect(l.addSpots.calledOnce).to.be.true;
+                    expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
+                    l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
+                        expect(newSpot.number).to.equal(i+1);
+                        expect(newSpot.location.coordinates).to.deep.equal(l.location.coordinates);
+                    })
+                    expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
+                    
+                    l.addSpots.restore();
+                    l.save.restore();
+                    Spot.prototype.save.restore();
+                    l.claimSpotNumbers.restore();
+                    done();
+                }
+                app.lotController.AddSpotsToLot(req, res);
+            });
+            
+            it('should add the specified spot ids and set spot numbers', function(done) {
+                var l = new Lot();
+                sinon.stub(l, 'addSpots', function(spots, cb) {
+                    cb(null);
+                });
+                sinon.stub(l, 'save', function(cb) {
+                    cb(null);
+                })
+                l.location.coordinates = [123, 456];
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(l.id);
+                        cb(null, l);
+                    }
+                }
+                sinon.stub(Spot.prototype, 'save', function(cb) {
+                    cb(null, this);
+                })
+                sinon.stub(l, 'claimSpotNumbers', function(nums, cb) {
+                    cb(null, [l.claimSpotNumbers.callCount]);
+                })
+                var newSpots = [
+                    new Spot(), new Spot()
+                ]
+                req.params.id = l.id;
+                req.body = {
+                    spots: newSpots
+                }
+                res.sendStatus = function(status) {
+                    expect(status).to.equal(200);
+                    expect(l.addSpots.calledOnce).to.be.true;
+                    expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
+                    l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
+                        expect(newSpot.number).to.equal(i+1);
+                        expect(newSpot.location.coordinates).to.deep.equal(l.location.coordinates);
+                    })
+                    expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
+                    
+                    l.addSpots.restore();
+                    l.save.restore();
+                    Spot.prototype.save.restore();
+                    l.claimSpotNumbers.restore();done();
+                }
+                res.status = function(status) {
+                    expect.fail(status);
+                    done();
+                }
+                app.lotController.AddSpotsToLot(req, res);
+            })
+            
+            it('should error if db encountered error', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.lotController.AddSpotsToLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if lot found is null', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.lotController.AddSpotsToLot(req, res);
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;
