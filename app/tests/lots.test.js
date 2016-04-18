@@ -336,7 +336,7 @@ describe('Lot schema', function() {
     })
 })
 
-describe.only('lotController', function() {
+describe('lotController', function() {
     describe('route', function() {
         routeTest('lotController', [
             {
@@ -495,7 +495,7 @@ describe.only('lotController', function() {
         })
         
         describe('GetLocationOfLot', function() {
-            it('should return the lot\' location', function() {
+            it('should return the lot\'s location', function() {
                 var l = new Lot();
                 l.address = '123 fake st';
                 l.location.coordinates = [123, 456];
@@ -620,6 +620,87 @@ describe.only('lotController', function() {
                 }
                 app.lotController.SetLocationOfLot(req, res);
             })
+        })
+        
+        describe.only('GetSpotsForLot', function(done) {
+            it('should return the lot\'s spots', function() {
+                var l = new Lot();
+                var expected = [
+                    new Spot(),
+                    new Spot()
+                ]
+                l.spots = [expected[0].id, expected[1].id];
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(l.id);
+                        cb(null, l);
+                    }
+                }
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        for(var i=0;i<expected.length;i++)
+                            if (expected[i].id == id)
+                                return cb(null, expected[i]);
+                        return cb(new Error('Spot not found'));
+                    }
+                }
+                req.params.id = l.id;
+                app.lotController.GetSpotsForLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(expected)).to.be.true;
+            });
+            
+            it('should return the lot\'s spots and error messages for failures', function() {
+                var l = new Lot();
+                var msg = 'Spot not found';
+                var expected = [
+                    new Spot(),
+                    msg
+                ]
+                l.spots = [expected[0].id, '123'];
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(l.id);
+                        cb(null, l);
+                    }
+                }
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        if (expected[0].id == id)
+                            return cb(null, expected[0]);
+                        return cb(new Error(msg));
+                    }
+                }
+                req.params.id = l.id;
+                app.lotController.GetSpotsForLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0][0]).to.deep.equal(expected[0]);
+                expect(res.send.firstCall.args[0][1]).to.be.a('string');
+            });
+            
+            it('should error if db encountered error', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.lotController.GetSpotsForLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if lot found is null', function() {
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.lotController.GetSpotsForLot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })          
         })
     })
 })

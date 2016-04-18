@@ -82,7 +82,31 @@ controller.prototype = {
         });
     },
     GetSpotsForLot: function(req, res) {
-        res.sendStatus(501);
+        this.app.db.lots.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Lot not found.');
+            else {
+                var result = [];
+                var spots = doc.getSpots();
+                var next = function(obj) {
+                    result.push(obj);
+                    if (result.length >= spots.length)
+                        return res.send(result);
+                }
+                spots.forEach(function(spot) {
+                    this.app.db.spots.findById(spot, function(err, doc) {
+                        if (err != null)
+                            next('Could not find spot ' + spot + ': ' + err.message);
+                        else if (doc == null)
+                            next('Could not find spot ' + spot);
+                        else
+                            next(doc);
+                    })
+                }.bind(this));
+            }
+        })
     },
     AddSpotsToLot: function(req, res) {
         res.sendStatus(501);
