@@ -394,6 +394,27 @@ describe.only('lotController', function() {
                 method: 'SetLocationOfLot',
                 ignoreHappyPath: true,
                 ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/lots/:id/spots',
+                method: 'GetSpotsForLot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/lots/:id/spots',
+                method: 'AddSpotsToLot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.DELETE,
+                route: '/api/lots/:id/spots',
+                method: 'RemoveSpotsFromLot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             }
         ])
     });

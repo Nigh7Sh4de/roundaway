@@ -7,6 +7,9 @@ var controller = function(app) {
     app.get('/api/lots/:id', app.checkAuth, app.checkAdmin, this.GetLot.bind(this));
     app.get('/api/lots/:id/location', app.checkAuth, app.checkAdmin, this.GetLocationOfLot.bind(this));
     app.put('/api/lots/:id/location', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetLocationOfLot.bind(this));
+    app.get('/api/lots/:id/spots', app.checkAuth, app.checkAdmin, this.GetSpotsForLot.bind(this));
+    app.put('/api/lots/:id/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddSpotsToLot.bind(this));
+    app.delete('/api/lots/:id/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.RemoveSpotsFromLot.bind(this));
 }
 
 controller.prototype = {
@@ -77,6 +80,15 @@ controller.prototype = {
                 })    
             }
         });
+    },
+    GetSpotsForLot: function(req, res) {
+        res.sendStatus(501);
+    },
+    AddSpotsToLot: function(req, res) {
+        res.sendStatus(501);
+    },
+    RemoveSpotsFromLot: function(req, res) {
+        res.sendStatus(501);
     }
 }
 
