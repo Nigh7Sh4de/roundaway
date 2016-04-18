@@ -9,7 +9,9 @@ var spotSchema = new Schema({
             default: 'Point'
         },
         coordinates: [Number]
-    }
+    },
+    lot: String,
+    number: Number
 });
 
 var Spot = mongoose.model('Spot', spotSchema);
