@@ -110,56 +110,87 @@ controller.prototype = {
     },
     AddSpotsToLot: function(req, res) {
         this.app.db.lots.findById(req.params.id, function(err, lot) {
+            var errors = [];
             if (err != null)
                 return res.status(500).send(err.message);
             else if (lot == null)
                 return res.status(500).send('Lot not found.');
             else {
                 var spots = [];
+                var failedSpots = 0;
+                var total = 0;
                 var done = function() {
                     lot.addSpots(spots, function(err) {
                         if (err != null)
-                            return res.status(500).send(err.message);
+                            return spotFailed(err.message);
                         lot.save(function(err) {
                             if (err != null)
-                                return res.status(500).send(err.message);
-                            res.sendStatus(200);
+                                return spotFailed(err.message);
+                            res.status(200).send({errors: errors});
                         })
                     })
+                }
+                var spotFailed = function(err) {
+                    errors.push(err);
+                    if (++failedSpots >= total)
+                        return res.status(500).send({errors: errors});
                 }
                 if (req.body.spots != null && req.body.spots instanceof Array) {
-                    var i = 0;
-                    lot.claimSpotNumbers(null, function(err, num) {
-                        req.body.spots[i].location = lot.location;
-                        req.body.spots[i].number = num[0];
-                        req.body.spots[i].save(function(err, savedSpot) {
-                            if (err != null)
-                                return res.status(500).send(err.message);
-                            spots.push(savedSpot);
-                            if (++i >= req.body.spots.length)
-                                done();
-                        })
-                    })
+                    total = req.body.spots.length;
+                    var i = -1;
+                    req.body.spots.forEach(function(spot, j) {
+                        var setSpotNumber = function() {
+                            lot.claimSpotNumbers(null, function(err, num) {
+                                if (err != null)
+                                    return spotFailed(err.message);
+                                i++;
+                                req.body.spots[i].location = lot.location;
+                                req.body.spots[i].number = num[0];
+                                req.body.spots[i].save(function(err, savedSpot) {
+                                    if (err != null)
+                                        return spotFailed(err.message);
+                                    spots.push(savedSpot);
+                                    if (spots.length + failedSpots >= req.body.spots.length)
+                                        done();
+                                })
+                            });
+                        }
+                        if (typeof req.body.spots[j] === 'string')
+                            this.app.db.spots.findById(req.body.spots[j], function(err, doc) {
+                                if (err != null)
+                                    return spotFailed(err.message);
+                                if (doc == null)
+                                    return spotFailed('Spot not found.');
+                                req.body.spots[j] = doc;
+                                setSpotNumber();
+                            })
+                        else if (req.body.spots[j] instanceof Spot)
+                            setSpotNumber();
+                        else
+                            spotFailed('Spot argument #' + j + ' is not valid.');
+                    }.bind(this))
                 }
-                else if (req.body.count != null)
+                else if (req.body.count != null && typeof req.body.count == 'number') {
+                    total = req.body.count;
                     for (var i=0; i < req.body.count; i++) {
                         lot.claimSpotNumbers(null, function(err, num) {
                             if (err != null)
-                                return res.status(500).send(err.message);
+                                return spotFailed(err.message);
                             var spot = new Spot();
                             spot.location = lot.location;
                             spot.number = num[0];
                             spot.save(function(err, savedSpot) {
                                 if (err != null)
-                                    return res.status(500).send(err.message);
+                                    return spotFailed(err.message);
                                 spots.push(savedSpot);
                                 if (spots.length >= req.body.count)
                                     done();
                             });
                         })
                     }
+                }
                 else
-                    return res.status(400).send('Your request was bad.')
+                    return res.status(500).send('Your request was bad.')
             }
         });
     },
