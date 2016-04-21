@@ -45,6 +45,28 @@ lotSchema.methods.addSpots = function(spots, cb) {
     });
 }
 
+lotSchema.methods.removeSpots = function(spots, cb) {
+    if (!(spots instanceof Array))
+        spots = [spots];
+    var errors = [];
+    var success = [];
+    spots.forEach(function(spot) {
+        if (typeof spot !== 'object' || spot == null)
+            return errors.push(new Error('Tried to remove null spot'));
+        this.spots.splice(this.spots.indexOf(spot.id), 1);
+        this.spotNumbers.splice(this.spotNumbers.indexOf(spot.number), 1);
+        success.push(spot.id);
+    }.bind(this))
+    this.save(function(err) {
+        if (err != null) 
+            return cb(err);
+        else if (errors.length > 0)
+            return cb(errors, success);
+        else
+            return cb(null, success);
+    });
+}
+
 lotSchema.methods.getAddress = function() {
     return this.address;
 }

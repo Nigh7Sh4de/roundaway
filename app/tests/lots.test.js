@@ -8,7 +8,7 @@ var Spot = require('./../models/Spot');
 
 describe('Lot schema', function() {
     before(function() {
-        sinon.stub(Lot.prototype, 'save', function(cb) { cb() });
+        sinon.stub(Lot.prototype, 'save', function(cb) { cb(null, this) });
     })
     
     after(function() {
@@ -105,6 +105,74 @@ describe('Lot schema', function() {
                 })
             })
             
+        })
+    })
+    
+    describe('removeSpots', function() {
+        it('should return a success id array', function(done) {
+            var l = new Lot();
+            var spot = new Spot();
+            l.spots.push(spot.id);
+            l.spotNumbers.push(123);
+            l.removeSpots(spot, function(err, success) {
+                expect(l.spots).to.have.length(0);
+                expect(l.spotNumbers).to.have.length(0);
+                expect(success).to.have.length(1);
+                expect(success).deep.include(spot.id);
+                done();
+            })
+        })
+        
+        it('should remove the given spot', function(done) {
+            var l = new Lot();
+            var spot = new Spot();
+            l.spots.push(spot.id);
+            l.spotNumbers.push(123);
+            l.removeSpots(spot, function(err) {
+                expect(l.spots).to.have.length(0);
+                expect(l.spotNumbers).to.have.length(0);
+                done();
+            })
+        })
+        
+        it('should remove an array of spots', function(done) {
+            var l = new Lot();
+            var spots = [new Spot(), new Spot(), new Spot()]
+            spots.forEach(function(spot, i) {
+                l.spots.push(spot.id);
+                l.spotNumbers.push(spot.number = i + 1);
+            })
+            l.removeSpots(spots, function(err) {
+                expect(l.spots).to.have.length(0);
+                expect(l.spotNumbers).to.have.length(0);
+                done();
+            })
+        })
+        
+        it('should error on bad type for each spot', function(done) {
+            var l = new Lot();
+            var s = new Spot();
+            s.number = 1;
+            l.spots.push(s.id);
+            l.spotNumbers.push(s.number);
+            expect(l.spots).to.have.length(1);
+            expect(l.spots).to.deep.include(s.id);
+            [
+                null, 
+                undefined,
+                123,
+                'abc',
+                function(){expect.fail()}
+            ].forEach(function(input, i, arr) {
+                l.removeSpots(input, function(err) {
+                    expect(err, 'error').to.be.an.instanceOf(Array);
+                    expect(err, 'error').to.have.length(1);
+                    expect(l.spots, 'spots').to.have.length(1);
+                    expect(l.spots, 'spots').to.deep.include(s.id);
+                    if (i + 1 >= arr.length)
+                        done();
+                })
+            })
         })
     })
     
@@ -800,7 +868,7 @@ describe('lotController', function() {
             })          
         })
         
-        describe.only('AddSpotsToLot', function(done) {
+        describe('AddSpotsToLot', function(done) {
             afterEach(function() {
                 if (Spot.prototype.save.restore != null)
                     Spot.prototype.save.restore()
@@ -1265,7 +1333,475 @@ describe('lotController', function() {
                     });
                     app.lotController.AddSpotsToLot(req,res);
                 })
-            })     
+            })  
+            
+            it('should still save succesfull spots when others fail', function(done) {
+                var l = new Lot();
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, l);
+                    }
+                }
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        for (var i=0;i<spots.length;i++)
+                            if (spots[i].id == id)
+                                return cb(null, spots[i]);
+                        cb(null, null);
+                    }
+                }
+                sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
+                    if (l.claimSpotNumbers.callCount <= 1)
+                        cb(null, l.claimSpotNumbers.callCount);
+                    else
+                        cb(new Error('some error'));
+                })
+                sinon.stub(l, 'addSpots', function(spots, cb) {
+                    expect(spots).to.have.length(1);
+                    cb(null);
+                })
+                sinon.stub(l, 'save', function(cb) {
+                    cb(null, this);
+                })
+                sinon.stub(Spot.prototype, 'save', function(cb) {
+                    cb(null, this);
+                })
+                var spots = [
+                    new Spot(),
+                    new Spot()
+                ]
+                req.body = {
+                    spots: spots.map(function(spot) {
+                        return spot.id;
+                    })
+                }
+                res.send = sinon.spy(function() {
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(200)).to.be.true;
+                    expect(res.send.calledOnce).to.be.true;
+                    expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                    done();
+                });
+                app.lotController.AddSpotsToLot(req,res);
+            })   
+        })
+        
+        describe('RemoveSpotsFromLot', function() {
+            it('should remove the given range of spot numbers', function(done) {
+                var l = new Lot();
+                var spots = [new Spot(), new Spot(), new Spot()]
+                spots.forEach(function(s, i) {
+                    s.save = sinon.spy(function(cb) {
+                        cb(null, this);
+                    });
+                    s.number = i + 1;
+                    s.location = l.location;
+                    l.spotNumbers.push(s.number);
+                    l.spots.push(s.id);
+                })
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, l);
+                    }
+                }
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        var found = null;
+                        spots.forEach(function(s) {
+                            if (s.id == id)
+                                return found = s;
+                        })
+                        cb(found == null ? new Error('Could not find spot') : null, found);
+                    },
+                    find: function(search, cb) {
+                        cb(null, [spots[0], spots[1]]);
+                    }
+                }
+                sinon.stub(l, 'save', function(cb) {
+                    cb(null, this);
+                })
+                res.send = sinon.spy(function() {
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(200)).to.be.true;
+                    spots.forEach(function(s, i) {
+                        if (i < 2) {
+                            expect(s.number).to.be.null;
+                            expect(l.spotNumbers).to.not.deep.include(i+1);
+                            expect(l.spots).to.not.deep.include(s.id);
+                            expect(s.save.calledOnce).to.be.true;
+                        }
+                        else {
+                            expect(s.number).to.not.be.null;
+                            expect(l.spotNumbers).to.deep.include(s.number);
+                            expect(l.spots).to.deep.include(s.id);
+                            expect(s.save.callCount).to.equal(0);
+                        }
+                    })
+                    expect(l.save.calledOnce).to.be.true;
+                    done();
+                });
+                req.params.id = l.id;
+                req.body = {
+                    from: 1,
+                    to: 2
+                }
+                app.lotController.RemoveSpotsFromLot(req, res);
+            })
+            it('should remove the given spot ids from spots', function(done) {
+                var l = new Lot();
+                var s = new Spot();
+                l.spots.push(s.id);
+                s.location = l.location;
+                s.number = 1;
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, l);
+                    }
+                }
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, s);
+                    }
+                }
+                sinon.stub(s, 'save', function(cb) {
+                    cb(null, this);
+                })
+                sinon.stub(l, 'save', function(cb) {
+                    cb(null, this);
+                })
+                res.send = sinon.spy(function() {
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(200)).to.be.true;
+                    expect(s.number).to.be.null;
+                    expect(l.spots).to.have.length(0);
+                    expect(l.spotNumbers).to.have.length(0);
+                    done();
+                });
+                req.params.id = l.id;
+                req.body.spots = [s.id];
+                app.lotController.RemoveSpotsFromLot(req, res);
+            })
+            
+            it('should remove the given spot objects', function(done) {
+                var l = new Lot();
+                var s = new Spot();
+                l.spots.push(s.id);
+                s.location = l.location;
+                s.number = 1;
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, l);
+                    }
+                }
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, s);
+                    }
+                }
+                sinon.stub(s, 'save', function(cb) {
+                    cb(null, this);
+                })
+                sinon.stub(l, 'save', function(cb) {
+                    cb(null, this);
+                })
+                res.send = sinon.spy(function() {
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(200)).to.be.true;
+                    expect(s.number).to.be.null;
+                    expect(l.spots).to.have.length(0);
+                    expect(l.spotNumbers).to.have.length(0);
+                    done();
+                });
+                req.params.id = l.id;
+                req.body.spots = [s];
+                app.lotController.RemoveSpotsFromLot(req, res);
+            })
+            
+            it('should return 200 if removeSpots succededs for any spot', function(done) {
+                var l = new Lot();
+                var s = new Spot();
+                var _s = null;
+                l.spots.push(s.id);
+                s.location = l.location;
+                s.number = 1;
+                app.db.lots = {
+                    findById: function(id, cb) {
+                        cb(null, l);
+                    }
+                }
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, s);
+                    }
+                }
+                sinon.stub(s, 'save', function(cb) {
+                    cb(null, this);
+                })
+                sinon.stub(l, 'save', function(cb) {
+                    cb(null, this);
+                })
+                res.send = sinon.spy(function() {
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(200)).to.be.true;
+                    expect(s.number).to.be.null;
+                    expect(l.spots).to.have.length(0);
+                    expect(l.spotNumbers).to.have.length(0);
+                    done();
+                });
+                req.params.id = l.id;
+                req.body.spots = [s, _s];
+                app.lotController.RemoveSpotsFromLot(req, res);
+            });
+            
+            describe('should error when', function() {
+                it('encounters error finding lot', function(done) {
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(new Error('some error'));
+                        }
+                    }
+                    res.send = sinon.spy(function() {
+                        expect(res.send.calledOnce).to.be.true;
+                        expect(res.status.calledOnce).to.be.true;
+                        expect(res.status.calledWith(500)).to.be.true;
+                        done();
+                    })
+                    app.lotController.RemoveSpotsFromLot(req, res);
+                })
+                
+                it('lot not found', function(done) {
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(null, null);
+                        }
+                    }
+                    res.send = sinon.spy(function() {
+                        expect(res.send.calledOnce).to.be.true;
+                        expect(res.status.calledOnce).to.be.true;
+                        expect(res.status.calledWith(500)).to.be.true;
+                        done();
+                    })
+                    app.lotController.RemoveSpotsFromLot(req, res);
+                })
+                
+                it('error finding spot', function(done) {
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(null, new Lot());
+                        }
+                    }
+                    app.db.spots = {
+                        findById: function(id, cb) {
+                            cb(new Error('some error'));
+                        }                        
+                    }
+                    req.body.spots = ['123']
+                    res.send = sinon.spy(function() {
+                        expect(res.send.calledOnce).to.be.true;
+                        expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                        expect(res.status.calledOnce).to.be.true;
+                        expect(res.status.calledWith(500)).to.be.true;
+                        done();
+                    })
+                    app.lotController.RemoveSpotsFromLot(req, res);
+                })
+                
+                it('spot not found', function(done) {
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(null, new Lot());
+                        }
+                    }
+                    app.db.spots = {
+                        findById: function(id, cb) {
+                            cb(null, null);
+                        }                        
+                    }
+                    req.body.spots = ['123']
+                    res.send = sinon.spy(function() {
+                        expect(res.send.calledOnce).to.be.true;
+                        expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                        expect(res.status.calledOnce).to.be.true;
+                        expect(res.status.calledWith(500)).to.be.true;
+                        done();
+                    })
+                    app.lotController.RemoveSpotsFromLot(req, res);
+                })
+                
+                it('could not removeSpots', function(done) {
+                    var l = new Lot();
+                    sinon.stub(l, 'removeSpots', function(spots, cb) {
+                        cb(new Error('some error'));
+                    })
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(null, l);
+                        }
+                    }
+                    app.db.spots = {
+                        findById: function(id, cb) {
+                            cb(null, new Spot());
+                        }                        
+                    }
+                    req.body.spots = ['123']
+                    res.send = sinon.spy(function() {
+                        expect(res.send.calledOnce).to.be.true;
+                        expect(res.send.calledWith('some error')).to.be.true;
+                        expect(res.status.calledOnce).to.be.true;
+                        expect(res.status.calledWith(500)).to.be.true;
+                        done();
+                    })
+                    app.lotController.RemoveSpotsFromLot(req, res);
+                })
+                
+                it('could not save Spot', function(done) {
+                    var l = new Lot();
+                    var s = new Spot();
+                    sinon.stub(l, 'removeSpots', function(spots, cb) {
+                        cb(null, [s.id]);
+                    })
+                    sinon.stub(s, 'save', function(cb) {
+                        cb(new Error('some error'));
+                    })
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(null, l);
+                        }
+                    }
+                    app.db.spots = {
+                        findById: function(id, cb) {
+                            cb(null, s);
+                        }                        
+                    }
+                    req.body.spots = ['123']
+                    res.send = sinon.spy(function() {
+                        expect(res.send.calledOnce).to.be.true;
+                        expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                        expect(res.status.calledOnce).to.be.true;
+                        expect(res.status.calledWith(500)).to.be.true;
+                        done();
+                    })
+                    app.lotController.RemoveSpotsFromLot(req, res);
+                })
+            })
+            
+            describe('should return error if malformed body', function() {
+                var badBodyTest = function(body) {
+                    var l = new Lot();
+                    sinon.stub(l, 'save', function(cb) {
+                        cb(null, this);
+                    })
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(null, l);
+                        }
+                    }
+                    req.body = body;
+                    app.lotController.RemoveSpotsFromLot(req, res);
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(500)).to.be.true;
+                    expect(res.send.calledOnce).to.be.true;    
+                    res.status.reset();
+                    res.send.reset();
+                }
+                
+                it('empty', function() {
+                    badBodyTest({});
+                })
+                
+                it('bad props', function() {
+                    badBodyTest({someProp: 'some value'});
+                })
+                
+                it('bad type for from', function() {
+                    [
+                        'abc',
+                        function(){expect.fail()},
+                        null,
+                        {}
+                    ].forEach(function(input) {
+                        badBodyTest({
+                            from: input,
+                            to: 10
+                        })
+                    })
+                })
+                
+                it('bad type for to', function() {
+                    [
+                        'abc',
+                        function(){expect.fail()},
+                        null,
+                        {}
+                    ].forEach(function(input) {
+                        badBodyTest({
+                            from: 1,
+                            to: input
+                        })
+                    })
+                })
+                
+                it('too small for from', function() {
+                    badBodyTest({
+                        from: Lot.spotNumbersRange.min - 1,
+                        to: Lot.spotNumbersRange.max
+                    })
+                })
+                
+                it('too big for to', function() {
+                    badBodyTest({
+                        from: Lot.spotNumbersRange.min,
+                        to: Lot.spotNumbersRange.max + 1
+                    })
+                })
+                
+                it('bad type for spots', function() {
+                    [
+                        123,
+                        function(){expect.fail()},
+                        null,
+                        undefined
+                    ].forEach(function(input) {
+                        badBodyTest({
+                            spots: [input]
+                        })
+                    })
+                })
+            })
+            
+            it('should still save succesfull updates', function(done) {
+                var l = new Lot();
+                    var s = new Spot();
+                    sinon.stub(l, 'removeSpots', function(spots, cb) {
+                        expect(spots).to.have.length(1);
+                        cb(null, [s.id]);
+                    })
+                    sinon.stub(s, 'save', function(cb) {
+                        cb(null, this);
+                    })
+                    app.db.lots = {
+                        findById: function(id, cb) {
+                            cb(null, l);
+                        }
+                    }
+                    app.db.spots = {
+                        findById: function(id, cb) {
+                            if (id == s.id)
+                                cb(null, s);
+                            else
+                                cb(new Error('some error'));
+                        }                        
+                    }
+                    req.body.spots = ['123', s.id]
+                    res.send = sinon.spy(function() {
+                        expect(res.send.calledOnce).to.be.true;
+                        expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                        expect(res.status.calledOnce).to.be.true;
+                        expect(res.status.calledWith(200)).to.be.true;
+                        done();
+                    })
+                    app.lotController.RemoveSpotsFromLot(req, res);
+            })
         })
     })
 })

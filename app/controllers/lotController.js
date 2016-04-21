@@ -1,5 +1,6 @@
 // var request = require('request');
 var Spot = require('./../models/Spot');
+var Lot = require('./../models/Lot');
 
 var controller = function(app) {
     this.app = app;
@@ -195,7 +196,94 @@ controller.prototype = {
         });
     },
     RemoveSpotsFromLot: function(req, res) {
-        res.sendStatus(501);
+        app.db.lots.findById(req.params.id, function(err, lot) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            if (lot == null)
+                return res.status(500).send('Lot not found.');
+            var spots = [];
+            var errors = [];
+            var failedSpots = 0;
+            var successSpots = [];
+            var total = 0;
+            var spotFailed = function(err) {
+                errors.push(err);
+                if (++failedSpots >= total)
+                    return res.status(500).send({errors: errors});
+                done();
+            }
+            var done = function(spot) {
+                if (spot != null)
+                    successSpots.push(spot);
+                if (failedSpots + successSpots.length >= total)
+                    return res.status(200).send({errors: errors, spotsRemoved: successSpots});
+            }
+            var next = function(spot) {
+                spots.push(spot);
+                if (spots.length + failedSpots >= total)
+                    process();
+            }
+            var process = function() {
+                lot.removeSpots(spots, function(err, success) {
+                    if (err != null && (success == null || success.length < 1))
+                        return res.status(500).send(err.message);
+                    spots.forEach(function(spot) {
+                        if (spot == null || success.indexOf(spot.id) < 0)
+                            return spotFailed(new Error('Spot ' + (spot || {}).id + ' could not be removed.'));
+                        spot.number = null;
+                        spot.save(function(err) {
+                            if (err != null)
+                                return spotFailed(err);
+                            done(spot);
+                        })
+                    });
+                })
+            }
+            var findSpots = function(spots) {
+                spots.forEach(function(spot) {
+                    if (typeof spot === 'string')
+                        app.db.spots.findById(spot, function(err, spot) {
+                            if (err != null)
+                                return spotFailed(err);
+                            if (spot == null)
+                                return spotFailed('Spot not found.');
+                            next(spot);
+                        });
+                    else
+                        next(spot);
+                })    
+            }
+            if (req.body.spots != null) {
+                if (!(req.body.spots instanceof Array))
+                    req.body.spots = [req.body.spots];
+                total = req.body.spots.length;
+                findSpots(req.body.spots);
+            }
+            else if (req.body.from != null &&
+                     typeof req.body.from === 'number' && 
+                     req.body.to != null &&
+                     typeof req.body.to === 'number') {
+                if (req.body.from < Lot.spotNumbersRange.min ||
+                    req.body.to > Lot.spotNumbersRange.max)
+                    return res.status(500).send('Specified range is invalid. Must be within: ' + 
+                                                Lot.spotNumbersRange.min + '-' +
+                                                Lot.spotNumbersRange.max + '.')
+                app.db.spots.find({
+                    _id: {$in: lot.spots}, 
+                    number: {$gte: req.body.from, $lte: req.body.to}
+                }, function(err, spots) {
+                    if (err != null)
+                        return res.status(500).send(err.message);
+                    if (spots == null || spots.length <= 0)
+                        return res.status(500).send('Could not find spots in given range.');
+                    total = spots.length;
+                    findSpots(spots);
+                })
+            }
+            else {
+                return res.status(500).send('Your request was bad.')
+            }
+        })
     }
 }
 
