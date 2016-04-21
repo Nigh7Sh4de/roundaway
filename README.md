@@ -357,3 +357,120 @@ Returns the entire `spots` collection sorting by shortest to longest distance aw
   </tr>
 </table>
 Creates a new `spots` document with the given data.
+
+#### GET `/api/lots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the entire lots collection.
+
+#### GET `/api/lots/:id`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the lot with the specified id.
+
+#### GET `/api/lots/:id/location`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the location of the lot with the specified id.
+
+#### PUT `/api/lots/:id/location`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>coordinates</td>
+    <td>The coordinates of the location to set the lot to. 
+    Can either be a number array of <code>[latitude, longitude]</code> or
+    an object containing <code>lat</code> and <code>long</code> or <code>lon</code> properties</td>
+  </tr>
+</table>
+Adds EITHER the specified spots to the lot or generates `count` number of new spots and adds them to the lot.
+
+#### GET `/api/lots/:id/spots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the spots in the lot with the specified id.
+
+#### PUT `/api/lots/:id/spots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>spots</td>
+    <td>The <code>spot</code> object(s) to add, can be either id's or entire objects</td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>Amount of new spots to create and add to lot</td>
+  </tr>
+</table>
+Adds EITHER the specified spots to the lot or generates `count` number of new spots and adds them to the lot.
+
+#### DELETE `/api/lots/:id/spots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>spots</td>
+    <td>The <code>spot</code> object(s) to remove, can be either id's or entire objects</td>
+  </tr>
+  <tr>
+    <td>from</td>
+    <td>The spot number (inclusive) from which to start removing</td>
+  </tr>
+  <tr>
+    <td>to</td>
+    <td>The spot number (inclusive) up to which to remove</td>
+  </tr>
+</table>
+Removes EITHER the specified spots from the lot or the spots associated with the spot number in the range `[from, to]`.
