@@ -6,7 +6,7 @@ var server = require('./../../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 
-describe('Lot schema', function() {
+describe.only('Lot schema', function() {
     before(function() {
         sinon.stub(Lot.prototype, 'save', function(cb) { cb(null, this) });
     })
@@ -426,7 +426,33 @@ describe('Lot schema', function() {
         })
     })
     
-    describe('claimSpotNumbers', function(done) {
+    describe('unClaimSpotNumbers', function() {
+        it('should unclaim the specified array of spot numbers', function(done) {
+            var l = new Lot();
+            var nums = [1,2,3];
+            l.spotNumbers = nums;
+            l.unClaimSpotNumbers(nums, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.spotNumbers).to.not.include.members(nums);
+                expect(l.spotNumbers).to.have.length(0);
+                done();
+            })
+        })
+        
+        it('should unclaim the specified spot number', function(done) {
+            var l = new Lot();
+            var num = 1;
+            l.spotNumbers.push(num);
+            l.unClaimSpotNumbers(num, function(err) {
+                expect(err).to.not.be.ok;
+                expect(l.spotNumbers).to.not.include(num);
+                expect(l.spotNumbers).to.have.length(0);
+                done();
+            })
+        })
+    })
+    
+    describe('claimSpotNumbers', function() {
         it('should pass added numbers to callback', function(done) {
             var l = new Lot();
             var nums = [1,2,3];
