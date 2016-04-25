@@ -33,7 +33,9 @@ lotSchema.methods.addSpots = function(spots, cb) {
         if (typeof spot === 'object' && spot != null)
             spot = spot.id;
         if (typeof spot != 'string')
-            return errs.push(new Error('This spot does not have a valid ID.')); 
+            return errs.push(new Error('This spot does not have a valid ID.'));
+        if (this.spots.indexOf(spot) >= 0)
+            return errs.push(new Error('This spots is already in this lot.'));
         this.spots.push(spot);
     }.bind(this))
     this.save(function(err) {
@@ -53,6 +55,8 @@ lotSchema.methods.removeSpots = function(spots, cb) {
     spots.forEach(function(spot) {
         if (typeof spot !== 'object' || spot == null)
             return errors.push(new Error('Tried to remove null spot'));
+        if (this.spots.indexOf(spot.id) < 0)
+            return errors.push(new Error('Could not remove spot. Spot with id ' + spot.id + ' is not in this lot.'))
         this.spots.splice(this.spots.indexOf(spot.id), 1);
         this.spotNumbers.splice(this.spotNumbers.indexOf(spot.number), 1);
         success.push(spot.id);
@@ -89,8 +93,8 @@ lotSchema.methods.setLocation = function(location, cb) {
     if (location instanceof Array) {
         if (location.length != 2)
             return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
-        var long = parseInt(location[0]);            
-        var lat = parseInt(location[1]);            
+        var long = parseFloat(location[0]);            
+        var lat = parseFloat(location[1]);            
         if (isNaN(long) ||
             isNaN(lat))
             return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
@@ -99,9 +103,9 @@ lotSchema.methods.setLocation = function(location, cb) {
     else {
         if (typeof location !== 'object' || location == null)
             return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
-        location.long = parseInt(location.long);
-        location.lon = parseInt(location.lon);
-        location.lat = parseInt(location.lat);
+        location.long = parseFloat(location.long);
+        location.lon = parseFloat(location.lon);
+        location.lat = parseFloat(location.lat);
         if (isNaN(location.long))
             location.long = location.lon;
         if (isNaN(location.long) ||
@@ -109,6 +113,17 @@ lotSchema.methods.setLocation = function(location, cb) {
             return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
         this.location.coordinates = [location.long, location.lat];
     }
+    this.save(cb);
+}
+
+lotSchema.methods.unClaimSpotNumbers = function(nums, cb) {
+    if (!(nums instanceof Array))
+        nums = [nums];
+    nums.forEach(function(num) {
+        var index = this.spotNumbers.indexOf(num);
+        if (index >= 0)
+            this.spotNumbers.splice(index, 1);
+    }.bind(this))
     this.save(cb);
 }
 

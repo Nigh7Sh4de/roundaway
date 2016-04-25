@@ -32,6 +32,19 @@ describe('Lot schema', function() {
     })
     
     describe('addSpots', function() {
+        it('should fail to add a spot that is already in the lot', function(done) {
+            var l = new Lot();
+            var s = new Spot();
+            l.spots.push(s.id);
+            l.spotNumbers.push(s.number = 1);
+            l.addSpots(s, function(err) {
+                expect(err).to.be.ok;
+                expect(err).to.have.length(1);
+                expect(l.spots).to.have.length(1);
+                done();
+            })
+        })
+        
         it('should add a list of spots to the array', function(done) {
             var spots = [new Spot(), new Spot()];
             var l = new Lot();
@@ -109,6 +122,16 @@ describe('Lot schema', function() {
     })
     
     describe('removeSpots', function() {
+        it('should error if trying to remove a spot that is not in the lot', function(done) {
+            var l = new Lot();
+            l.removeSpots(new Spot(), function(err, success) {
+                expect(err).to.be.ok;
+                expect(err).to.have.length(1);
+                expect(success).to.have.length(0);
+                done();
+            })
+        })
+        
         it('should return a success id array', function(done) {
             var l = new Lot();
             var spot = new Spot();
@@ -306,8 +329,8 @@ describe('Lot schema', function() {
             l.setLocation(coords, function(err) {
                 expect(err).to.not.be.ok;
                 expect(l.location.coordinates).to.include.all.members([
-                    parseInt(coords_g),
-                    parseInt(coords_t)
+                    parseFloat(coords_g),
+                    parseFloat(coords_t)
                 ]);
                 done();
             })
@@ -788,6 +811,23 @@ describe('lotController', function() {
         })
         
         describe('GetSpotsForLot', function(done) {
+            it('should return an empty array if no spots are assigned', function(done) {
+                var l = new Lot();
+                app.db.lots = {
+                    findById: function(id,cb) {
+                        return cb(null, l);
+                    }
+                }
+                res.send = function(body) {
+                    expect(body).to.be.ok;
+                    expect(body).to.have.length(0);
+                    done();
+                }
+                req.params.id = l.id;
+                app.lotController.GetSpotsForLot(req, res);
+            })
+            
+            
             it('should return the lot\'s spots', function() {
                 var l = new Lot();
                 var expected = [
@@ -1265,6 +1305,8 @@ describe('lotController', function() {
                 
                 it('could not addSpots', function(done) {
                     var l = new Lot();
+                    var s = new Spot();
+                    var number = 123;
                     app.db.lots = {
                         findById: function(id, cb) {
                             cb(null, l);
@@ -1272,26 +1314,30 @@ describe('lotController', function() {
                     }
                     app.db.spots = {
                         findById: function(id, cb) {
-                            cb(null, new Spot());
+                            cb(null, s);
                         }
                     }
                     sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-                        cb(null, 1);
+                        cb(null, [1]);
+                    })
+                    sinon.stub(l, 'unClaimSpotNumbers', function(num, cb) {
+                        cb(null);
                     })
                     sinon.stub(l, 'addSpots', function(spots, cb) {
-                        cb(new Error('some error'));
+                        cb([new Error('some error')]);
                     })
-                    sinon.stub(Spot.prototype, 'save', function(cb) {
+                    sinon.stub(s, 'save', function(cb) {
                         cb(null, this);
                     })
                     req.body = {
-                        spots: ['123']
+                        spots: [s.id]
                     }
                     res.send = sinon.spy(function() {
                         expect(res.status.calledOnce).to.be.true;
                         expect(res.status.calledWith(500)).to.be.true;
                         expect(res.send.calledOnce).to.be.true;
                         expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                        expect(s.number).to.not.be.ok;
                         done();
                     });
                     app.lotController.AddSpotsToLot(req,res);

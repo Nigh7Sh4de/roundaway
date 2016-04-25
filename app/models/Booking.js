@@ -37,7 +37,7 @@ bookingSchema.methods.getEnd = function() {
 }
 
 bookingSchema.methods.setDuration = function(dur, cb) {
-    dur = parseInt(dur);
+    dur = parseFloat(dur);
     if (typeof dur !== 'number' || dur <= 0 || isNaN(dur))
         return cb(new Error('Cannot set duration. Provided duration is invalid.'));
     this.duration = dur;
