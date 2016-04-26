@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var later = require('later');
 var Schema = mongoose.Schema;
 
 var spotSchema = new Schema({
@@ -10,6 +11,13 @@ var spotSchema = new Schema({
         },
         coordinates: [Number]
     },
+    available: {
+        schedules: []
+    },
+    booked: {
+        schedules: []
+    },
+    bookings: [],
     lot: String,
     number: Number
 });
