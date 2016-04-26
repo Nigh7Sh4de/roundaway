@@ -188,6 +188,7 @@ controller.prototype = {
                                 claimedNums.push(num[0]);
                                 i++;
                                 spot.location = lot.location;
+                                spot.address = lot.address;
                                 spot.number = num[0];
                                 spot.save(function(err, savedSpot) {
                                     if (err != null)
@@ -221,6 +222,7 @@ controller.prototype = {
                             claimedNums.push(num[0]);
                             var spot = new Spot();
                             spot.location = lot.location;
+                            spot.address = lot.address;
                             spot.number = num[0];
                             spot.save(function(err, savedSpot) {
                                 if (err != null)
