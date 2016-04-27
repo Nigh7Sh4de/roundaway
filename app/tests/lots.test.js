@@ -6,7 +6,7 @@ var server = require('./../../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 
-describe.only('Lot schema', function() {
+describe('Lot schema', function() {
     before(function() {
         sinon.stub(Lot.prototype, 'save', function(cb) { cb(null, this) });
     })
