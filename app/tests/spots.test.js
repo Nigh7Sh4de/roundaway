@@ -1,4 +1,5 @@
 var later = require('later');
+later.date.localTime();
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var routeTest = require('./routeTestBase');
@@ -271,7 +272,7 @@ describe('Spot schema', function() {
                 expect(s.bookings).to.include(b.id);
                 var sched = later.schedule(s.booked).nextRange(1, b.start);
                 expect(sched).to.be.an.instanceOf(Array);
-                expect(sched[1]).to.be.at.least(new Date(b.start.valueOf() + b.duration));
+                expect(sched[1]).to.be.at.least(new Date(b.start.valueOf() + b.duration - 1000));
                 done();
             })
         })
