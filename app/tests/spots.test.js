@@ -1,4 +1,5 @@
 var later = require('later');
+later.date.localTime();
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var routeTest = require('./routeTestBase');
@@ -265,6 +266,7 @@ describe('Spot schema', function() {
             var s = new Spot();
             var b = new Booking();
             var now = new Date();
+            now.setMilliseconds(0);
             b.start = new Date(now.toDateString());
             b.duration = now - b.start;
             s.addBookings(b, function(err) {
