@@ -1,6 +1,6 @@
 var init = function(app) {
     app.get('/api/spots', app.checkAuth, app.checkAdmin, function(req, res) {
-        app.db.find('spots', {}, function(err, docs) {
+        app.db.spots.find({}, function(err, docs) {
             return res.send(docs);
         });
     });
