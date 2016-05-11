@@ -1,6 +1,41 @@
 Roundaway
 ============
 
+## Git Flow
+
+<table>
+ <thead>
+  <tr>
+   <th>Branch name</th>
+   <th>Port</th>
+   <th>Version scheme</th>
+   <th>Purpose</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td>master</td>
+   <td>80</td>
+   <td>major.minor</td>
+   <td>production</td>
+  </tr>
+  <tr>
+   <td>dev</td>
+   <td>DNE (for now)</td>
+   <td>major.minor.build</td>
+   <td>staging (completed items)</td>
+  </tr>
+  <tr>
+   <td><i>topic</i></td>
+   <td>LOCAL</td>
+   <td>N/A</td>
+   <td>development (tasks in progress)</td>
+  </tr>
+ </tbody>
+</table>
+
+
+
 ## Config
 
 1. Run `npm install` to download all required packages
