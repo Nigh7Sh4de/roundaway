@@ -1,7 +1,10 @@
+var Booking = require('./../models/Booking');
+
 var controller = function(app) {
     this.app = app;
     app.get('/api/bookings', app.checkAuth, app.checkAdmin, this.GetAllBookings.bind(this));
     app.get('/api/bookings/:id', app.checkAuth, app.checkAdmin, this.GetBooking.bind(this));
+    app.put('/api/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateBooking.bind(this));
     app.get('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, this.GetSpotForBooking.bind(this));
     app.put('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetSpotForBooking.bind(this));
     app.get('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, this.GetStartOfBooking.bind(this));
@@ -32,6 +35,20 @@ controller.prototype = {
             else
                 return res.send(doc);
         })
+    },
+    CreateBooking: function(req, res) {
+        if (typeof req.body.count === 'number') {
+            var arr = new Array(5).map(function() { return {}; });
+            this.app.db.bookings.collection.insert(arr, function(err, result) {
+                res.send({status: 'SUCCESS', result: result});
+            })
+        }
+        else {
+            this.app.db.bookings.create({}, function(err, result) {
+                res.send({status: 'SUCCESS', result: result});
+            })    
+        }
+        
     },
     GetSpotForBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {

@@ -328,6 +328,14 @@ describe('bookingController', function() {
                 output: {someProp:'some value'}
             },
             {
+                verb: verbs.PUT,
+                route: '/api/bookings',
+                method: 'CreateBooking',
+                ignoreId: true,
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
                 verb: verbs.GET,
                 route: '/api/bookings/:id/spot',
                 method: 'GetSpotForBooking',
@@ -615,6 +623,37 @@ describe('bookingController', function() {
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe.only('CreateBooking', function() {
+            it('should create a blank booking given no params', function() {
+                app.db.bookings = {
+                    create: sinon.spy(function(obj, cb) {
+                        expect(obj).to.deep.equal({});
+                        cb(null, obj);
+                    })
+                }
+                app.bookingController.CreateBooking(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(app.db.bookings.create.calledOnce).to.be.true;
+            })
+            
+            it('should create n blank bookings given a count n', function() {
+                var count = 5;
+                app.db.bookings = {
+                    collection: {
+                        insert: sinon.spy(function(obj, cb) {
+                            expect(obj).to.have.length(count);
+                            expect(obj).to.deep.include.all.members(new Array(5).map(function() { return {}; }));
+                            cb(null, obj);
+                        })
+                    }
+                }
+                req.body.count = count;
+                app.bookingController.CreateBooking(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(app.db.bookings.collection.insert.calledOnce).to.be.true;
             })
         })
                 
