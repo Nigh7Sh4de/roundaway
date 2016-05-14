@@ -626,26 +626,117 @@ describe('bookingController', function() {
             })
         })
         
-        describe.only('CreateBooking', function() {
-            it('should create a blank booking given no params', function() {
+        describe('CreateBooking', function() {
+            var emptyBooking;
+            
+            before(function() {
+                emptyBooking = new Booking().toJSON();
+                delete emptyBooking._id;    
+            })
+            
+            it('should send error if req count is invalid (and not null)', function() {
+                [
+                    'abc',
+                    {},
+                    function(){expect.fail()},
+                    []
+                ].forEach(function(input) {
+                    req.body.count = input;
+                    app.bookingController.CreateBooking(req, res);
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(500)).to.be.true;
+                    expect(res.send.calledOnce).to.be.true;
+                    res.status.reset();
+                    res.send.reset();
+                })
+            })
+            
+            it('if couldnt create booking should send error', function() {
                 app.db.bookings = {
-                    create: sinon.spy(function(obj, cb) {
-                        expect(obj).to.deep.equal({});
-                        cb(null, obj);
-                    })
+                    create: function(obj, cb) {
+                        cb(new Error('some error'));
+                    }
                 }
                 app.bookingController.CreateBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(app.db.bookings.create.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0]).to.have.property('error');
+            })
+            
+            it('if couldnt insert entire collection should send error', function() {
+                app.db.bookings = {
+                    collection: {
+                        insert: function(obj, cb) {
+                            cb(new Error('some error'));
+                        }
+                    }
+                }
+                req.body.count = 5;
+                app.bookingController.CreateBooking(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0]).to.have.property('error');
+            })
+            
+            it('should create n bookings with the given props', function() {
+                var count = 5;
+                var booking = Object.assign({}, emptyBooking);
+                var arr = [];
+                for (var i=0;i<count;i++)
+                    arr.push(booking);
+                booking.start = new Date();
+                app.db.bookings = {
+                    collection: {
+                        insert: function(obj, cb) {
+                            expect(obj).to.have.length(count);
+                            expect(obj[0]).to.have.property('start');
+                            expect(obj).to.deep.include.all.members(arr);
+                            cb(null, obj);
+                        }
+                    }
+                }
+                req.body.count = count;
+                req.body.booking = booking;
+                app.bookingController.CreateBooking(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+            })
+            
+            it('should create a booking with the given props', function() {
+                var booking = Object.assign({}, emptyBooking);
+                booking.start = new Date();
+                app.db.bookings = {
+                    create: function(obj, cb) {
+                        expect(obj).to.have.property('start');
+                        cb(null, obj);
+                    }
+                }
+                req.body.booking = booking;
+                app.bookingController.CreateBooking(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+            })
+            
+            it('should create a blank booking given no params', function() {
+                app.db.bookings = {
+                    create: function(obj, cb) {
+                        expect(obj).to.deep.equal(emptyBooking);
+                        cb(null, obj);
+                    }
+                }
+                app.bookingController.CreateBooking(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
             })
             
             it('should create n blank bookings given a count n', function() {
                 var count = 5;
+                var arr = [];
+                for (var i=0;i<count;i++)
+                    arr.push(emptyBooking);
                 app.db.bookings = {
                     collection: {
                         insert: sinon.spy(function(obj, cb) {
                             expect(obj).to.have.length(count);
-                            expect(obj).to.deep.include.all.members(new Array(5).map(function() { return {}; }));
+                            expect(obj).to.deep.include.all.members(arr);
                             cb(null, obj);
                         })
                     }
@@ -653,7 +744,7 @@ describe('bookingController', function() {
                 req.body.count = count;
                 app.bookingController.CreateBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(app.db.bookings.collection.insert.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
             })
         })
                 
