@@ -44,6 +44,7 @@ Roundaway
   * FACEBOOK_CLIENT_SECRET
   * GOOGLE_CLIENT_ID
   * GOOGLE_CLIENT_SECRET
+  * GOOGLE_API_KEY
 3. Ensure MongoDB server is running on localhost
 4. *(Optional)* The server will be listening on port 8080. Set up any necessary port-forwarding to accomodate this.
 
