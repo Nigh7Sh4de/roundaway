@@ -716,7 +716,7 @@ describe('lotController', function() {
             })
         })
         
-        describe.only('CreateLot', function() {
+        describe('CreateLot', function() {
             var emptyLot;
             
             before(function() {
