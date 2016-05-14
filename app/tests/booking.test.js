@@ -331,9 +331,22 @@ describe('bookingController', function() {
                 verb: verbs.PUT,
                 route: '/api/bookings',
                 method: 'CreateBooking',
-                ignoreId: true,
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    bookings: {
+                        create: sinon.spy(function(obj, cb) {
+                            cb(null, {someProp:'some value'});
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        create: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: { status: 'SUCCESS', result: { someProp: 'some value'} },
+                ignoreId: true
             },
             {
                 verb: verbs.GET,

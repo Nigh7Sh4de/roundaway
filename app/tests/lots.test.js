@@ -599,9 +599,22 @@ describe('lotController', function() {
                 verb: verbs.PUT,
                 route: '/api/lots',
                 method: 'CreateLot',
-                ignoreId: true,
-                ignoreHappyPath: true,
-                ignoreSadPath: true
+                dbInjection: {
+                    lots: {
+                        create: sinon.spy(function(obj, cb) {
+                            cb(null, {someProp:'some value'});
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    lots: {
+                        create: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: { status: 'SUCCESS', result: { someProp: 'some value'} },
+                ignoreId: true
             },
             {
                 verb: verbs.GET,
