@@ -5,6 +5,7 @@ var Lot = require('./../models/Lot');
 var controller = function(app) {
     this.app = app;
     app.get('/api/lots', app.checkAuth, app.checkAdmin, this.GetAllLots.bind(this));
+    app.put('/api/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateLot.bind(this));
     app.get('/api/lots/:id', app.checkAuth, app.checkAdmin, this.GetLot.bind(this));
     app.get('/api/lots/:id/location', app.checkAuth, app.checkAdmin, this.GetLocationOfLot.bind(this));
     app.put('/api/lots/:id/location', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetLocationOfLot.bind(this));
@@ -35,6 +36,30 @@ controller.prototype = {
             else
                 return res.send(doc);
         })
+    },
+    CreateLot: function(req, res) {
+        var newLot = new Lot(req.body.lot).toJSON();
+        delete newLot._id;
+        if (req.body.count != null) {
+            if (typeof req.body.count !== 'number' || req.body.count <= 0)
+                return res.status(500).send(new Error('Could not create lot. Specified count was invalid.'));
+            var arr = [];
+            for (var i=0;i<req.body.count;i++)
+                arr.push(newLot);
+            this.app.db.lots.collection.insert(arr, function(err, result) {
+                if (err != null)
+                    return res.send({status: 'ERROR', error: err});
+                res.send({status: 'SUCCESS', result: result});
+            })
+        }
+        else {
+            this.app.db.lots.create(newLot, function(err, result) {
+                if (err != null)
+                    return res.send({status: 'ERROR', error: err});
+                res.send({status: 'SUCCESS', result: result});
+            })    
+        }
+        
     },
     GetLocationOfLot: function(req, res) {
         var app = this.app;

@@ -37,14 +37,24 @@ controller.prototype = {
         })
     },
     CreateBooking: function(req, res) {
-        if (typeof req.body.count === 'number') {
-            var arr = new Array(5).map(function() { return {}; });
+        var newBooking = new Booking(req.body.booking).toJSON();
+        delete newBooking._id;
+        if (req.body.count != null) {
+            if (typeof req.body.count !== 'number' || req.body.count <= 0)
+                return res.status(500).send(new Error('Could not create booking. Specified count was invalid.'));
+            var arr = [];
+            for (var i=0;i<req.body.count;i++)
+                arr.push(newBooking);
             this.app.db.bookings.collection.insert(arr, function(err, result) {
+                if (err != null)
+                    return res.send({status: 'ERROR', error: err});
                 res.send({status: 'SUCCESS', result: result});
             })
         }
         else {
-            this.app.db.bookings.create({}, function(err, result) {
+            this.app.db.bookings.create(newBooking, function(err, result) {
+                if (err != null)
+                    return res.send({status: 'ERROR', error: err});
                 res.send({status: 'SUCCESS', result: result});
             })    
         }
