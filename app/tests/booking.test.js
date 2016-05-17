@@ -97,10 +97,10 @@ describe('Booking schema', function() {
             expect(b.getStart()).to.equal(start);
         })
         
-        it('should error if no start time set', function() {
+        it('should return null if no start time set', function() {
             var b = new Booking();
             var result = b.getStart();
-            expect(result).to.be.an.instanceof(Error);
+            expect(result).to.not.be.ok;
         })
     })
     
@@ -171,6 +171,16 @@ describe('Booking schema', function() {
     })
     
     describe('setDuration', function() {
+        it('should error if no start time set', function(done) {
+            var b = new Booking();
+            var end = b.end = new Date(); 
+            b.setDuration(123, function(err) {
+                expect(err).to.be.ok;
+                expect(b.end).to.deep.equal(end);
+                done();
+            });
+        })
+        
         it('should set start', function(done) {
             var b = new Booking();
             b.start = new Date('01/01/2000');
@@ -230,7 +240,7 @@ describe('Booking schema', function() {
         it('should error if no end time set', function() {
             var b = new Booking();
             var result = b.getEnd();
-            expect(result).to.be.an.instanceof(Error);
+            expect(result).to.not.be.ok;
         })
     })
     
