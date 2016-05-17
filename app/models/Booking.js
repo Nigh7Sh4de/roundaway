@@ -27,13 +27,12 @@ bookingSchema.methods.setEnd = function(time, cb) {
 }
 
 bookingSchema.methods.getEnd = function() {
-    if (this.end != null)
-        return this.end;
-    else
-        return new Error('This booking does not have an end time set.');
+    return this.end;
 }
 
 bookingSchema.methods.setDuration = function(dur, cb) {
+    if (this.start == null)
+        return cb('Cannot set a duration. This booking does not have a start time set.');
     dur = parseFloat(dur);
     if (typeof dur !== 'number' || dur <= 0 || isNaN(dur))
         return cb(new Error('Cannot set duration. Provided duration is invalid.'));
@@ -59,10 +58,7 @@ bookingSchema.methods.setStart = function(time, cb) {
 }
 
 bookingSchema.methods.getStart = function() {
-    if (this.start != null)
-        return this.start;
-    else
-        return new Error('This booking does not have a start time set.');
+    return this.start;
 }
 
 bookingSchema.methods.setSpot = function(id, cb) {
