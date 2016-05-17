@@ -261,65 +261,67 @@ describe('Spot schema', function() {
         })
     })
     
-    describe('addBookings', function() {
+    describe.only('addBookings', function() {
+        it('should fail if not available', function(done) {
+            expect.fail('Not implemented.');
+        })
+        
         it('should update booking schedule', function(done) {
-            var s = new Spot();
-            var b = new Booking();
-            var now = new Date();
-            now.setMilliseconds(0);
-            b.start = new Date(now.toDateString());
-            b.duration = now - b.start;
-            s.addBookings(b, function(err) {
-                expect(s.bookings).to.include(b.id);
-                var sched = later.schedule(s.booked).nextRange(1, b.start);
-                expect(sched).to.be.an.instanceOf(Array);
-                expect(sched[1]).to.be.at.least(new Date(b.start.valueOf() + b.duration - 1000));
-                done();
-            })
+            expect.fail('Not implemented.');
         })
         
         it('should fail to add a booking that is already in the spot', function(done) {
             var s = new Spot();
             var b = new Booking();
+            b.start = b.end = new Date();
             s.bookings.push(b.id);
             s.addBookings(b, function(err) {
                 expect(err).to.be.ok;
-                expect(err).to.have.length(1);
                 expect(s.bookings).to.have.length(1);
                 done();
             })
         })
         
-        it('should add a list of bookings to the array', function(done) {
-            var bookings = [new Booking(), new Booking()];
-            bookings.forEach(function(b) {
-                b.start = new Date(),
-                b.duration = 123
-            });
+        it('should fail if booking does not have a start time set', function(done) {
             var s = new Spot();
-            expect(s.bookings).to.have.length(0);
-            s.addBookings(bookings, function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.bookings).to.have.length(bookings.length);
-                bookings.forEach(function(booking) {
-                    expect(s.bookings).to.include(booking.id);
-                })
+            var b = new Booking();
+            b.end = new Date();
+            s.addBookings(b, function(err) {
+                expect(err).to.be.ok;
+                expect(s.bookings).to.have.length(0);
                 done();
-            });
+            })
+        })
+        
+        it('should add a list of bookings to the array', function(done) {
+            var s = new Spot();
+            var bs = [new Booking(), new Booking(), new Booking()];
+            bs.forEach(function(b) {
+                b.start = b.end = new Date();
+            })
+            expect(s.bookings).to.have.length(0);
+            s.addBookings(bs, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.bookings).to.have.length(bs.length);
+                expect(s.bookings).to.include.all.members(bs.map(function(b) {
+                    return b.id;
+                }));
+                done();
+            })
+            
         })
         
         it('should add a single booking to the array', function(done) {
-            var booking = new Booking();
-            booking.start = new Date(),
-            booking.duration = 123
             var s = new Spot();
+            var b = new Booking();
+            b.start = b.end = new Date();
             expect(s.bookings).to.have.length(0);
-            s.addBookings(booking, function(err) {
+            s.addBookings(b, function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.bookings).to.have.length(1);
-                expect(s.bookings).to.include(booking.id);
+                expect(s.bookings).to.include(b.id);
                 done();
-            });
+            })
         })
         
         it('should fail if given bad input', function(done) {
@@ -333,7 +335,7 @@ describe('Spot schema', function() {
                 function(){expect.fail()},
             ].forEach(function(input, i, arr) {
                 s.addBookings(input, function(err) {
-                    expect(err).to.be.ok;
+                    expect(err, JSON.stringify(input)).to.be.ok;
                     expect(s.bookings).to.have.length(0);
                     if (i+1 >= arr.length)
                         done();
