@@ -261,7 +261,7 @@ describe('Spot schema', function() {
         })
     })
     
-    describe.only('addBookings', function() {
+    describe.skip('addBookings', function() {
         it('should fail if not available', function(done) {
             expect.fail('Not implemented.');
         })
@@ -345,7 +345,17 @@ describe('Spot schema', function() {
         })
     })
     
-    describe('removeBookings', function() {
+    describe.skip('removeBookings', function() {
+        it('should clear booked time for spot', function(done) {
+            expect.fail();
+            var s = new Spot();
+            var b = new Booking();
+            b.start = new Date('2016/01/01');
+            b.end = new Date();
+            s.bookings.push(b.id);
+            s.book(b.start, b.end);
+        })
+        
         it('should error if trying to remove a booking that is not in the spot', function(done) {
             var s = new Spot();
             s.removeBookings(new Booking(), function(err, success) {
