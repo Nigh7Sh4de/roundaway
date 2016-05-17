@@ -91,7 +91,24 @@ spotSchema.methods.addBookings = function(bookings, cb) {
 }
 
 spotSchema.methods.removeBookings = function(bookings, cb) {
-    
+    if (!(bookings instanceof Array))
+        bookings = [bookings];
+    var errs = [];
+    var removed = [];
+    bookings.forEach(function(booking) {
+        if (booking == null)
+            return errs.push(new Error('Cannot remove null booking.'));
+        if (booking.id == null)
+            return errs.push(new Error('Cannot remove booking. Booking must have an id.'));
+        var index = this.bookings.indexOf(booking.id);
+        if (index < 0)
+            return errs.push(new Error('Cannot remove booking. This booking is not assoaciated with this spot'));
+        removed = removed.concat(this.bookings.splice(index, 1));
+    }.bind(this));
+    this.save(function (err) {
+        errs = errs.length == 0 ? null : errs;
+        cb(err || errs, removed);
+    });
 }
 
 spotSchema.methods.getNumber = function() {
