@@ -150,14 +150,14 @@ describe('Booking schema', function() {
         it('should return duration', function() {
             var b = new Booking();
             b.start = new Date('01/01/2000');
-            var duration = new Date() - b.start; 
-            b.duration = duration;
+            b.end = new Date();
+            var duration = b.end - b.start;
             expect(b.getDuration()).to.equal(duration);
         })
         
         it('should error if no start time set', function() {
             var b = new Booking();
-            b.duration = 666;
+            b.end = new Date();
             var result = b.getDuration();
             expect(result).to.be.an.instanceof(Error);
         })
@@ -173,29 +173,34 @@ describe('Booking schema', function() {
     describe('setDuration', function() {
         it('should set start', function(done) {
             var b = new Booking();
-            var duration = new Date() - new Date('01/01/2000');
-            expect(b.duration).to.not.be.ok;
+            b.start = new Date('01/01/2000');
+            var end = new Date();
+            var duration = end - b.start;
+            expect(b.end).to.not.be.ok; 
             b.setDuration(duration, function(err) {
                 expect(err).to.not.be.ok;
-                expect(b.duration).to.equal(duration);
+                expect(b.end).to.deep.equal(end);
                 done();
             });
         })
         
         it('should parse string values', function(done) {
             var b = new Booking();
-            b.start = new Date();
-            var duration = 123456789;
-            expect(b.duration).to.not.be.ok;
+            b.start = new Date('2016/01/01');
+            var end = new Date();
+            var duration = end - b.start;
+            expect(b.end).to.not.be.ok;
             b.setDuration(duration.toString(), function(err) {
                 expect(err).to.not.be.ok;
-                expect(b.duration).to.equal(duration);
+                expect(b.end).to.deep.equal(end);
                 done();
             });
         })
         
         it('should error if invalid duration', function(done) {
             var b = new Booking();
+            var start = b.start = new Date('2016/01/01');
+            var end = b.end = new Date();
             [
                 null,
                 undefined,
@@ -205,7 +210,8 @@ describe('Booking schema', function() {
             ].forEach(function (input, i, arr) {
                 expect(b.setDuration(input, function(err) {
                     expect(err).to.be.ok;
-                    expect(b.duration).to.not.be.ok;
+                    expect(b.start).to.deep.equal(start);
+                    expect(b.end).to.deep.equal(end);
                     if (i + 1 >= arr.length)
                         done();
                 }));
@@ -216,11 +222,8 @@ describe('Booking schema', function() {
     describe('getEnd', function() {
         it('should return end time', function() {
             var b = new Booking();
-            var start = new Date('01/01/2000');
             var end = new Date();
-            var duration = end - start; 
-            b.start = start;
-            b.duration = duration;
+            b.end = end;
             expect(b.getEnd()).to.deep.equal(end);
         })
         
@@ -234,35 +237,30 @@ describe('Booking schema', function() {
     describe('setEnd', function() {
         it('should set end time', function(done) {
             var b = new Booking();
-            var start = new Date('01/01/2000');
             var end = new Date();
-            var duration = end - start;
-            b.start = start;
-            b.duration = 10;
+            expect(b.end).to.not.be.ok;
             b.setEnd(end, function(err) {
                 expect(err).to.not.be.ok;
-                expect(b.duration).to.equal(duration);
+                expect(b.end).to.deep.equal(end);
                 done();
             });
         })
         
         it('should parse strings into date objects', function(done) {
             var b = new Booking();
-            var start = new Date();
-            b.start = start;
             var str = '01/01/2099';
             var end = new Date(str);
             expect(b.end).to.not.be.ok;
             b.setEnd(str, function(err) {
                 expect(err).to.not.be.ok;
-                expect(b.duration).to.deep.equal(end - start);
+                expect(b.end).to.deep.equal(end);
                 done();
             })
         })
         
         it('should error if invalid end time', function(done) {
             var b = new Booking();
-            var dur = b.duration;
+            expect(b.end).to.not.be.ok;
             [
                 null,
                 undefined,
@@ -271,7 +269,7 @@ describe('Booking schema', function() {
             ].forEach(function (input, i, arr) {
                 expect(b.setEnd(input, function(err) {
                     expect(err).to.be.ok;
-                    expect(b.duration).to.equal(dur);
+                    expect(b.end).to.not.be.ok;
                     if (i + 1 >= arr.length)
                         done();
                 }));
@@ -1022,9 +1020,9 @@ describe('bookingController', function() {
         describe('GetDurationForBooking', function() {
             it('should return the booking duration', function() {
                 var b = new Booking();
-                var duration = 123456789;
-                b.duration = duration;
-                b.start = new Date();
+                b.start = new Date('2016/01/01');
+                b.end = new Date();
+                var dur = b.end - b.start;
                 app.db.bookings = {
                     findById: function(id, cb) {
                         expect(id).to.equal(b.id);
@@ -1034,7 +1032,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetDurationForBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(duration.toString())).to.be.true;
+                expect(res.send.calledWith(dur.toString()), res.send.firstCall.args[0]).to.be.true;
             });
             
             it('should return error if schema getDuration returned error', function() {
@@ -1082,8 +1080,10 @@ describe('bookingController', function() {
         
         describe('SetDurationForBooking', function() {
             it('should set duration for booking', function() {
-                var duration = 123456789;
                 var b = new Booking();
+                b.start = new Date('2016/01/01');
+                var duration = 123456789;
+                var end = new Date(b.start.valueOf() + duration); 
                 sinon.stub(b, 'setDuration', function(t, cb) {
                     expect(t).to.equal(duration);
                     cb();
@@ -1093,7 +1093,7 @@ describe('bookingController', function() {
                         cb(null, b);
                     }
                 }
-                expect(b.duration).to.not.be.ok;
+                expect(b.end).to.not.be.ok;
                 req.body.duration = duration;
                 app.bookingController.SetDurationForBooking(req, res);
                 expect(b.setDuration.calledOnce).to.be.true;
@@ -1130,11 +1130,8 @@ describe('bookingController', function() {
         describe('GetEndOfBooking', function() {
             it('should return the booking end time', function() {
                 var b = new Booking();
-                var start = new Date('01/01/2000');
                 var end = new Date();
-                var duration = end - start;
-                b.start = start;
-                b.duration = duration;
+                b.end = end;
                 app.db.bookings = {
                     findById: function(id, cb) {
                         expect(id).to.equal(b.id);

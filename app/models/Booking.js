@@ -12,44 +12,41 @@ var bookingSchema = new Schema({
     start: {
         type: Date
     },
-    duration: {
-        type: Number
+    end: {
+        type: Date
     }
 });
 
 bookingSchema.methods.setEnd = function(time, cb) {
     if (time == null || typeof time == 'boolean' || time == 0 || time == '')
-        return cb(new Error('Cannot set start time. Provided date is empty.'));
+        return cb(new Error('Cannot set end time. Provided date is empty.'));
     if ((time = new Date(time)) == 'Invalid Date')
-        return cb(new Error('Cannot set start time. Provided date is invalid.'));
-    this.duration = time - this.start;
+        return cb(new Error('Cannot set end time. Provided date is invalid.'));
+    this.end = time;
     this.save(cb);
 }
 
 bookingSchema.methods.getEnd = function() {
-    var start = this.getStart();
-    if (start instanceof Error)
-        return start;
-    var duration = this.getDuration();
-    if (duration instanceof Error)
-        return duration;
-    return new Date(start.valueOf() + duration);
+    if (this.end != null)
+        return this.end;
+    else
+        return new Error('This booking does not have an end time set.');
 }
 
 bookingSchema.methods.setDuration = function(dur, cb) {
     dur = parseFloat(dur);
     if (typeof dur !== 'number' || dur <= 0 || isNaN(dur))
         return cb(new Error('Cannot set duration. Provided duration is invalid.'));
-    this.duration = dur;
+    this.end = new Date(this.start.valueOf() + dur);
     this.save(cb);
 }
 
 bookingSchema.methods.getDuration = function() {
-    if (this.duration == null)
-        return new Error('This booking does not have a duration set.');
+    if (this.end == null)
+        return new Error('Could not get duration. This booking does not have a start set.');
     if (this.start == null)
         return new Error('Could not get duration. This booking does not have a start set.');
-    return this.duration;
+    return this.end - this.start;
 }
 
 bookingSchema.methods.setStart = function(time, cb) {
