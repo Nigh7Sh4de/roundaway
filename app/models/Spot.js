@@ -12,12 +12,8 @@ var spotSchema = new Schema({
         },
         coordinates: [Number]
     },
-    available: {
-        schedules: []
-    },
-    booked: {
-        schedules: []
-    },
+    available: [],
+    booked: [],
     bookings: [],
     lot: String,
     number: Number
@@ -77,52 +73,25 @@ spotSchema.methods.addBookings = function(bookings, cb) {
         bookings = [bookings];
     var errs = [];
     bookings.forEach(function(booking) {
-        if (typeof booking !== 'object' || booking == null)
-            return errs.push(new Error('Cannot add booking. Booking is invalid.'));
+        if (booking == null)
+            return errs.push(new Error('Cannot add empty object as booking.'));
+        if (booking.id == null)
+            return errs.push(new Error('Booking must have an id.'));
+        if (booking.getStart() ==  null || 
+            booking.getEnd() == null)
+            return errs.push(new Error('Booking must have a start and end time set.'));
         if (this.bookings.indexOf(booking.id) >= 0)
-            return errs.push(new Error('This booking is already in this lot.'));
+            return errs.push(new Error('Booking ' + booking.id + ' already exists on this spot.'));
         this.bookings.push(booking.id);
-        var startTime = booking.start.getHours() * 3600 +
-                        booking.start.getMinutes() * 60 + 
-                        booking.start.getSeconds(); 
-        this.booked.schedules.push({
-            t_a: [ startTime ],
-            t_b: [ parseInt(startTime + booking.duration / 1000) ],
-            D: [ booking.start.getDate() ],
-            M: [ booking.start.getMonth() + 1 ],
-            Y: [ booking.start.getFullYear() ]
-        })
-    }.bind(this))
+    }.bind(this));
     this.save(function(err) {
-        if (errs.length == 0 && err == null)
-            errs = null;
-        else if (err != null)
-            errs.push(err);
-        cb(errs);
+        errs = errs.length == 0 ? null : errs;
+        cb(err || errs);
     });
 }
 
 spotSchema.methods.removeBookings = function(bookings, cb) {
-    if (!(bookings instanceof Array))
-        bookings = [bookings];
-    var errors = [];
-    var success = [];
-    bookings.forEach(function(booking) {
-        if (typeof booking !== 'object' || booking == null)
-            return errors.push(new Error('Tried to remove null booking'));
-        if (this.bookings.indexOf(booking.id) < 0)
-            return errors.push(new Error('Could not remove booking. Booking with id ' + booking.id + ' is not in this lot.'))
-        this.bookings.splice(this.bookings.indexOf(booking.id), 1);
-        success.push(booking.id);
-    }.bind(this))
-    this.save(function(err) {
-        if (err != null) 
-            return cb(err);
-        else if (errors.length > 0)
-            return cb(errors, success);
-        else
-            return cb(null, success);
-    });
+    
 }
 
 spotSchema.methods.getNumber = function() {
@@ -183,15 +152,7 @@ var setNumber = function(num) {
 }
 
 spotSchema.methods.addAvailable = function(sched, cb) {
-    try {
-        later.schedule({schedules: [sched]}).next();
-        this.available.schedules.push(sched);
-        this.save(cb);    
-    }
-    catch (e) {
-        return cb(e);
-    }
-    
+
 }
 
 var Spot = mongoose.model('Spot', spotSchema);
