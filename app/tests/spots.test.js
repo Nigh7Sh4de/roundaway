@@ -262,7 +262,7 @@ describe('Spot schema', function() {
     })
     
     describe('addBookings', function() {
-        it.only('should update booking schedule', function(done) {
+        it('should update booking schedule', function(done) {
             var s = new Spot();
             var b = new Booking();
             var now = new Date();
