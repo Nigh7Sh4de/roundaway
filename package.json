@@ -23,6 +23,22 @@
   },
   "scripts": {
     "test": "mocha app/tests",
-    "test-debug": "mocha --debug-brk app/tests"
-  }
+    "test-debug": "mocha --debug-brk app/tests",
+    "start": "node server.js"
+  },
+  "description": "Roundaway",
+  "main": "server.js",
+  "devDependencies": {
+    "mocha": "^2.4.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nigh7sh4de/roundaway.git"
+  },
+  "author": "Roundaway Inc",
+  "license": "CC-BY-NC-ND-4.0",
+  "bugs": {
+    "url": "https://github.com/nigh7sh4de/roundaway/issues"
+  },
+  "homepage": "https://github.com/nigh7sh4de/roundaway#readme"
 }

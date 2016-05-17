@@ -44,6 +44,7 @@ Roundaway
   * FACEBOOK_CLIENT_SECRET
   * GOOGLE_CLIENT_ID
   * GOOGLE_CLIENT_SECRET
+  * GOOGLE_API_KEY
 3. Ensure MongoDB server is running on localhost
 4. *(Optional)* The server will be listening on port 8080. Set up any necessary port-forwarding to accomodate this.
 
@@ -212,6 +213,27 @@ Updates the specified fields of the user's profile.
   </tr>
 </table>
 Returns the entire bookings collection.
+
+#### PUT `/api/bookings`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>Number of bookings to create (defaults to 1)</td>
+  </tr>
+  <tr>
+    <td><b>...</b></td>
+    <td>Any properties and values you would like the booking(s) to be initialized with </td>
+  </tr>
+</table>
+Create a new booking.
 
 #### GET `/api/bookings/:id`
 <table>
@@ -405,6 +427,27 @@ Creates a new `spots` document with the given data.
   </tr>
 </table>
 Returns the entire lots collection.
+
+#### PUT `/api/lots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>Number of lots to create (defaults to 1)</td>
+  </tr>
+  <tr>
+    <td><b>...</b></td>
+    <td>Any properties and values you would like the lot(s) to be initialized with </td>
+  </tr>
+</table>
+Create a new lot.
 
 #### GET `/api/lots/:id`
 <table>

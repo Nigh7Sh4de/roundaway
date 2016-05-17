@@ -596,6 +596,27 @@ describe('lotController', function() {
                 output: {someProp:'some value'}
             },
             {
+                verb: verbs.PUT,
+                route: '/api/lots',
+                method: 'CreateLot',
+                dbInjection: {
+                    lots: {
+                        create: sinon.spy(function(obj, cb) {
+                            cb(null, {someProp:'some value'});
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    lots: {
+                        create: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: { status: 'SUCCESS', result: { someProp: 'some value'} },
+                ignoreId: true
+            },
+            {
                 verb: verbs.GET,
                 route: '/api/lots/:id/location',
                 method: 'GetLocationOfLot',
@@ -705,6 +726,128 @@ describe('lotController', function() {
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('CreateLot', function() {
+            var emptyLot;
+            
+            before(function() {
+                emptyLot = new Lot().toJSON();
+                delete emptyLot._id;    
+            })
+            
+            it('should send error if req count is invalid (and not null)', function() {
+                [
+                    'abc',
+                    {},
+                    function(){expect.fail()},
+                    []
+                ].forEach(function(input) {
+                    req.body.count = input;
+                    app.lotController.CreateLot(req, res);
+                    expect(res.status.calledOnce).to.be.true;
+                    expect(res.status.calledWith(500)).to.be.true;
+                    expect(res.send.calledOnce).to.be.true;
+                    res.status.reset();
+                    res.send.reset();
+                })
+            })
+            
+            it('if couldnt create lot should send error', function() {
+                app.db.lots = {
+                    create: function(obj, cb) {
+                        cb(new Error('some error'));
+                    }
+                }
+                app.lotController.CreateLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0]).to.have.property('error');
+            })
+            
+            it('if couldnt insert entire collection should send error', function() {
+                app.db.lots = {
+                    collection: {
+                        insert: function(obj, cb) {
+                            cb(new Error('some error'));
+                        }
+                    }
+                }
+                req.body.count = 5;
+                app.lotController.CreateLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0]).to.have.property('error');
+            })
+            
+            it('should create n lots with the given props', function() {
+                var count = 5;
+                var lot = Object.assign({}, emptyLot);
+                var arr = [];
+                for (var i=0;i<count;i++)
+                    arr.push(lot);
+                lot.address = '123 fake st';
+                app.db.lots = {
+                    collection: {
+                        insert: function(obj, cb) {
+                            expect(obj).to.have.length(count);
+                            expect(obj[0]).to.have.property('address');
+                            expect(obj).to.deep.include.all.members(arr);
+                            cb(null, obj);
+                        }
+                    }
+                }
+                req.body.count = count;
+                req.body.lot = lot;
+                app.lotController.CreateLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+            })
+            
+            it('should create a lot with the given props', function() {
+                var lot = Object.assign({}, emptyLot);
+                lot.address = '123 fake st';
+                app.db.lots = {
+                    create: function(obj, cb) {
+                        expect(obj).to.have.property('address');
+                        cb(null, obj);
+                    }
+                }
+                req.body.lot = lot;
+                app.lotController.CreateLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+            })
+            
+            it('should create a blank lot given no params', function() {
+                app.db.lots = {
+                    create: function(obj, cb) {
+                        expect(obj).to.deep.equal(emptyLot);
+                        cb(null, obj);
+                    }
+                }
+                app.lotController.CreateLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+            })
+            
+            it('should create n blank lots given a count n', function() {
+                var count = 5;
+                var arr = [];
+                for (var i=0;i<count;i++)
+                    arr.push(emptyLot);
+                app.db.lots = {
+                    collection: {
+                        insert: sinon.spy(function(obj, cb) {
+                            expect(obj).to.have.length(count);
+                            expect(obj).to.deep.include.all.members(arr);
+                            cb(null, obj);
+                        })
+                    }
+                }
+                req.body.count = count;
+                app.lotController.CreateLot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
             })
         })
         

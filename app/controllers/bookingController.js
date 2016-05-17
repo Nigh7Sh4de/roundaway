@@ -1,7 +1,10 @@
+var Booking = require('./../models/Booking');
+
 var controller = function(app) {
     this.app = app;
     app.get('/api/bookings', app.checkAuth, app.checkAdmin, this.GetAllBookings.bind(this));
     app.get('/api/bookings/:id', app.checkAuth, app.checkAdmin, this.GetBooking.bind(this));
+    app.put('/api/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateBooking.bind(this));
     app.get('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, this.GetSpotForBooking.bind(this));
     app.put('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetSpotForBooking.bind(this));
     app.get('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, this.GetStartOfBooking.bind(this));
@@ -32,6 +35,30 @@ controller.prototype = {
             else
                 return res.send(doc);
         })
+    },
+    CreateBooking: function(req, res) {
+        var newBooking = new Booking(req.body.booking).toJSON();
+        delete newBooking._id;
+        if (req.body.count != null) {
+            if (typeof req.body.count !== 'number' || req.body.count <= 0)
+                return res.status(500).send(new Error('Could not create booking. Specified count was invalid.'));
+            var arr = [];
+            for (var i=0;i<req.body.count;i++)
+                arr.push(newBooking);
+            this.app.db.bookings.collection.insert(arr, function(err, result) {
+                if (err != null)
+                    return res.send({status: 'ERROR', error: err});
+                res.send({status: 'SUCCESS', result: result});
+            })
+        }
+        else {
+            this.app.db.bookings.create(newBooking, function(err, result) {
+                if (err != null)
+                    return res.send({status: 'ERROR', error: err});
+                res.send({status: 'SUCCESS', result: result});
+            })    
+        }
+        
     },
     GetSpotForBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
