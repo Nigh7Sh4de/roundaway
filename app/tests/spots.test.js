@@ -548,25 +548,59 @@ describe('Spot schema', function() {
         });
     })
     
-    describe('addAvailable', function() {
-        it('should fail if given an invalid schedule', function(done) {
+    describe.only('addAvailability', function() {
+        it('should fail if given bad input', function(done) {
             var s = new Spot();
-            var b = {};
-            expect(s.available.schedules).to.have.length(0);
-            s.addAvailable(b, function(err) {
+            [
+                123,
+                'abc',
+                function(){expect.fail()},
+                null,
+                undefined,
+                {},
+                {start: 456},
+                {start: function(){expect.fail()}, end: function(){expect.fail()}}
+            ].forEach(function(input, i, arr) {
+                s.addAvailability(input, function(err) {
+                    expect(err).to.be.ok;
+                    expect(s.available.ranges).to.have.length(0);
+                    if (i+1 >= arr.length)
+                        done();
+                })
+            })
+        })
+        
+        it('should fail if given odd array', function(done) {
+            var s = new Spot();
+            s.addAvailability([1,2,3], function(err) {
                 expect(err).to.be.ok;
-                expect(s.available.schedules).to.have.length(0);
+                expect(s.available.ranges).to.have.length(0);
                 done();
             })
         })
-        it('should add the given sched to the available laterjs', function(done) {
+        
+        it('should add the given time range array to the available array', function(done) {
             var s = new Spot();
-            var b = { h: [1] };
-            expect(s.available.schedules).to.have.length(0);
-            s.addAvailable(b, function(err) {
+            var start = new Date('2016/01/01');
+            var end = new Date();
+            expect(s.available.ranges).to.have.length(0);
+            s.addAvailability([start, end], function(err) {
                 expect(err).to.not.be.ok;
-                expect(s.available.schedules).to.have.length(1);
-                expect(s.available.schedules).to.deep.include(b);
+                expect(s.available.ranges).to.have.length(2);
+                expect(s.available.ranges).to.deep.include.all.members([start, end]);
+                done();
+            })
+        })
+        
+        it('should add the given time range object to the available array', function(done) {
+            var s = new Spot();
+            var start = new Date('2016/01/01');
+            var end = new Date();
+            expect(s.available.ranges).to.have.length(0);
+            s.addAvailability({start: start, end: end}, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.available.ranges).to.have.length(2);
+                expect(s.available.ranges).to.deep.include.all.members([start, end]);
                 done();
             })
         })
