@@ -1,3 +1,4 @@
+var ranger = require('rangerjs');
 var mongoose = require('mongoose');
 var later = require('later');
 later.date.localTime();
@@ -12,7 +13,20 @@ var spotSchema = new Schema({
         },
         coordinates: [Number]
     },
-    available: [],
+    available: {
+        type: [Date],
+        get: function(data) {
+            try {
+                return new ranger(data);
+            } catch(e) {
+                console.error(e);
+                return data;
+            }
+        },
+        set: function(data) {
+            return data.ranges || data;
+        }
+    },
     booked: [],
     bookings: [],
     lot: String,
@@ -168,8 +182,28 @@ var setNumber = function(num) {
     this.number = num;
 }
 
-spotSchema.methods.addAvailable = function(sched, cb) {
-
+spotSchema.methods.addAvailability = function(sched, cb) {
+    if (!(sched instanceof Array)) {
+        if (sched == null)
+            return cb(new Error('Cannot add null schedule to availability.'));
+        if (sched.start == null || sched.end == null)
+            return cb(new Error('Cannot add availablility. Must have start and end times for each range.'));
+        sched = [sched.start, sched.end];
+    }
+    if (sched.length % 2 !== 0)
+        return cb(new Error('Cannot add availablility. Must have start and end times for each range.'));
+    var errs = [];
+    for (var i=0; i < sched.length; i+=2) {
+        if (!(sched[i] instanceof Date) && typeof sched[i] !== 'number' ||
+            !(sched[i+1] instanceof Date) && typeof sched[i+1] !== 'number')
+                errs.push(new Error('Cannot add availability range: ' + sched[i] + ' ~ ' + sched[i+1]));
+        else
+            this.available.addRange(sched[i], sched[i+1]);
+    }
+    this.save(function(err) {
+        errs = errs.length == 0 ? null : errs;
+        cb(err || errs);
+    });
 }
 
 var Spot = mongoose.model('Spot', spotSchema);
