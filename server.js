@@ -23,10 +23,8 @@ var app = function(inject) {
     app.userController = new inject.userController(app);
     app.bookingController = new inject.bookingController(app);
     app.lotController = new inject.lotController(app);
-    app.spotController = inject.spotController;
+    app.spotController = new inject.spotController(app);
     app.authController = new inject.authController(app);
-    app.spotController.init(app);
-    // app.authController.init(app);
 
     app.get('/', app.checkAuth, app.sendIndex);
     app.get('/home', app.checkAuth, app.sendIndex);
