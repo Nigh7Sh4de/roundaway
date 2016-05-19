@@ -7,6 +7,7 @@ var funcs = [];
 var verbs = {
     GET: 'GET',
     PUT: 'PUT',
+    POST: 'POST',
     PATCH: 'PATCH',
     DELETE: 'DELETE'
 }
@@ -35,6 +36,8 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
             st = request(app).put(route)
         else if(verb == verbs.PATCH)
             st = request(app).patch(route)
+        else if(verb == verbs.POST)
+            st = request(app).post(route)
         else 
             st = request(app).delete(route)
         st.set('Content-Type', 'application/json')
@@ -74,6 +77,8 @@ function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, reqMock, dbInjec
             st = request(app).put(route)
         else if(verb == verbs.PATCH)
             st = request(app).patch(route)
+        else if(verb == verbs.POST)
+            st = request(app).post(route)
         else 
             st = request(app).delete(route)
         st.set('Content-Type', 'application/json')
@@ -122,6 +127,8 @@ function RouteTest(ctrl, verb, route, ignoreId, ignoreAdmin, ignoreAuth, method,
             st = request(app).put(route)
         else if(verb == verbs.PATCH)
             st = request(app).patch(route)
+        else if(verb == verbs.POST)
+            st = request(app).post(route)
         else 
             st = request(app).delete(route)
         st.set('Content-Type', 'application/json')
