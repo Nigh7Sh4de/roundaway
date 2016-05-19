@@ -1,10 +1,17 @@
-var init = function(app) {
-    app.get('/api/spots', app.checkAuth, app.checkAdmin, function(req, res) {
-        app.db.spots.find({}, function(err, docs) {
+var controller = function(app) {
+    this.app = app;
+    app.get('/api/spots', app.checkAuth, app.checkAdmin, this.GetAllSpots.bind(this))
+}
+
+controller.prototype = {
+    GetAllSpots: function(req, res) {
+        this.app.db.spots.find({}, function(err, docs) {
             return res.send(docs);
         });
-    });
+    }
+}
 
+var init = function(app) {
     app.get('/api/spots/near', app.checkAuth, app.checkAdmin, function(req, res)  {
         if (isNaN(req.query.long) || isNaN(req.query.lat))
             return res.send("Got invalid coordinates");
@@ -40,6 +47,4 @@ var init = function(app) {
     });
 }
 
-module.exports = {
-    init: init
-};
+module.exports = controller;

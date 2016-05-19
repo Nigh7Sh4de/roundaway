@@ -687,5 +687,33 @@ describe('Spot schema', function() {
             })
         })
     })
-    
+})
+
+describe.only('spotController', function() {
+    describe('route', function() {
+        routeTest('spotController', [
+            {
+                verb: verbs.GET,
+                route: '/api/spots',
+                method: 'GetAllSpots',
+                dbInjection: {
+                    spots: {
+                        find: sinon.spy(function(search, cb) {
+                            expect(search).to.eql({});
+                            cb(null, [{someProp:'some value'},{someProp:'some other value'}]);
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    spots: {
+                        find: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: [{someProp:'some value'},{someProp:'some other value'}],
+                ignoreId: true
+            }
+        ])
+    })
 })
