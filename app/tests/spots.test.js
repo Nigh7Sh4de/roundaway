@@ -713,6 +713,91 @@ describe.only('spotController', function() {
                 },
                 output: [{someProp:'some value'},{someProp:'some other value'}],
                 ignoreId: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/spots',
+                method: 'CreateSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true,
+                ignoreId: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/spots/:id',
+                method: 'GetSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/spots/:id/location',
+                method: 'GetLocationForSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.POST,
+                route: '/api/spots/:id/location',
+                method: 'SetLocationForSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/spots/:id/bookings',
+                method: 'GetAllBookingsForSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/spots/:id/bookings',
+                method: 'AdBookingsToSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.DELETE,
+                route: '/api/spots/:id/bookings',
+                method: 'RemoveBookingsFromSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/spots/:id/available',
+                method: 'GetAllAvailabilityForSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/spots/:id/available',
+                method: 'AdAvailabilityToSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.DELETE,
+                route: '/api/spots/:id/available',
+                method: 'RemoveAvailabilityFromSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/spots/:id/booked',
+                method: 'GetAllBookedTimeForSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/spots/:id/schedule',
+                method: 'GetEntireScheduleForSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true
             }
         ])
     })
