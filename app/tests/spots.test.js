@@ -11,7 +11,7 @@ var Booking = require('./../models/Booking');
 
 describe('Spot schema', function() {
     before(function() {
-        sinon.stub(Spot.prototype, 'save', function(cb) { cb(null, this) });
+        sinon.stub(Spot.prototype, 'save', function(cb) { cb() });
     })
     
     after(function() {
@@ -548,7 +548,29 @@ describe('Spot schema', function() {
         });
     })
     
-    describe.only('addAvailability', function() {
+    describe('addAvailability', function() {
+        describe.only('should add the given recuring range to the availability', function() {
+            it('given an integer interval', function(done) {
+                var s = new Spot();
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var count = 3;
+                var oneday = 1000*60*60*24;
+                s.addAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    count: 3    
+                }, function(err) {
+                    expect(err).to.not.be.ok;
+                    expect(s.available.ranges).to.have.length(count * 2);
+                    for (var i=0; i < count*2; i += oneday)
+                        expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                    done();
+                })
+            })
+        })
+        
         it('should fail if given bad input', function(done) {
             var s = new Spot();
             [
@@ -567,28 +589,6 @@ describe('Spot schema', function() {
                     if (i+1 >= arr.length)
                         done();
                 })
-            })
-        })
-        
-        it('should fail if given odd array', function(done) {
-            var s = new Spot();
-            s.addAvailability([1,2,3], function(err) {
-                expect(err).to.be.ok;
-                expect(s.available.ranges).to.have.length(0);
-                done();
-            })
-        })
-        
-        it('should add the given time range array to the available array', function(done) {
-            var s = new Spot();
-            var start = new Date('2016/01/01');
-            var end = new Date();
-            expect(s.available.ranges).to.have.length(0);
-            s.addAvailability([start, end], function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.available.ranges).to.have.length(2);
-                expect(s.available.ranges).to.deep.include.all.members([start, end]);
-                done();
             })
         })
         
