@@ -188,17 +188,16 @@ spotSchema.methods.addAvailability = function(sched, cb) {
             return cb(new Error('Cannot add null schedule to availability.'));
         if (sched.start == null || sched.end == null)
             return cb(new Error('Cannot add availablility. Must have start and end times for each range.'));
-        sched = [sched.start, sched.end];
+        sched = [sched];
     }
-    if (sched.length % 2 !== 0)
-        return cb(new Error('Cannot add availablility. Must have start and end times for each range.'));
     var errs = [];
-    for (var i=0; i < sched.length; i+=2) {
-        if (!(sched[i] instanceof Date) && typeof sched[i] !== 'number' ||
-            !(sched[i+1] instanceof Date) && typeof sched[i+1] !== 'number')
-                errs.push(new Error('Cannot add availability range: ' + sched[i] + ' ~ ' + sched[i+1]));
+    for (var i=0; i < sched.length; i++) {
+        if (!(sched[i].start instanceof Date) || !(sched[i].end instanceof Date))
+            errs.push(new Error('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end));
+        else if (sched[i].interval && (sched[i].count || sched[i].finish))
+            this.available.addRecuringRange(sched[i].start, sched[i].end, sched[i].interval, sched[i].count, sched[i].finish);
         else
-            this.available.addRange(sched[i], sched[i+1]);
+            this.available.addRange(sched[i].start, sched[i].end);
     }
     this.save(function(err) {
         errs = errs.length == 0 ? null : errs;
