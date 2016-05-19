@@ -27,8 +27,21 @@ var spotSchema = new Schema({
             return data.ranges || data;
         }
     },
-    booked: [],
-    bookings: [],
+    booked: {
+        type: [Date],
+        get: function(data) {
+            try {
+                return new ranger(data);
+            } catch(e) {
+                console.error(e);
+                return data;
+            }
+        },
+        set: function(data) {
+            return data.ranges || data;
+        }
+    },
+    bookings: [String],
     lot: String,
     number: Number
 });
@@ -96,7 +109,11 @@ spotSchema.methods.addBookings = function(bookings, cb) {
             return errs.push(new Error('Booking must have a start and end time set.'));
         if (this.bookings.indexOf(booking.id) >= 0)
             return errs.push(new Error('Booking ' + booking.id + ' already exists on this spot.'));
+        if (!this.available.checkRange(booking.start, booking.end))
+            return errs.push(new Error('Cannot add booking. The specified time range is not available for this spot: ' + booking.start + ' ~ ' + booking.end));
         this.bookings.push(booking.id);
+        this.booked.addRange(booking.start, booking.end);
+        this.available.removeRange(booking.start, booking.end);
     }.bind(this));
     this.save(function(err) {
         errs = errs.length == 0 ? null : errs;
@@ -118,6 +135,8 @@ spotSchema.methods.removeBookings = function(bookings, cb) {
         if (index < 0)
             return errs.push(new Error('Cannot remove booking. This booking is not assoaciated with this spot'));
         removed = removed.concat(this.bookings.splice(index, 1));
+        this.booked.removeRange(booking.start, booking.end);
+        this.available.addRange(booking.start, booking.end);
     }.bind(this));
     this.save(function (err) {
         errs = errs.length == 0 ? null : errs;

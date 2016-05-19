@@ -261,13 +261,51 @@ describe('Spot schema', function() {
         })
     })
     
-    describe.skip('addBookings', function() {
-        it('should fail if not available', function(done) {
-            expect.fail('Not implemented.');
+    describe('addBookings', function() {
+        it('should fail if range is already booked', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            b.start = new Date('2016/01/01');
+            b.end = new Date('2016/01/04');
+            var busy = new Date('2016/01/02');
+            s.booked.addRange(b.start, busy);
+            s.addBookings(b, function(err) {
+                expect(err).to.be.ok;
+                expect(s.booked.checkRange(b.start, busy)).to.be.true;
+                expect(s.booked.checkRange(busy, b.end)).to.be.false;
+                done();
+            })
+        })
+        
+        it('should remove availability', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            var oneday = 1000*60*60*24;
+            b.start = new Date('2016/01/02');
+            b.end = new Date('2016/01/04');
+            var pre = new Date(b.start.valueOf() - oneday),
+                post = new Date(b.end.valueOf() + oneday);
+            s.available.addRange(pre, post);
+            s.addBookings(b, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.available.checkRange(pre, b.start)).to.be.true;
+                expect(s.available.checkRange(pre, post)).to.be.false;
+                expect(s.available.checkRange(b.end, post)).to.be.true;
+                done();
+            })
         })
         
         it('should update booking schedule', function(done) {
-            expect.fail('Not implemented.');
+            var s = new Spot();
+            var b = new Booking();
+            b.start = new Date('2016/01/01');
+            b.end = new Date();
+            s.available.addRange(b.start, b.end);
+            s.addBookings(b, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.booked.checkRange(b.start, b.end)).to.be.true;
+                done();
+            })
         })
         
         it('should fail to add a booking that is already in the spot', function(done) {
@@ -299,6 +337,7 @@ describe('Spot schema', function() {
             bs.forEach(function(b) {
                 b.start = b.end = new Date();
             })
+            s.available.addRange(new Date(0), new Date());
             expect(s.bookings).to.have.length(0);
             s.addBookings(bs, function(err) {
                 expect(err).to.not.be.ok;
@@ -315,6 +354,7 @@ describe('Spot schema', function() {
             var s = new Spot();
             var b = new Booking();
             b.start = b.end = new Date();
+            s.available.addRange(new Date(0), new Date());
             expect(s.bookings).to.have.length(0);
             s.addBookings(b, function(err) {
                 expect(err).to.not.be.ok;
@@ -345,15 +385,35 @@ describe('Spot schema', function() {
         })
     })
     
-    describe.skip('removeBookings', function() {
+    describe('removeBookings', function() {
         it('should clear booked time for spot', function(done) {
-            expect.fail();
             var s = new Spot();
             var b = new Booking();
             b.start = new Date('2016/01/01');
             b.end = new Date();
+            s.booked.addRange(b.start, b.end);
             s.bookings.push(b.id);
-            s.book(b.start, b.end);
+            s.removeBookings(b, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.bookings).to.not.include(b.id);
+                expect(s.booked.checkRange(b.start, b.end)).to.be.false;
+                done();
+            })
+        })
+        
+        it('should return availability for spot', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            b.start = new Date('2016/01/01');
+            b.end = new Date();
+            s.booked.addRange(b.start, b.end);
+            s.bookings.push(b.id);
+            s.removeBookings(b, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.bookings).to.not.include(b.id);
+                expect(s.available.checkRange(b.start, b.end)).to.be.true;
+                done();
+            })
         })
         
         it('should error if trying to remove a booking that is not in the spot', function(done) {
@@ -549,8 +609,8 @@ describe('Spot schema', function() {
     })
     
     describe('addAvailability', function() {
-        describe.only('should add the given recuring range to the availability', function() {
-            it('given an integer interval', function(done) {
+        describe('should add the given recuring range to the availability', function() {
+            it('given an rep count', function(done) {
                 var s = new Spot();
                 var start = new Date('2016/01/01');
                 var end = new Date('2016/01/02');
@@ -560,7 +620,7 @@ describe('Spot schema', function() {
                     start: start,
                     end: end,
                     interval: 2 * oneday,
-                    count: 3    
+                    count: count
                 }, function(err) {
                     expect(err).to.not.be.ok;
                     expect(s.available.ranges).to.have.length(count * 2);
@@ -569,6 +629,28 @@ describe('Spot schema', function() {
                     done();
                 })
             })
+            
+            it('given a limit', function(done) {
+                var s = new Spot();
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var finish = new Date('2016/01/07');
+                var oneday = 1000*60*60*24;
+                var count = 3;
+                s.addAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    finish: finish    
+                }, function(err) {
+                    expect(err).to.not.be.ok;
+                    expect(s.available.ranges).to.have.length(count * 2);
+                    for (var i=0; i < count*2; i += oneday)
+                        expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                    done();
+                })
+            })
+            
         })
         
         it('should fail if given bad input', function(done) {
