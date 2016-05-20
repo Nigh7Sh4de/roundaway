@@ -774,7 +774,7 @@ describe('spotController', function() {
             {
                 verb: verbs.PUT,
                 route: '/api/spots/:id/available',
-                method: 'AdAvailabilityToSpot',
+                method: 'AddAvailabilityToSpot',
                 ignoreHappyPath: true,
                 ignoreSadPath: true
             },
@@ -1468,6 +1468,133 @@ describe('spotController', function() {
                     }
                 }
                 app.spotController.RemoveBookingsFromSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetAllAvailabilityForSpot', function() {
+            it('should return the available ranges for the spot', function() {
+                var s = new Spot();
+                s.available.addRange(new Date('2016/01/01'), new Date());
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                req.params.id = s.id;
+                app.spotController.GetAllAvailabilityForSpot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(s.available.ranges)).to.be.true;
+            })
+            
+            it('should error if db encountered error', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.spotController.GetAllAvailabilityForSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if spot found is null', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.spotController.GetAllAvailabilityForSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetAllBookedTimeForSpot', function() {
+            it('should return the available ranges for the spot', function() {
+                var s = new Spot();
+                s.booked.addRange(new Date('2016/01/01'), new Date());
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                req.params.id = s.id;
+                app.spotController.GetAllBookedTimeForSpot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(s.booked.ranges)).to.be.true;
+            })
+            
+            it('should error if db encountered error', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.spotController.GetAllBookedTimeForSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if spot found is null', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.spotController.GetAllBookedTimeForSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('GetEntireScheduleForSpot', function() {
+            it('should return the available ranges for the spot', function() {
+                var s = new Spot();
+                s.booked.addRange(new Date('2016/01/01'), new Date());
+                s.available.addRange(new Date('2016/01/01'), new Date());
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                req.params.id = s.id;
+                app.spotController.GetEntireScheduleForSpot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith({
+                        booked: s.booked.ranges,
+                        available: s.available.ranges
+                    })).to.be.true;
+            })
+            
+            it('should error if db encountered error', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.spotController.GetEntireScheduleForSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if spot found is null', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.spotController.GetEntireScheduleForSpot(req, res);
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;

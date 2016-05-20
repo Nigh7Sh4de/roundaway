@@ -11,7 +11,7 @@ var controller = function(app) {
     app.put('/api/spots/:id/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
     app.delete('/api/spots/:id/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.RemoveBookingsFromSpot.bind(this));
     app.get('/api/spots/:id/available', app.checkAuth, app.checkAdmin, this.GetAllAvailabilityForSpot.bind(this));
-    app.put('/api/spots/:id/available', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AdAvailabilityToSpot.bind(this));
+    app.put('/api/spots/:id/available', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddAvailabilityToSpot.bind(this));
     app.delete('/api/spots/:id/available', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.RemoveAvailabilityFromSpot.bind(this));
     app.get('/api/spots/:id/booked', app.checkAuth, app.checkAdmin, this.GetAllBookedTimeForSpot.bind(this));
     app.get('/api/spots/:id/schedule', app.checkAuth, app.checkAdmin, this.GetEntireScheduleForSpot.bind(this));
@@ -214,19 +214,49 @@ controller.prototype = {
         });
     },
     GetAllAvailabilityForSpot: function(req, res) {
-        
+        var app = this.app;
+        app.db.spots.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Spot not found.');
+            else {
+                return res.send(doc.available.ranges);
+            }
+        });
     },
-    AdAvailabilityToSpot: function(req, res) {
+    AddAvailabilityToSpot: function(req, res) {
         
     },
     RemoveAvailabilityFromSpot: function(req, res) {
         
     },
     GetAllBookedTimeForSpot: function(req, res) {
-        
+        var app = this.app;
+        app.db.spots.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Spot not found.');
+            else {
+                return res.send(doc.booked.ranges);
+            }
+        });
     },
     GetEntireScheduleForSpot: function(req, res) {
-        
+        var app = this.app;
+        app.db.spots.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Spot not found.');
+            else {
+                return res.send({
+                        available: doc.available.ranges,
+                        booked: doc.booked.ranges
+                    });
+            }
+        });
     }
 }
 
