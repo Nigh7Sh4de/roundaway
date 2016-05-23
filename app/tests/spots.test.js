@@ -612,6 +612,7 @@ describe('Spot schema', function() {
         describe('should add the given recuring range to the availability', function() {
             it('given an rep count', function(done) {
                 var s = new Spot();
+                s.save = function(cb){cb(null)}
                 var start = new Date('2016/01/01');
                 var end = new Date('2016/01/02');
                 var count = 3;
@@ -624,7 +625,7 @@ describe('Spot schema', function() {
                 }, function(err) {
                     expect(err).to.not.be.ok;
                     expect(s.available.ranges).to.have.length(count * 2);
-                    for (var i=0; i < count*2; i += oneday)
+                    for (var i=0; i < count*2; i += 2)
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
                     done();
                 })
@@ -632,6 +633,7 @@ describe('Spot schema', function() {
             
             it('given a limit', function(done) {
                 var s = new Spot();
+                s.save = function(cb){cb(null)}
                 var start = new Date('2016/01/01');
                 var end = new Date('2016/01/02');
                 var finish = new Date('2016/01/07');
@@ -645,7 +647,7 @@ describe('Spot schema', function() {
                 }, function(err) {
                     expect(err).to.not.be.ok;
                     expect(s.available.ranges).to.have.length(count * 2);
-                    for (var i=0; i < count*2; i += oneday)
+                    for (var i=0; i < count*2; i += 2)
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
                     done();
                 })
@@ -682,6 +684,94 @@ describe('Spot schema', function() {
             s.addAvailability({start: start, end: end}, function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.available.ranges).to.have.length(2);
+                expect(s.available.ranges).to.deep.include.all.members([start, end]);
+                done();
+            })
+        })
+    })
+    
+    describe('removeAvailability', function() {
+        describe('should remove the given recuring range from the availability', function() {
+            it('given an rep count', function(done) {
+                var s = new Spot();
+                s.save = function(cb){cb(null)}
+                s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var count = 3;
+                var oneday = 1000*60*60*24;
+                s.removeAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    count: count
+                }, function(err) {
+                    expect(err).to.not.be.ok;
+                    expect(s.available.ranges).to.have.length((count + 1) * 2);
+                    for (var i=1; i < count*2; i += 2) {
+                        expect(s.available.check(new Date('2016/01/' + (i)))).to.be.false;
+                        expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                    }
+                    done();
+                })
+            })
+            
+            it('given a limit', function(done) {
+                var s = new Spot();
+                s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var finish = new Date('2016/01/07');
+                var oneday = 1000*60*60*24;
+                var count = 3;
+                s.removeAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    finish: finish    
+                }, function(err) {
+                    expect(err).to.not.be.ok;
+                    expect(s.available.ranges).to.have.length((count + 1) * 2);
+                    for (var i=1; i < count*2; i += 2) {
+                        expect(s.available.check(new Date('2016/01/' + (i)))).to.be.false;
+                        expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                    }
+                    done();
+                })
+            })
+            
+        })
+        
+        it('should fail if given bad input', function(done) {
+            var s = new Spot();
+            [
+                123,
+                'abc',
+                function(){expect.fail()},
+                null,
+                undefined,
+                {},
+                {start: 456},
+                {start: function(){expect.fail()}, end: function(){expect.fail()}}
+            ].forEach(function(input, i, arr) {
+                s.removeAvailability(input, function(err) {
+                    expect(err).to.be.ok;
+                    expect(s.available.ranges).to.have.length(0);
+                    if (i+1 >= arr.length)
+                        done();
+                })
+            })
+        })
+        
+        it('should remove the given time range object from the available array', function(done) {
+            var s = new Spot();
+            s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+            var start = new Date('2016/01/01');
+            var end = new Date();
+            expect(s.available.ranges).to.have.length(2);
+            s.removeAvailability({start: start, end: end}, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.available.ranges).to.have.length(4);
                 expect(s.available.ranges).to.deep.include.all.members([start, end]);
                 done();
             })
@@ -802,7 +892,7 @@ describe('spotController', function() {
         ])
     })
     
-    describe.only('method', function() {
+    describe('method', function() {
         var app,
             req = {},
             res = {};
@@ -1509,6 +1599,182 @@ describe('spotController', function() {
                     }
                 }
                 app.spotController.GetAllAvailabilityForSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('AddAvailabilityToSpot', function() {
+            it('should add the entire request body as a schedule if no shedules are specified', function() {
+                var s = new Spot();
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                var schedule = {someProp: 'somevalue'};
+                sinon.stub(s, 'addAvailability', function(sched, cb) {
+                    expect(sched).to.equal(schedule);
+                    cb(null);
+                })
+                req.params.id = s.id;
+                req.body = schedule;
+                app.spotController.AddAvailabilityToSpot(req, res);
+                expect(res.sendStatus.calledOnce).to.be.true;
+                expect(res.sendStatus.calledWith(200)).to.be.true;
+            })
+            it('should add the given schedules to the spot\'s availability', function() {
+                var s = new Spot();
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                var schedules = [{someProp: 'somevalue'}];
+                sinon.stub(s, 'addAvailability', function(sched, cb) {
+                    expect(sched).to.equal(schedules);
+                    cb(null);
+                })
+                req.params.id = s.id;
+                req.body.schedules = schedules;
+                app.spotController.AddAvailabilityToSpot(req, res);
+                expect(res.sendStatus.calledOnce).to.be.true;
+                expect(res.sendStatus.calledWith(200)).to.be.true;
+            })
+            
+            it('should fail if addAvailability failed', function() {
+                var s = new Spot();
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                var schedules = [{someProp: 'somevalue'}];
+                var error = new Error('some error');
+                sinon.stub(s, 'addAvailability', function(sched, cb) {
+                    expect(sched).to.equal(schedules);
+                    cb(error);
+                })
+                req.params.id = s.id;
+                req.body.schedules = schedules;
+                app.spotController.AddAvailabilityToSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].error).to.equal(error);
+            })
+            
+            it('should error if db encountered error', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.spotController.AddAvailabilityToSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if spot found is null', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.spotController.AddAvailabilityToSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('RemoveAvailabilityFromSpot', function() {
+            it('should remove the entire request body as a schedule if no shedules are specified', function() {
+                var s = new Spot();
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                var schedule = {someProp: 'somevalue'};
+                sinon.stub(s, 'removeAvailability', function(sched, cb) {
+                    expect(sched).to.equal(schedule);
+                    cb(null);
+                })
+                req.params.id = s.id;
+                req.body = schedule;
+                app.spotController.RemoveAvailabilityFromSpot(req, res);
+                expect(res.sendStatus.calledOnce).to.be.true;
+                expect(res.sendStatus.calledWith(200)).to.be.true;
+            })
+            it('should remove the given schedules to the spot\'s availability', function() {
+                var s = new Spot();
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                var schedules = [{someProp: 'somevalue'}];
+                sinon.stub(s, 'removeAvailability', function(sched, cb) {
+                    expect(sched).to.equal(schedules);
+                    cb(null);
+                })
+                req.params.id = s.id;
+                req.body.schedules = schedules;
+                app.spotController.RemoveAvailabilityFromSpot(req, res);
+                expect(res.sendStatus.calledOnce).to.be.true;
+                expect(res.sendStatus.calledWith(200)).to.be.true;
+            })
+            
+            it('should fail if removeAvailability failed', function() {
+                var s = new Spot();
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                var schedules = [{someProp: 'somevalue'}];
+                var error = new Error('some error');
+                sinon.stub(s, 'removeAvailability', function(sched, cb) {
+                    expect(sched).to.equal(schedules);
+                    cb(error);
+                })
+                req.params.id = s.id;
+                req.body.schedules = schedules;
+                app.spotController.RemoveAvailabilityFromSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.firstCall.args[0].error).to.equal(error);
+            })
+            
+            it('should error if db encountered error', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.spotController.RemoveAvailabilityFromSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if spot found is null', function() {
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.spotController.RemoveAvailabilityFromSpot(req, res);
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;
