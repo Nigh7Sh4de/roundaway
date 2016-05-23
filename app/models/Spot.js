@@ -224,6 +224,29 @@ spotSchema.methods.addAvailability = function(sched, cb) {
     });
 }
 
+spotSchema.methods.removeAvailability = function(sched, cb) {
+    if (!(sched instanceof Array)) {
+        if (sched == null)
+            return cb(new Error('Cannot remove null schedule from availability.'));
+        if (sched.start == null || sched.end == null)
+            return cb(new Error('Cannot remove availablility. Must have start and end times for each range to remove.'));
+        sched = [sched];
+    }
+    var errs = [];
+    for (var i=0; i < sched.length; i++) {
+        if (!(sched[i].start instanceof Date) || !(sched[i].end instanceof Date))
+            errs.push(new Error('Cannot remove availability range: ' + sched[i].start + ' ~ ' + sched[i].end));
+        else if (sched[i].interval && (sched[i].count || sched[i].finish))
+            this.available.removeRecuringRange(sched[i].start, sched[i].end, sched[i].interval, sched[i].count, sched[i].finish);
+        else
+            this.available.removeRange(sched[i].start, sched[i].end);
+    }
+    this.save(function(err) {
+        errs = errs.length == 0 ? null : errs;
+        cb(err || errs);
+    });
+}
+
 var Spot = mongoose.model('Spot', spotSchema);
 
 module.exports = Spot;

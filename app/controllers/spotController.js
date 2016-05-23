@@ -226,10 +226,38 @@ controller.prototype = {
         });
     },
     AddAvailabilityToSpot: function(req, res) {
-        
+        var app = this.app;
+        app.db.spots.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Spot not found.');
+            else {
+                doc.addAvailability(req.body.schedules || req.body, function(err) {
+                    if (err != null)
+                        return res.status(500).send({status: 'ERROR', error: err});
+                    else
+                        return res.sendStatus(200);
+                })
+            }
+        });
     },
     RemoveAvailabilityFromSpot: function(req, res) {
-        
+        var app = this.app;
+        app.db.spots.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Spot not found.');
+            else {
+                doc.removeAvailability(req.body.schedules || req.body, function(err) {
+                    if (err != null)
+                        return res.status(500).send({status: 'ERROR', error: err});
+                    else
+                        return res.sendStatus(200);
+                })
+            }
+        });
     },
     GetAllBookedTimeForSpot: function(req, res) {
         var app = this.app;
