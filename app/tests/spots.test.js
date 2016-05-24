@@ -860,8 +860,8 @@ describe('spotController', function() {
                 ignoreSadPath: true
             },
             {
-                verb: verbs.DELETE,
-                route: '/api/spots/:id/bookings',
+                verb: verbs.PUT,
+                route: '/api/spots/:id/bookings/remove',
                 method: 'RemoveBookingsFromSpot',
                 ignoreHappyPath: true,
                 ignoreSadPath: true
