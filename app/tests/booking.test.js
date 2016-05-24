@@ -568,6 +568,61 @@ describe('bookingController', function() {
                         })
                     }
                 }
+            },
+            {
+                verb: verbs.GET,
+                route: '/api/bookings/:id/time',
+                method: 'GetTimeOfBooking',
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                getEnd: function() { return new Date('01/01/2010'); },
+                                getStart: function() { return new Date('01/01/2000'); }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: function(id,cb) {
+                            cb(new Error());
+                        }
+                    }
+                },
+                output: { start: new Date('01/01/2000').toJSON(), end: new Date('01/01/2010').toJSON() }
+            },
+            {
+                verb: verbs.PUT,
+                route: '/api/bookings/:id/time',
+                method: 'SetTimeOfBooking',
+                body: {
+                    start: new Date('01/01/2000'),
+                    end: new Date('01/01/2010')
+                },
+                dbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(null, {
+                                setEnd: function(date, cb) { 
+                                    expect(date).to.deep.equal(new Date('01/01/2010').toJSON());
+                                    cb();
+                                },
+                                setStart: function(date, cb) {
+                                    expect(date).to.deep.equal(new Date('01/01/2000').toJSON());
+                                    cb();
+                                }
+                            });
+                        })
+                    }
+                },
+                sadDbInjection: {
+                    bookings: {
+                        findById: sinon.spy(function(search, cb) {
+                            cb(new Error());
+                        })
+                    }
+                }
             }
         ])
     })
@@ -1220,6 +1275,104 @@ describe('bookingController', function() {
                     }
                 }
                 app.bookingController.SetEndOfBooking(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })            
+        })
+        
+        describe('GetTimeOfBooking', function() {
+            it('should return the booking start and end time', function() {
+                var b = new Booking();
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/01');
+                b.end = end;
+                b.start = start;
+                app.db.bookings = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(b.id);
+                        cb(null, b);
+                    }
+                }
+                req.params.id = b.id;
+                app.bookingController.GetTimeOfBooking(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith({start: start, end: end})).to.be.true;
+            });
+            
+            it('should error if db encountered error', function() {
+                app.db.bookings = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.bookingController.GetTimeOfBooking(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if booking found is null', function() {
+                app.db.bookings = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.bookingController.GetTimeOfBooking(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+        })
+        
+        describe('SetTimeOfBooking', function() {
+            it('should set start and end time for booking', function() {
+                var start = new Date('2000/01/01');
+                var end = new Date('2016/01/01');
+                var b = new Booking();
+                sinon.stub(b, 'setStart', function(t, cb) {
+                    expect(t).to.equal(start);
+                    cb();
+                });
+                sinon.stub(b, 'setEnd', function(t, cb) {
+                    expect(t).to.equal(end);
+                    cb();
+                });
+                app.db.bookings = {
+                    findById: function(id, cb) {
+                        cb(null, b);
+                    }
+                }
+                req.body.start = start;
+                req.body.end = end;
+                app.bookingController.SetTimeOfBooking(req, res);
+                expect(b.setStart.calledOnce).to.be.true;
+                expect(b.setStart.calledWith(start)).to.be.true;
+                expect(b.setEnd.calledOnce).to.be.true;
+                expect(b.setEnd.calledWith(end)).to.be.true;
+                expect(res.sendStatus.calledOnce)
+                expect(res.sendStatus.calledWith(200)).to.be.true;
+            })
+                        
+            it('should error if db encountered error', function() {
+                app.db.bookings = {
+                    findById: function(id, cb) {
+                        cb(new Error(), null);
+                    }
+                }
+                app.bookingController.SetTimeOfBooking(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should return error if booking found is null', function() {
+                app.db.bookings = {
+                    findById: function(id, cb) {
+                        cb(null, null);
+                    }
+                }
+                app.bookingController.SetTimeOfBooking(req, res);
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;
