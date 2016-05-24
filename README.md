@@ -720,6 +720,43 @@ Returns the ranges during which this spot is available in an array where each pa
 </table>
 Adds availability based on the supplied information. Either `count` (of reptitions) or `finish` (final upper limit) must be set if using a recuring range.
 
+#### PUT `/api/spots/:id/available/remove`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to remove</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to remove</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td><i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td><i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td><i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with `start`, `end`, and optionally `interval` and either `count` or `finish`. If using an array, the rest of the body of the request will be ignored.
+  </tr>
+</table>
+Removes availability based on the supplied information. Either `count` (of reptitions) or `finish` (final upper limit) must be set if using a recuring range.
+
 #### GET `/api/spots/:id/booked`
 <table>
   <tr>
