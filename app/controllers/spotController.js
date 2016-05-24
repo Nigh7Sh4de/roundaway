@@ -75,6 +75,8 @@ controller.prototype = {
     },
     SetLocationForSpot: function(req, res) {
         var coords = req.body.coordinates;
+        if (!coords)
+            return res.status(500).send('Cannot set location. Must supply coordinates.');
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, spot) {
             if (err != null) {
@@ -144,12 +146,13 @@ controller.prototype = {
         if (!(req.body.bookings instanceof Array))
             req.body.bookings = [req.body.bookings];
         var firstType = typeof req.body.bookings[0];
-        req.body.bookings.forEach(function(booking) {
+        for (var i=0; i < req.body.bookings.length; i++) {
+            var booking = req.body.bookings[i];
             if (typeof booking !== firstType || (typeof booking !== 'string' && typeof booking !== 'object'))
                 return res.status(500).send('Cannot add bookings. All bookings must be either id\'s or objects.');
             else if (typeof booking === 'object' && (!booking.id || !booking.start || !booking.end))
                 return res.status(500).send('Cannot add bookings. Booking objects must have properties: id, start, end');
-        });
+        };
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
                 return res.status(500).send(err.message);

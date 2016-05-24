@@ -609,6 +609,18 @@ describe('Spot schema', function() {
     })
     
     describe('addAvailability', function() {
+        it('should be able to parse string', function(done) {
+            var start = '2010/01/01';
+            var end = '2016/01/01';
+            var s = new Spot();
+            s.addAvailability({start: start, end: end}, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.available.check(new Date(start))).to.be.true;
+                expect(s.available.check(new Date(end))).to.be.false;
+                done();
+            })
+        })
+        
         describe('should add the given recuring range to the availability', function() {
             it('given an rep count', function(done) {
                 var s = new Spot();
@@ -1227,6 +1239,13 @@ describe('spotController', function() {
                     done();
                 }
                 app.spotController.SetLocationForSpot(req, res);
+            })
+            
+            it('should fail if no coordinates object in body', function() {
+                app.spotController.SetLocationForSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
             })
         })
         

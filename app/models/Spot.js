@@ -101,16 +101,16 @@ spotSchema.methods.addBookings = function(bookings, cb) {
     var errs = [];
     bookings.forEach(function(booking) {
         if (booking == null)
-            return errs.push(new Error('Cannot add empty object as booking.'));
+            return errs.push('Cannot add empty object as booking.');
         if (booking.id == null)
-            return errs.push(new Error('Booking must have an id.'));
+            return errs.push('Booking must have an id.');
         if (booking.getStart() ==  null || 
             booking.getEnd() == null)
-            return errs.push(new Error('Booking must have a start and end time set.'));
+            return errs.push('Booking must have a start and end time set.');
         if (this.bookings.indexOf(booking.id) >= 0)
-            return errs.push(new Error('Booking ' + booking.id + ' already exists on this spot.'));
+            return errs.push('Booking ' + booking.id + ' already exists on this spot.');
         if (!this.available.checkRange(booking.start, booking.end))
-            return errs.push(new Error('Cannot add booking. The specified time range is not available for this spot: ' + booking.start + ' ~ ' + booking.end));
+            return errs.push('Cannot add booking. The specified time range is not available for this spot: ' + booking.start + ' ~ ' + booking.end);
         this.bookings.push(booking.id);
         this.booked.addRange(booking.start, booking.end);
         this.available.removeRange(booking.start, booking.end);
@@ -211,7 +211,13 @@ spotSchema.methods.addAvailability = function(sched, cb) {
     }
     var errs = [];
     for (var i=0; i < sched.length; i++) {
-        if (!(sched[i].start instanceof Date) || !(sched[i].end instanceof Date))
+        var start = sched[i].start, 
+            end = sched[i].end;
+        if (!(start instanceof Date))
+            start = new Date(sched[i].start);
+        if (!(end instanceof Date))
+            end = new Date(sched[i].end);
+        if (isNaN(start.valueOf()) || isNaN(end.valueOf()))
             errs.push(new Error('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end));
         else if (sched[i].interval && (sched[i].count || sched[i].finish))
             this.available.addRecuringRange(sched[i].start, sched[i].end, sched[i].interval, sched[i].count, sched[i].finish);
