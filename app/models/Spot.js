@@ -240,12 +240,18 @@ spotSchema.methods.removeAvailability = function(sched, cb) {
     }
     var errs = [];
     for (var i=0; i < sched.length; i++) {
-        if (!(sched[i].start instanceof Date) || !(sched[i].end instanceof Date))
-            errs.push(new Error('Cannot remove availability range: ' + sched[i].start + ' ~ ' + sched[i].end));
+        var start = sched[i].start, 
+            end = sched[i].end;
+        if (!(start instanceof Date))
+            start = new Date(sched[i].start);
+        if (!(end instanceof Date))
+            end = new Date(sched[i].end);
+        if (isNaN(start.valueOf()) || isNaN(end.valueOf()))
+            errs.push(new Error('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end));
         else if (sched[i].interval && (sched[i].count || sched[i].finish))
-            this.available.removeRecuringRange(sched[i].start, sched[i].end, sched[i].interval, sched[i].count, sched[i].finish);
+            this.available.removeRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
         else
-            this.available.removeRange(sched[i].start, sched[i].end);
+            this.available.removeRange(start, end);
     }
     this.save(function(err) {
         errs = errs.length == 0 ? null : errs;

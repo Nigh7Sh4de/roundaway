@@ -703,6 +703,19 @@ describe('Spot schema', function() {
     })
     
     describe('removeAvailability', function() {
+        it('should be able to parse string', function(done) {
+            var start = '2010/01/01';
+            var end = '2016/01/01';
+            var s = new Spot();
+            s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+            s.removeAvailability({start: start, end: end}, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.available.check(new Date(start))).to.be.false;
+                expect(s.available.check(new Date(end))).to.be.true;
+                done();
+            })
+        })
+        
         describe('should remove the given recuring range from the availability', function() {
             it('given an rep count', function(done) {
                 var s = new Spot();
