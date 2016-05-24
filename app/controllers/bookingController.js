@@ -13,6 +13,8 @@ var controller = function(app) {
     app.put('/api/bookings/:id/duration', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetDurationForBooking.bind(this));
     app.get('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, this.GetEndOfBooking.bind(this));
     app.put('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetEndOfBooking.bind(this));
+    app.get('/api/bookings/:id/time', app.checkAuth, app.checkAdmin, this.GetTimeOfBooking.bind(this));
+    app.put('/api/bookings/:id/time', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetTimeOfBooking.bind(this));
 }
 
 controller.prototype = {
@@ -183,6 +185,53 @@ controller.prototype = {
                     return res.status(500).send(err.message);
                 res.sendStatus(200);
             })
+        });
+    },
+    GetTimeOfBooking: function(req, res) {
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            else {
+                res.send({
+                    start: doc.getStart() || 'This booking does not have a start time',
+                    end: doc.getEnd() || 'This booking does not have a start time',
+                })
+            }
+        });
+    },
+    SetTimeOfBooking: function(req, res) {
+        if (!req.body.start && !req.body.end)
+            return res.status(500).send('Cannot set time of booking. Must specify start and/or end times.');
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err != null)
+                return res.status(500).send(err.message);
+            else if (doc == null)
+                return res.status(500).send('Booking not found.');
+            else {
+                var errs = [];
+                var count = 0;
+                var next = function(err) {
+                    count++;
+                    if (err != null)
+                        errs.push(err);
+                    if (count >= 2)
+                        done();
+                }
+                var done = function() {
+                    if (errs.length == 0)
+                        res.sendStatus(200);
+                    else
+                        res.status(500).send(errs);
+                }
+                if (req.body.start)
+                    doc.setStart(req.body.start, next);
+                else count++;
+                if (req.body.end)
+                    doc.setEnd(req.body.end, next);
+                else count++;
+            }
         });
     }
 }
