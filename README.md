@@ -368,6 +368,40 @@ Returns the end of the specified booking.
 </table>
 Sets the end of the booking.
 
+#### GET `/api/bookings/:id/time`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the time `{start: Date, end: Date}` of the specified booking.
+
+#### PUT `/api/bookings/:id/time`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>JSON Date object to be set as the start</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>JSON Date object to be set as the end</td>
+  </tr>
+</table>
+Sets the time (start and end dates) of the booking.
+
 #### GET `/api/spots`
 <table>
   <tr>
