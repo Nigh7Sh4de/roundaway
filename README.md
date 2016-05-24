@@ -559,3 +559,189 @@ Adds EITHER the specified spots to the lot or generates `count` number of new sp
   </tr>
 </table>
 Removes EITHER the specified spots from the lot or the spots associated with the spot number in the range `[from, to]`.
+
+#### GET `/api/spots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the entire spots collection.
+
+#### PUT `/api/spots`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>Number of spots to create (defaults to 1)</td>
+  </tr>
+  <tr>
+    <td><b>...</b></td>
+    <td>Any properties and values you would like the spot(s) to be initialized with </td>
+  </tr>
+</table>
+Create a new spot.
+
+#### GET `/api/spots/:id`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the spot with the specified id.
+
+
+#### GET `/api/spots/:id/location`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the location of the spot with the specified id.
+
+#### PUT `/api/spots/:id/location`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>coordinates</td>
+    <td>The coordinates of the location to set the spot to. 
+    Can either be a number array of <code>[latitude, longitude]</code> or
+    an object containing <code>lat</code> and <code>long</code> or <code>lon</code> properties</td>
+  </tr>
+</table>
+Adds EITHER the specified spots to the spot or generates `count` number of new spots and adds them to the spot.
+
+#### GET `/api/spots/:id/bookings`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the bookings associated with the spot with the given id.
+
+#### PUT `/api/spots/:id/bookings`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>bookings</td>
+    <td>The <code>spot</code> object(s) to add, can be either id's or entire objects</td>
+  </tr>
+</table>
+Associates the specified booking objects with the spot.
+
+#### GET `/api/spots/:id/available`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the ranges during which this spot is available in an array where each pair of indices is a start and end time. 
+
+#### PUT `/api/spots/:id/available`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to add</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to add</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td><i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td><i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td><i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with `start`, `end`, and optionally `interval` and either `count` or `finish`. If using an array, the rest of the body of the request will be ignored.
+  </tr>
+</table>
+Adds availability based on the supplied information. Either `count` (of reptitions) or `finish` (final upper limit) must be set if using a recuring range.
+
+#### GET `/api/spots/:id/booked`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the ranges during which this spot is booked in an array where each pair of indices is a start and end time. 
+
+#### GET `/api/spots/:id/schedules`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns an object which contains 2 propertes: `booked` and `available` each of which are arrays where each pair of indices is a start and end time.
