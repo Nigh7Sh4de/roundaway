@@ -881,8 +881,8 @@ describe('spotController', function() {
                 ignoreSadPath: true
             },
             {
-                verb: verbs.DELETE,
-                route: '/api/spots/:id/available',
+                verb: verbs.PUT,
+                route: '/api/spots/:id/available/remove',
                 method: 'RemoveAvailabilityFromSpot',
                 ignoreHappyPath: true,
                 ignoreSadPath: true
