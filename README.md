@@ -658,10 +658,27 @@ Returns the bookings associated with the spot with the given id.
   </tr>
   <tr>
     <td>bookings</td>
-    <td>The <code>spot</code> object(s) to add, can be either id's or entire objects</td>
+    <td>The <code>booking</code> object(s) to add, can be either id's or entire objects that must include properties <i>id</i>, <i>start</i>, and <i>end</i></td>
   </tr>
 </table>
 Associates the specified booking objects with the spot.
+
+#### PUT `/api/spots/:id/bookings/remove`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>bookings</td>
+    <td>The <code>booking</code> object(s) to remove, can be either id's or entire objects that must include properties <i>id</i>, <i>start</i>, and <i>end</i></td>
+  </tr>
+</table>
+Disassociates the specified booking objects with the spot.
 
 #### GET `/api/spots/:id/available`
 <table>
@@ -708,7 +725,7 @@ Returns the ranges during which this spot is available in an array where each pa
   </tr>
   <tr>
     <td>schedules</td>
-    <td>An array of schedules each with `start`, `end`, and optionally `interval` and either `count` or `finish`. If using an array, the rest of the body of the request will be ignored.
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
   </tr>
 </table>
 Adds availability based on the supplied information. Either `count` (of reptitions) or `finish` (final upper limit) must be set if using a recuring range.
@@ -745,7 +762,7 @@ Adds availability based on the supplied information. Either `count` (of reptitio
   </tr>
   <tr>
     <td>schedules</td>
-    <td>An array of schedules each with `start`, `end`, and optionally `interval` and either `count` or `finish`. If using an array, the rest of the body of the request will be ignored.
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
   </tr>
 </table>
 Removes availability based on the supplied information. Either `count` (of reptitions) or `finish` (final upper limit) must be set if using a recuring range.
