@@ -4,6 +4,7 @@ var controller = function(app) {
     this.app = app;
     app.get('/api/spots', app.checkAuth, app.checkAdmin, this.GetAllSpots.bind(this));
     app.put('/api/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateSpot.bind(this));
+    app.get('/api/spots/near', app.checkAuth, app.checkAdmin, this.GetNearestSpot.bind(this));
     app.get('/api/spots/:id', app.checkAuth, app.checkAdmin, this.GetSpot.bind(this));
     app.get('/api/spots/:id/location', app.checkAuth, app.checkAdmin, this.GetLocationForSpot.bind(this));
     app.post('/api/spots/:id/location', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetLocationForSpot.bind(this));
@@ -45,6 +46,26 @@ controller.prototype = {
                 res.send({status: 'SUCCESS', result: result});
             })    
         }
+    },
+    GetNearestSpot: function(req, res) {
+        if (isNaN(req.query.long) || isNaN(req.query.lat))
+            return res.status(500).send('Cannot find nearest spots. Must specify valid long and lat.');
+
+        var coordinates = [
+            parseFloat(req.query.long),
+            parseFloat(req.query.lat)
+        ];
+
+        this.app.db.spots.find({
+            location: {$near:{$geometry:{ type: "Point", coordinates: coordinates }}}
+        
+        }, function(err, docs) {
+            if (err != null)
+                return res.status(500).send(err);
+            else {
+                return res.send(docs);
+            }
+        });
     },
     GetSpot: function(req, res) {
         this.app.db.spots.findById(req.params.id, function(err, doc) {
@@ -309,21 +330,6 @@ var init = function(app) {
             }
         });
 
-    });
-
-    app.put('/api/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), function(req, res) {
-        if (req.body.address == null)
-            return res.send("address cannot be null");
-        else if (req.body.coordinates == null || req.body.coordinates == {})
-            return res.send("location cannot be null or empty");
-        else
-            app.db.createSpot(req.body, function(err) {
-                if (err != null)
-                    return res.send(err);
-                else {
-                    return res.sendStatus(200);
-                }
-            });
     });
 }
 

@@ -839,6 +839,14 @@ describe('spotController', function() {
             },
             {
                 verb: verbs.GET,
+                route: '/api/spots/near',
+                method: 'GetNearestSpot',
+                ignoreHappyPath: true,
+                ignoreSadPath: true,
+                ignoreId: true
+            },
+            {
+                verb: verbs.GET,
                 route: '/api/spots/:id',
                 method: 'GetSpot',
                 ignoreHappyPath: true,
@@ -938,6 +946,7 @@ describe('spotController', function() {
             app = server(inject);
             req = {
                 body: {},
+                query: {},
                 params: {
                     id: 'user.id'
                 }
@@ -1124,6 +1133,41 @@ describe('spotController', function() {
                 app.spotController.CreateSpot(req, res);
                 expect(res.send.calledOnce).to.be.true;
                 expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+            })
+        })
+        
+        describe.only('GetNearestSpot', function() {
+            it('should return nearest AVAILABLE spots', function() {
+                expect.fail();
+            })
+            
+            it('should return nearest COUNT spots', function() {
+                expect.fail();
+            })
+            
+            it('should return nearest spots', function() {
+                expect.fail();
+            })
+            
+            it('should error if long and lat are not specified', function() {
+                app.spotController.GetNearestSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
+            
+            it('should error if db encountered error', function() {
+                req.query.long = req.query.lat = 123;
+                app.db.spots = {
+                    find: sinon.spy(function(search, cb) {
+                        cb(new Error(), null);
+                    })
+                }
+                app.spotController.GetNearestSpot(req, res);
+                expect(app.db.spots.find.calledOnce).to.be.true;
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
             })
         })
         
