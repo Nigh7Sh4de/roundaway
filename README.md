@@ -8,6 +8,7 @@ Roundaway
   <tr>
    <th>Branch name</th>
    <th>Port</th>
+   <th>URL</th>
    <th>Version scheme</th>
    <th>Purpose</th>
   </tr>
@@ -16,30 +17,36 @@ Roundaway
   <tr>
    <td>master</td>
    <td>80</td>
+   <td>http://roundaway.com</td>
    <td>major.minor</td>
    <td>production</td>
   </tr>
   <tr>
    <td>dev</td>
-   <td>DNE (for now)</td>
+   <td>8081</td>
+   <td>http://dev.roundaway.com (DNE yet)</th>
    <td>major.minor.build</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
    <td><i>topic</i></td>
-   <td>LOCAL</td>
-   <td>N/A</td>
+   <td colspan="3">LOCAL</td>
    <td>development (tasks in progress)</td>
   </tr>
  </tbody>
 </table>
 
-
+- Always rebase the source branch onto the target branch before merging (ff)
+- When a task is complete merge the topic branch into dev
+- Merges from dev -> master will occur once a significant number of tasks have been completed
+- After every merge, update the package.json in the target branch following the appropriate scheme
+  - Increment least significant digit by 1
+  - i.e. on dev: `0.3.4` becomes `0.3.5`
+  - on master: `0.3` becomes `0.4`
 
 ## Config
-
 1. Run `npm install` to download all required packages
-2. Create the following environment variables:
+2. Create the following environment variables: ***this will soon change to be a config file***
   * FACEBOOK_CLIENT_ID
   * FACEBOOK_CLIENT_SECRET
   * GOOGLE_CLIENT_ID
