@@ -14,7 +14,7 @@ var spotSchema = new Schema({
         coordinates: [Number]
     },
     available: {
-        type: [Date],
+        type: [ranger.Range(Date)],
         get: function(data) {
             try {
                 return new ranger(data);
@@ -28,7 +28,7 @@ var spotSchema = new Schema({
         }
     },
     booked: {
-        type: [Date],
+        type: [ranger.Range(Date)],
         get: function(data) {
             try {
                 return new ranger(data);

@@ -636,7 +636,7 @@ describe('Spot schema', function() {
                     count: count
                 }, function(err) {
                     expect(err).to.not.be.ok;
-                    expect(s.available.ranges).to.have.length(count * 2);
+                    expect(s.available.ranges).to.have.length(count);
                     for (var i=0; i < count*2; i += 2)
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
                     done();
@@ -658,7 +658,7 @@ describe('Spot schema', function() {
                     finish: finish    
                 }, function(err) {
                     expect(err).to.not.be.ok;
-                    expect(s.available.ranges).to.have.length(count * 2);
+                    expect(s.available.ranges).to.have.length(count);
                     for (var i=0; i < count*2; i += 2)
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
                     done();
@@ -691,12 +691,15 @@ describe('Spot schema', function() {
         it('should add the given time range object to the available array', function(done) {
             var s = new Spot();
             var start = new Date('2016/01/01');
-            var end = new Date();
-            expect(s.available.ranges).to.have.length(0);
+            var end = new Date('2016/02/01');
+            expect(s.available.check(new Date('2015/01/15'))).to.be.false;
+            expect(s.available.check(new Date('2016/01/15'))).to.be.false;
+            expect(s.available.check(new Date('2017/01/15'))).to.be.false;
             s.addAvailability({start: start, end: end}, function(err) {
                 expect(err).to.not.be.ok;
-                expect(s.available.ranges).to.have.length(2);
-                expect(s.available.ranges).to.deep.include.all.members([start, end]);
+                expect(s.available.check(new Date('2015/01/15'))).to.be.false;
+                expect(s.available.check(new Date('2016/01/15'))).to.be.true;
+                expect(s.available.check(new Date('2017/01/15'))).to.be.false;
                 done();
             })
         })
@@ -732,7 +735,7 @@ describe('Spot schema', function() {
                     count: count
                 }, function(err) {
                     expect(err).to.not.be.ok;
-                    expect(s.available.ranges).to.have.length((count + 1) * 2);
+                    expect(s.available.ranges).to.have.length(count + 1);
                     for (var i=1; i < count*2; i += 2) {
                         expect(s.available.check(new Date('2016/01/' + (i)))).to.be.false;
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
@@ -756,7 +759,7 @@ describe('Spot schema', function() {
                     finish: finish    
                 }, function(err) {
                     expect(err).to.not.be.ok;
-                    expect(s.available.ranges).to.have.length((count + 1) * 2);
+                    expect(s.available.ranges).to.have.length(count + 1);
                     for (var i=1; i < count*2; i += 2) {
                         expect(s.available.check(new Date('2016/01/' + (i)))).to.be.false;
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
@@ -792,12 +795,15 @@ describe('Spot schema', function() {
             var s = new Spot();
             s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
             var start = new Date('2016/01/01');
-            var end = new Date();
-            expect(s.available.ranges).to.have.length(2);
+            var end = new Date('2016/02/01');
+                expect(s.available.check(new Date('2015/01/15'))).to.be.true;
+                expect(s.available.check(new Date('2016/01/15'))).to.be.true;
+                expect(s.available.check(new Date('2017/01/15'))).to.be.true;
             s.removeAvailability({start: start, end: end}, function(err) {
                 expect(err).to.not.be.ok;
-                expect(s.available.ranges).to.have.length(4);
-                expect(s.available.ranges).to.deep.include.all.members([start, end]);
+                expect(s.available.check(new Date('2015/01/15'))).to.be.true;
+                expect(s.available.check(new Date('2016/01/15'))).to.be.false;
+                expect(s.available.check(new Date('2017/01/15'))).to.be.true;
                 done();
             })
         })
