@@ -1142,7 +1142,7 @@ describe('spotController', function() {
             })
         })
         
-        describe.only('GetNearestSpot', function() {
+        describe('GetNearestSpot', function() {
             it('should return nearest AVAILABLE spots', function() {
                 var spots = [new Spot(), new Spot];
                 var limitedSpots = spots.slice(0, 1);
