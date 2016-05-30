@@ -1144,11 +1144,62 @@ describe('spotController', function() {
         
         describe.only('GetNearestSpot', function() {
             it('should return nearest AVAILABLE spots', function() {
-                expect.fail();
+                var spots = [new Spot(), new Spot];
+                var limitedSpots = spots.slice(0, 1);
+                var long = 12;
+                var lat = 21;
+                var find = function(cb) { 
+                    cb(null, spots); 
+                };
+                var fakeQueryObject = function() {
+                    this.limit = function() { return this; }
+                    this.elemMatch = function() {
+                        spots.splice(1, 1); 
+                        return this; 
+                    }
+                    this.exec = find;
+                    return this;
+                }
+                app.db.spots = {
+                    find: fakeQueryObject
+                }
+                req.query = {
+                    long: long,
+                    lat: lat,
+                    available: new Date()
+                }
+                app.spotController.GetNearestSpot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(limitedSpots)).to.be.true;
             })
             
             it('should return nearest COUNT spots', function() {
-                expect.fail();
+                var spots = [new Spot(), new Spot];
+                var limitedSpots = spots.slice(0, 1);
+                var long = 12;
+                var lat = 21;
+                var find = function(cb) { 
+                    cb(null, spots); 
+                };
+                var fakeQueryObject = function() {
+                    this.limit = function() {
+                        spots.splice(1, 1); 
+                        return this; 
+                    }
+                    this.exec = find;
+                    return this;
+                }
+                app.db.spots = {
+                    find: fakeQueryObject
+                }
+                req.query = {
+                    long: long,
+                    lat: lat,
+                    count: 1
+                }
+                app.spotController.GetNearestSpot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(limitedSpots)).to.be.true;
             })
             
             it('should return nearest spots', function() {

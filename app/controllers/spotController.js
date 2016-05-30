@@ -56,14 +56,15 @@ controller.prototype = {
             parseFloat(req.query.lat)
         ];
 
-        // this.app.db.spots.find({
-        //     location: {$near:{$geometry:{ type: "Point", coordinates: coordinates }}}
-        
-        // }, {
-        //     limit: isNaN(req.query.available) ? undefined : parseInt(req.query.available)
+        var requiredAvailableDate = new Date(req.query.available);
         var query = this.app.db.spots.find({"location.coordinates": {$near:{$geometry:{ type: "Point", coordinates: coordinates }}}})
-        if (!isNaN(req.query.available))
-            query.limit(parseInt(req.query.available));
+        if (!isNaN(requiredAvailableDate.valueOf()))
+            query.elemMatch("available", {
+                start: {$lte: requiredAvailableDate},
+                end: {$gte: requiredAvailableDate}
+            })
+        if (!isNaN(req.query.count))
+            query.limit(parseInt(req.query.count));
         query.exec(function(err, docs) {
             if (err != null)
                 return res.status(500).send(err);
