@@ -1152,7 +1152,25 @@ describe('spotController', function() {
             })
             
             it('should return nearest spots', function() {
-                expect.fail();
+                var spots = [new Spot()];
+                var long = 12;
+                var lat = 21;
+                var find = sinon.spy(function(cb) { cb(null, spots); });
+                var fakeQueryObject = function() {
+                    this.limit = function() { return this; }
+                    this.exec = find;
+                    return this;
+                }
+                app.db.spots = {
+                    find: fakeQueryObject
+                }
+                req.query = {
+                    long: long,
+                    lat: lat
+                }
+                app.spotController.GetNearestSpot(req, res);
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.send.calledWith(spots)).to.be.true;
             })
             
             it('should error if long and lat are not specified', function() {
@@ -1164,13 +1182,17 @@ describe('spotController', function() {
             
             it('should error if db encountered error', function() {
                 req.query.long = req.query.lat = 123;
+                var find = sinon.spy(function(cb) { cb(new Error('')); });
+                var fakeQueryObject = function() {
+                    this.limit = function() { return this; }
+                    this.exec = find;
+                    return this;
+                }
                 app.db.spots = {
-                    find: sinon.spy(function(search, cb) {
-                        cb(new Error(), null);
-                    })
+                    find: fakeQueryObject
                 }
                 app.spotController.GetNearestSpot(req, res);
-                expect(app.db.spots.find.calledOnce).to.be.true;
+                expect(find.calledOnce).to.be.true;
                 expect(res.status.calledOnce).to.be.true;
                 expect(res.status.calledWith(500)).to.be.true;
                 expect(res.send.calledOnce).to.be.true;

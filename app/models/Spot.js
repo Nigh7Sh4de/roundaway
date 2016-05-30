@@ -7,11 +7,14 @@ var Schema = mongoose.Schema;
 var spotSchema = new Schema({
     address: String,
     location: {
-        type: {
-            type: String,
-            default: 'Point'
-        },
-        coordinates: [Number]
+        coordinates: {
+            type: [Number],
+            index: '2d'
+        }//{
+            
+            // type: [Number],  // [<longitude>, <latitude>]
+            // index: '2d'      // create the geospatial index
+        // }
     },
     available: {
         type: [ranger.Range(Date)],
