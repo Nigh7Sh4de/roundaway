@@ -9,7 +9,7 @@ var spotSchema = new Schema({
     location: {
         coordinates: {
             type: [Number],
-            index: '2d'
+            index: '2dsphere'
         }//{
             
             // type: [Number],  // [<longitude>, <latitude>]
