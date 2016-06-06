@@ -55,6 +55,7 @@ Roundaway
   * GOOGLE_CLIENT_ID
   * GOOGLE_CLIENT_SECRET
   * GOOGLE_API_KEY
+  * PORT
 3. Ensure MongoDB server is running on localhost
 4. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
 
