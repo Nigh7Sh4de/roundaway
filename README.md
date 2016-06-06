@@ -422,7 +422,7 @@ Sets the time (start and end dates) of the booking.
 </table>
 Returns the entire `spots` collection.
 
-#### GET `/api/spots/near?long=LONGITUDE&lat=LATITUDE`
+#### GET `/api/spots/near?long=LONGITUDE&lat=LATITUDE&available=DATE&count=COUNT`
 <table>
   <tr>
     <td><i>Requires auth</i></td>
@@ -432,8 +432,23 @@ Returns the entire `spots` collection.
     <td><i>Requires admin</i></td>
     <td>True</td>
   </tr>
+  <tr>
+    <td>long</td>
+    <td>Longitude of the target location</td>
+  </tr>
+  <tr>
+    <td>lat</td>
+    <td>Latitude of the target location</td>
+  </tr>
+    <td>available</td>
+    <td>A datetime during which this spot should be available (if unassigned then current time is used)</td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>Number of spots to return</td>
+  </tr>
 </table>
-Returns the entire `spots` collection sorting by shortest to longest distance away from the supplied `LATITUDE` and `LONGITUDE`
+Returns the required number of Spots based on the given filters
 
 #### PUT `/api/spots`
 <table>
