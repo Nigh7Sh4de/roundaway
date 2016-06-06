@@ -29,9 +29,6 @@
   },
   "description": "Roundaway",
   "main": "server.js",
-  "devDependencies": {
-    "mocha": "^2.4.5"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nigh7sh4de/roundaway.git"
