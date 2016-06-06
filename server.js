@@ -1,12 +1,24 @@
 var app = function(inject) {
     var express = require('express');
     var app = express();
+    app.config = require('./config');
+    [
+        "FACEBOOK_CLIENT_ID",
+        "FACEBOOK_CLIENT_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_API_KEY",
+        "PORT"
+    ].forEach(function(configKey) {
+        if (!app.config[configKey])
+            throw new Error('Must define config: ' + configKey);
+    })
     app.db = new inject.db();
     if (app.db.connect != null && typeof app.db.connect === 'function')
         app.db.connect();
-    app.passport = inject.passport(app.db);
+    app.passport = inject.passport(app.db, app.config);
     app.geocoder = require('node-geocoder')('google','https',{
-        apiKey: process.env.GOOGLE_API_KEY
+        apiKey: app.config.GOOGLE_API_KEY
     });
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
@@ -61,8 +73,8 @@ app.GetDefaultInjection = function(allowConnect) {
 }
 
 if (require.main == module)
-    app(app.GetDefaultInjection(true)).listen(8080, function() {
-        console.log('App started. Listening on port 8080!');
+    app(app.GetDefaultInjection(true)).listen(app.config.PORT, function() {
+        console.log('App started. Listening on port ' + app.config.PORT + '!');
     });
 else
     module.exports = app;
