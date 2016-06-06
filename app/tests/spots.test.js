@@ -1,5 +1,3 @@
-var later = require('later');
-later.date.localTime();
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var routeTest = require('./routeTestBase');

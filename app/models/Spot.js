@@ -1,7 +1,5 @@
 var ranger = require('rangerjs');
 var mongoose = require('mongoose');
-var later = require('later');
-later.date.localTime();
 var Schema = mongoose.Schema;
 
 var spotSchema = new Schema({
