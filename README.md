@@ -9,7 +9,7 @@ Roundaway
    <th>Branch name</th>
    <th>Port</th>
    <th>URL</th>
-   <th>Version scheme</th>
+   <th>Version</th>
    <th>Purpose</th>
   </tr>
  </thead>
@@ -18,14 +18,14 @@ Roundaway
    <td>master</td>
    <td>80</td>
    <td>http://roundaway.com</td>
-   <td>major.minor</td>
+   <td>0.0</td>
    <td>production</td>
   </tr>
   <tr>
    <td>dev</td>
    <td>8081</td>
    <td>http://dev.roundaway.com (DNE yet)</th>
-   <td>major.minor.build</td>
+   <td>0.0.2</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
