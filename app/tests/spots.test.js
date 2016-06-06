@@ -89,6 +89,7 @@ describe('Spot schema', function() {
         it('should set the location given an array', function(done) {
             var s = new Spot();
             var coords = [123, 456];
+            expect(s.location.coordinates).to.not.be.ok;
             s.setLocation(coords, function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members(coords);
@@ -99,10 +100,10 @@ describe('Spot schema', function() {
         it('should fail given a small array', function(done) {
             var s = new Spot();
             var coords = [123];
-            expect(s.location.coordinates).to.have.length(0);
+            expect(s.location.coordinates).to.not.be.ok;
             s.setLocation(coords, function(err) {
                 expect(err).to.be.ok;
-                expect(s.location.coordinates).to.have.length(0);
+                expect(s.location.coordinates).to.not.be.ok;
                 done();
             })
         })
@@ -110,17 +111,17 @@ describe('Spot schema', function() {
         it('should fail given a large array', function(done) {
             var s = new Spot();
             var coords = [123,456,789];
-            expect(s.location.coordinates).to.have.length(0);
+            expect(s.location.coordinates).to.not.be.ok;
             s.setLocation(coords, function(err) {
                 expect(err).to.be.ok;
-                expect(s.location.coordinates).to.have.length(0);
+                expect(s.location.coordinates).to.not.be.ok;
                 done();
             })
         })
         
         it('should fail if array does not contain numbers', function(done) {
             var s = new Spot();
-            expect(s.location.coordinates).have.length(0);
+            expect(s.location.coordinates).to.not.be.ok;
             [
                 null,
                 undefined,
@@ -133,7 +134,7 @@ describe('Spot schema', function() {
             ].forEach(function(input, i, arr) {
                 s.setLocation([input,input], function(err) {
                     expect(err).to.be.ok;
-                    expect(s.location.coordinates).have.length(0);
+                    expect(s.location.coordinates).to.not.be.ok;
                     if (i+1 >= arr.length)
                         done();
                 })
@@ -145,6 +146,7 @@ describe('Spot schema', function() {
             var coords_g = '123';
             var coords_t = '456';
             var coords = [coords_g, coords_t];
+            expect(s.location.coordinates).to.not.be.ok;
             s.setLocation(coords, function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([
@@ -162,7 +164,8 @@ describe('Spot schema', function() {
             var coords = {
                 long: coords_g,
                 lat: coords_t
-        };
+            };
+            expect(s.location.coordinates).to.not.be.ok;
             s.setLocation(coords, function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
@@ -172,7 +175,7 @@ describe('Spot schema', function() {
         
         it('should fail if not given good input', function(done) {
             var s = new Spot();
-            expect(s.location.coordinates).have.length(0);
+            expect(s.location.coordinates).to.not.be.ok;
             [
                 null,
                 undefined,
@@ -185,7 +188,7 @@ describe('Spot schema', function() {
             ].forEach(function(input, i, arr) {
                 s.setLocation(input, function(err) {
                     expect(err).to.be.ok;
-                    expect(s.location.coordinates).have.length(0);
+                    expect(s.location.coordinates).to.not.be.ok;
                     if (i+1 >= arr.length)
                         done();
                 })
@@ -194,7 +197,7 @@ describe('Spot schema', function() {
         
         it('should fail if object does not have long lat props', function(done) {
             var s = new Spot();
-            expect(s.location.coordinates).to.have.length(0);
+            expect(s.location.coordinates).to.not.be.ok;
             [
                 null,
                 undefined,
@@ -207,7 +210,7 @@ describe('Spot schema', function() {
             ].forEach(function(input, i, arr) {
                 s.setLocation({long:input,lat:input}, function(err) {
                     expect(err).to.be.ok;
-                    expect(s.location.coordinates).have.length(0);
+                    expect(s.location.coordinates).to.not.be.ok;
                     if (i+1 >= arr.length)
                         done();
                 })
@@ -221,7 +224,8 @@ describe('Spot schema', function() {
             var coords = {
                 lon: coords_g,
                 lat: coords_t
-        };
+            };
+            expect(s.location.coordinates).to.not.be.ok;
             s.setLocation(coords, function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
@@ -236,7 +240,8 @@ describe('Spot schema', function() {
             var coords = {
                 long: coords_g,
                 lat: coords_t
-        };
+            };
+            expect(s.location.coordinates).to.not.be.ok;
             s.setLocation(coords, function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);

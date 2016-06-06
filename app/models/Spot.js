@@ -10,11 +10,7 @@ var spotSchema = new Schema({
         coordinates: {
             type: [Number],
             index: '2dsphere'
-        }//{
-            
-            // type: [Number],  // [<longitude>, <latitude>]
-            // index: '2d'      // create the geospatial index
-        // }
+        }
     },
     available: {
         type: [ranger.Range(Date)],
