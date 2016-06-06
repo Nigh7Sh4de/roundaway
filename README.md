@@ -25,7 +25,7 @@ Roundaway
    <td>dev</td>
    <td>8081</td>
    <td>http://dev.roundaway.com (DNE yet)</th>
-   <td>0.0.2</td>
+   <td>0.0.3</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
@@ -36,24 +36,27 @@ Roundaway
  </tbody>
 </table>
 
-- Always rebase the source branch onto the target branch before merging (ff)
+- Always rebase the source branch onto the target branch before merging (--ff)
 - When a task is complete merge the topic branch into dev
 - Merges from dev -> master will occur once a significant number of tasks have been completed
-- After every merge, update the package.json in the target branch following the appropriate scheme
+- After every merge, update the version number in the package.json and this readme in the target branch following the appropriate scheme
   - Increment least significant digit by 1
   - i.e. on dev: `0.3.4` becomes `0.3.5`
   - on master: `0.3` becomes `0.4`
+    - update the **minor** version number on dev after merging to master
 
-## Config
-1. Run `npm install` to download all required packages
-2. Create the following environment variables: ***this will soon change to be a config file***
+## Set Up
+1. Clone/download this repo
+2. Run `npm update` to download and update all required packages
+3. Create and/or find keys for *Facebook* and *Google* web applications (for authentication)
+4. Create a **config.js** file that exports an object with the following config keys (see **config.example.js** for more info and defaults):
   * FACEBOOK_CLIENT_ID
   * FACEBOOK_CLIENT_SECRET
   * GOOGLE_CLIENT_ID
   * GOOGLE_CLIENT_SECRET
   * GOOGLE_API_KEY
 3. Ensure MongoDB server is running on localhost
-4. *(Optional)* The server will be listening on port 8080. Set up any necessary port-forwarding to accomodate this.
+4. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
 
 ## API
 
