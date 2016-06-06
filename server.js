@@ -1,7 +1,7 @@
 var app = function(inject) {
     var express = require('express');
     var app = express();
-    app.config = require('./config');
+    
     [
         "FACEBOOK_CLIENT_ID",
         "FACEBOOK_CLIENT_SECRET",
@@ -10,9 +10,11 @@ var app = function(inject) {
         "GOOGLE_API_KEY",
         "PORT"
     ].forEach(function(configKey) {
-        if (!app.config[configKey])
+        if (!inject.config[configKey])
             throw new Error('Must define config: ' + configKey);
     })
+    app.config = inject.config;
+    
     app.db = new inject.db();
     if (app.db.connect != null && typeof app.db.connect === 'function')
         app.db.connect();
@@ -22,8 +24,6 @@ var app = function(inject) {
     });
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
-    // inject.helper(app);
-
 
     app.use(require('cookie-parser')());
     app.use(app.bodyParser.urlencoded({ extended: true }));
@@ -58,6 +58,7 @@ var app = function(inject) {
 
 app.GetDefaultInjection = function(allowConnect) {
     var inject = {
+        config: require('./config'),
         db: require('./app/db'),
         passport: require('./app/passport'),
         helper: require('./app/helper'),
