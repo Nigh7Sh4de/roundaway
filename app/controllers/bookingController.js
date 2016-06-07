@@ -43,7 +43,7 @@ controller.prototype = {
         delete newBooking._id;
         if (req.body.count != null) {
             if (typeof req.body.count !== 'number' || req.body.count <= 0)
-                return res.status(500).send(new Error('Could not create booking. Specified count was invalid.'));
+                return res.status(500).send('Could not create booking. Specified count was invalid.');
             var arr = [];
             for (var i=0;i<req.body.count;i++)
                 arr.push(newBooking);
