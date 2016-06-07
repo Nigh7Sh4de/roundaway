@@ -25,7 +25,7 @@ Roundaway
    <td>dev</td>
    <td>8081</td>
    <td>http://dev.roundaway.com (DNE yet)</th>
-   <td>0.0.3</td>
+   <td>0.0.4</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
