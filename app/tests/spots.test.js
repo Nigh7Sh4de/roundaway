@@ -1487,9 +1487,40 @@ describe('spotController', function() {
         })
         
         describe('AddBookingsToSpot', function() {
+            it('should update booking object being added', function(done) {
+                var s = new Spot();
+                var b = new Booking();
+                b.setSpot = sinon.spy(function(spot, cb) {
+                    cb(null);
+                });
+                b.start = b.end = new Date();
+                sinon.stub(s, 'addBookings', function(_b, cb) {
+                    expect(_b).to.deep.include(b);
+                    cb(null);
+                })
+                app.db.spots = {
+                    findById: function(id, cb) {
+                        expect(id).to.equal(s.id);
+                        cb(null, s);
+                    }
+                }
+                req.params.id = s.id;
+                req.body.bookings = b;
+                res.status = function() {
+                    expect.fail();
+                }
+                res.sendStatus = function(status) {
+                    expect(status).to.equal(200);
+                    expect(b.setSpot.calledOnce).to.be.true;
+                    done();
+                }
+                app.spotController.AddBookingsToSpot(req, res);
+            })
+
             it('should add the given booking objects arr', function(done) {
                 var s = new Spot();
                 var b = new Booking();
+                b.setSpot = function(spot, cb) { cb() }
                 b.start = b.end = new Date();
                 sinon.stub(s, 'addBookings', function(_b, cb) {
                     expect(_b).to.deep.include(b);
@@ -1516,6 +1547,7 @@ describe('spotController', function() {
             it('should find and add the given booking ids', function(done) {
                 var s = new Spot();
                 var b = new Booking();
+                b.setSpot = function(spot, cb) { cb() }
                 b.start = b.end = new Date();
                 sinon.stub(s, 'addBookings', function(_b, cb) {
                     expect(_b).to.deep.include(b);

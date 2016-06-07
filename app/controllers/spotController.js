@@ -186,12 +186,35 @@ controller.prototype = {
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
+                var updatedBookings = 0;
+                var errs = [];
+                var updateBooking = function(booking, total) {
+                    booking.setSpot(doc, function(err) {
+                        if (err != null)
+                            errs.push(err);
+                        if (++updatedBookings >= total) {
+                            if (errs.length == 0)
+                                res.sendStatus(200);
+                            else
+                                res.status(500).send({
+                                    status: 'ERROR',
+                                    message: 'Some bookings could not be updated',
+                                    errors: errs,
+                                    bookingsToUpdate: bookings,
+                                    spot: doc
+                                })
+                        }
+                    })
+                }
                 var addBookings = function(bookings) {
                     doc.addBookings(bookings, function(err) {
                         if (err != null)
                             return res.status(500).send(err);
-                        else
-                            return res.sendStatus(200);
+                        else {
+                            bookings.forEach(function(booking) {
+                                updateBooking(booking, bookings.length);
+                            })
+                        }
                     })
                 }
                 if (typeof req.body.bookings[0] === 'string')
