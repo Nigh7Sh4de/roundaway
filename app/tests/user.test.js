@@ -326,7 +326,7 @@ describe('User schema', function() {
             };
             user.updateProfile(profile, function(err) {
                 expect(err).to.be.ok;
-                expect(err.message.indexOf('someBadProp')).to.be.at.least(0);
+                expect(err.indexOf('someBadProp')).to.be.at.least(0);
                 done();
             });
         })
@@ -455,7 +455,7 @@ describe('User schema', function() {
                 function(){}
             ].forEach(function (input, i, arr) {
                 var result = user.getAuth(input);
-                expect(result).to.be.an.instanceOf(Error);
+                expect(result).to.be.null;
             });
         })
         
@@ -500,7 +500,7 @@ describe('User schema', function() {
                 123,
                 function(){}
             ].forEach(function(input) {
-                expect(user.hasLot(input)).to.be.an.instanceOf(Error);
+                expect(user.hasLot(input)).to.be.null;
             });
         })
     })
@@ -536,7 +536,7 @@ describe('User schema', function() {
                 123,
                 function(){}
             ].forEach(function(input) {
-                expect(user.hasSpot(input)).to.be.an.instanceOf(Error);
+                expect(user.hasSpot(input)).to.be.null;
             });
         })
     })
@@ -572,7 +572,7 @@ describe('User schema', function() {
                 123,
                 function(){}
             ].forEach(function(input) {
-                expect(user.hasBooking(input)).to.be.an.instanceOf(Error);
+                expect(user.hasBooking(input)).to.be.null;
             });
         })
     })
