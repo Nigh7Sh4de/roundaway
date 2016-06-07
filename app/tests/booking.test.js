@@ -43,7 +43,7 @@ describe('Booking schema', function() {
         it('should error if no spot id', function() {
             var b = new Booking();
             var result = b.getSpot();
-            expect(result).to.be.an.instanceof(Error);
+            expect(result).to.be.null;
         })
     })
     
@@ -159,14 +159,14 @@ describe('Booking schema', function() {
             var b = new Booking();
             b.end = new Date();
             var result = b.getDuration();
-            expect(result).to.be.an.instanceof(Error);
+            expect(result).to.be.null;
         })
         
         it('should error if no duration set', function() {
             var b = new Booking();
             b.start = new Date();
             var result = b.getDuration();
-            expect(result).to.be.an.instanceof(Error);
+            expect(result).to.be.null;
         })
     })
     
