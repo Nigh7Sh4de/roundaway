@@ -49,7 +49,7 @@ spotSchema.methods.getAddress = function() {
 
 spotSchema.methods.setAddress = function(address, cb) {
     if (typeof address !== 'string' || address == '')
-        return cb(new Error('Cannot set address. Provided address is invlaid.'));
+        return cb('Cannot set address. Provided address is invlaid.');
     this.address = address;
     this.save(cb);
 }
@@ -64,17 +64,17 @@ spotSchema.methods.getLocation = function() {
 spotSchema.methods.setLocation = function(location, cb) {
     if (location instanceof Array) {
         if (location.length != 2)
-            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+            return cb('Cannot set location. Specified coordinates are invalid.');
         var long = parseFloat(location[0]);            
         var lat = parseFloat(location[1]);            
         if (isNaN(long) ||
             isNaN(lat))
-            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+            return cb('Cannot set location. Specified coordinates are invalid.');
         this.location.coordinates = [long, lat];
     }
     else {
         if (typeof location !== 'object' || location == null)
-            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+            return cb('Cannot set location. Specified coordinates are invalid.');
         location.long = parseFloat(location.long);
         location.lon = parseFloat(location.lon);
         location.lat = parseFloat(location.lat);
@@ -82,7 +82,7 @@ spotSchema.methods.setLocation = function(location, cb) {
             location.long = location.lon;
         if (isNaN(location.long) ||
             isNaN(location.lat))
-            return cb(new Error('Cannot set location. Specified coordinates are invalid.'));
+            return cb('Cannot set location. Specified coordinates are invalid.');
         this.location.coordinates = [location.long, location.lat];
     }
     this.save(cb);
@@ -125,12 +125,12 @@ spotSchema.methods.removeBookings = function(bookings, cb) {
     var removed = [];
     bookings.forEach(function(booking) {
         if (booking == null)
-            return errs.push(new Error('Cannot remove null booking.'));
+            return errs.push('Cannot remove null booking.');
         if (booking.id == null)
-            return errs.push(new Error('Cannot remove booking. Booking must have an id.'));
+            return errs.push('Cannot remove booking. Booking must have an id.');
         var index = this.bookings.indexOf(booking.id);
         if (index < 0)
-            return errs.push(new Error('Cannot remove booking. This booking is not assoaciated with this spot'));
+            return errs.push('Cannot remove booking. This booking is not assoaciated with this spot');
         removed = removed.concat(this.bookings.splice(index, 1));
         this.booked.removeRange(booking.start, booking.end);
         this.available.addRange(booking.start, booking.end);
@@ -188,22 +188,22 @@ var setLot = function(lot) {
     if (typeof lot === 'object' && lot != null)
         lot = lot.id;
     if (typeof lot !== 'string')
-        return new Error('Cannot set lot. Lot id is invalid.');
+        return 'Cannot set lot. Lot id is invalid.';
     this.lot = lot;
 }
 
 var setNumber = function(num) {
     if (typeof num !== 'number')
-        return new Error('Cannot set number. Number is invalid.');
+        return 'Cannot set number. Number is invalid.';
     this.number = num;
 }
 
 spotSchema.methods.addAvailability = function(sched, cb) {
     if (!(sched instanceof Array)) {
         if (sched == null)
-            return cb(new Error('Cannot add null schedule to availability.'));
+            return cb('Cannot add null schedule to availability.');
         if (sched.start == null || sched.end == null)
-            return cb(new Error('Cannot add availablility. Must have start and end times for each range.'));
+            return cb('Cannot add availablility. Must have start and end times for each range.');
         sched = [sched];
     }
     var errs = [];
@@ -211,7 +211,7 @@ spotSchema.methods.addAvailability = function(sched, cb) {
         var start = new Date(sched[i].start),
             end = new Date(sched[i].end);
         if (isNaN(start.valueOf()) || isNaN(end.valueOf()))
-            errs.push(new Error('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end));
+            errs.push('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
         else if (sched[i].interval && (sched[i].count || sched[i].finish))
             this.available.addRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
         else
@@ -227,9 +227,9 @@ spotSchema.methods.addAvailability = function(sched, cb) {
 spotSchema.methods.removeAvailability = function(sched, cb) {
     if (!(sched instanceof Array)) {
         if (sched == null)
-            return cb(new Error('Cannot remove null schedule from availability.'));
+            return cb('Cannot remove null schedule from availability.');
         if (sched.start == null || sched.end == null)
-            return cb(new Error('Cannot remove availablility. Must have start and end times for each range to remove.'));
+            return cb('Cannot remove availablility. Must have start and end times for each range to remove.');
         sched = [sched];
     }
     var errs = [];
@@ -237,7 +237,7 @@ spotSchema.methods.removeAvailability = function(sched, cb) {
         var start = new Date(sched[i].start),
             end = new Date(sched[i].end);
         if (isNaN(start.valueOf()) || isNaN(end.valueOf()))
-            errs.push(new Error('Cannot remove availability range: ' + sched[i].start + ' ~ ' + sched[i].end));
+            errs.push('Cannot remove availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
         else if (sched[i].interval && (sched[i].count || sched[i].finish))
             this.available.removeRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
         else
