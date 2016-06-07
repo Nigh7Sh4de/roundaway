@@ -20,8 +20,8 @@ var controller = function(app) {
 controller.prototype = {
     GetAllBookings: function(req, res) {
         this.app.db.bookings.find({}, function(err, docs) {
-            if (err != null) {
-                return res.status(500).send(err.message);
+            if (err) {
+                return res.status(500).send(err);
             }
             else {
                 return res.send(docs);
@@ -31,7 +31,7 @@ controller.prototype = {
     GetBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             else
@@ -65,15 +65,15 @@ controller.prototype = {
     GetSpotForBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             var spotId = doc.getSpot();
             if (spotId instanceof Error)
-                return res.status(500).send(spotId.message);
+                return res.status(500).send(spotId);
             this.app.db.spots.findById(spotId, function(spotErr, spotDoc) {
                 if (spotErr != null)
-                    return res.status(500).send(spotErr.message);
+                    return res.status(500).send(spotErr);
                 else if (spotDoc == null)
                     return res.status(500).send('The spot associated with this booking does not exist.');
                 else
@@ -97,13 +97,13 @@ controller.prototype = {
         var done = function(err) {
             booking.setSpot(spot, function(err) {
                 if (err != null)
-                    res.status(500).send(err.message);    
+                    res.status(500).send(err);    
                 res.sendStatus(200);                
             });
         }
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return next(err.message);
+                return next(err);
             else if (doc == null)
                 return next('Booking not found.');
             booking = doc;
@@ -111,7 +111,7 @@ controller.prototype = {
         });
         this.app.db.spots.findById(req.body.id, function(spotErr, spotDoc) {
             if (spotErr != null)
-                return next(spotErr.message);
+                return next(spotErr);
             else if (spotDoc == null)
                 return next('The spot you are trying to set does not exist.');
             spot = spotDoc;
@@ -121,7 +121,7 @@ controller.prototype = {
     GetStartOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             res.send(doc.getStart());
@@ -130,12 +130,12 @@ controller.prototype = {
     SetStartOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             doc.setStart(req.body.start, function(err) {
                 if (err != null)
-                    return res.status(500).send(err.message);
+                    return res.status(500).send(err);
                 res.sendStatus(200);
             })
         });
@@ -143,24 +143,24 @@ controller.prototype = {
     GetDurationForBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             var dur = doc.getDuration();
-            if (dur instanceof Error)
-                return res.status(500).send(dur.message);
+            if (!dur)
+                return res.status(500).send('This booking does not have valid start and/or end dates. Start: ' + doc.getStart() + ', End: ' + doc.getEnd());
             res.send(dur.toString());
         })
     },
     SetDurationForBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             doc.setDuration(req.body.duration, function(err) {
                     if (err != null)
-                    return res.status(500).send(err.message);
+                    return res.status(500).send(err);
                 res.sendStatus(200);
             });
         })
@@ -168,7 +168,7 @@ controller.prototype = {
     GetEndOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             res.send(doc.getEnd());
@@ -177,12 +177,12 @@ controller.prototype = {
     SetEndOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             doc.setEnd(req.body.end, function(err) {
                 if (err != null)
-                    return res.status(500).send(err.message);
+                    return res.status(500).send(err);
                 res.sendStatus(200);
             })
         });
@@ -190,7 +190,7 @@ controller.prototype = {
     GetTimeOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             else {
@@ -206,7 +206,7 @@ controller.prototype = {
             return res.status(500).send('Cannot set time of booking. Must specify start and/or end times.');
         this.app.db.bookings.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Booking not found.');
             else {

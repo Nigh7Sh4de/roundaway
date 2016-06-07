@@ -831,7 +831,7 @@ describe('spotController', function() {
                 sadDbInjection: {
                     spots: {
                         find: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -1001,7 +1001,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.GetSpot(req, res);
@@ -1051,7 +1051,7 @@ describe('spotController', function() {
             it('if couldnt create spot should send error', function() {
                 app.db.spots = {
                     create: function(obj, cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     }
                 }
                 app.spotController.CreateSpot(req, res);
@@ -1063,7 +1063,7 @@ describe('spotController', function() {
                 app.db.spots = {
                     collection: {
                         insert: function(obj, cb) {
-                            cb(new Error('some error'));
+                            cb('some error');
                         }
                     }
                 }
@@ -1236,7 +1236,7 @@ describe('spotController', function() {
             
             it('should error if db encountered error', function() {
                 req.query.long = req.query.lat = 123;
-                var find = sinon.spy(function(cb) { cb(new Error('')); });
+                var find = sinon.spy(function(cb) { cb('some error'); });
                 var fakeQueryObject = function() {
                     this.limit = function() { return this; }
                     this.exec = find;
@@ -1277,7 +1277,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.GetLocationForSpot(req, res);
@@ -1424,7 +1424,7 @@ describe('spotController', function() {
                         for(var i=0;i<expected.length;i++)
                             if (expected[i].id == id)
                                 return cb(null, expected[i]);
-                        return cb(new Error('Booking not found'));
+                        return cb('Booking not found');
                     }
                 }
                 req.params.id = s.id;
@@ -1451,7 +1451,7 @@ describe('spotController', function() {
                     findById: function(id, cb) {
                         if (expected[0].id == id)
                             return cb(null, expected[0]);
-                        return cb(new Error(msg));
+                        return cb(msg);
                     }
                 }
                 req.params.id = s.id;
@@ -1464,7 +1464,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.GetAllBookingsForSpot(req, res);
@@ -1580,7 +1580,7 @@ describe('spotController', function() {
             it('should fail if addBookings failed', function(done) {
                 var s = new Spot();
                 sinon.stub(s, 'addBookings', function(b, cb) {
-                    cb(new Error('some error'));
+                    cb('some error');
                 });
                 req.body.bookings = new Booking();
                 res.send = function() {
@@ -1614,7 +1614,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.AddBookingsToSpot(req, res);
@@ -1698,7 +1698,7 @@ describe('spotController', function() {
             it('should fail if removeBookings failed', function(done) {
                 var s = new Spot();
                 sinon.stub(s, 'removeBookings', function(b, cb) {
-                    cb(new Error('some error'));
+                    cb('some error');
                 });
                 req.body.bookings = new Booking();
                 res.send = function() {
@@ -1732,7 +1732,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.RemoveBookingsFromSpot(req, res);
@@ -1773,7 +1773,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.GetAllAvailabilityForSpot(req, res);
@@ -1844,7 +1844,7 @@ describe('spotController', function() {
                     }
                 }
                 var schedules = [{someProp: 'somevalue'}];
-                var error = new Error('some error');
+                var error = 'some error';
                 sinon.stub(s, 'addAvailability', function(sched, cb) {
                     expect(sched).to.equal(schedules);
                     cb(error);
@@ -1861,7 +1861,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.AddAvailabilityToSpot(req, res);
@@ -1932,7 +1932,7 @@ describe('spotController', function() {
                     }
                 }
                 var schedules = [{someProp: 'somevalue'}];
-                var error = new Error('some error');
+                var error = 'some error';
                 sinon.stub(s, 'removeAvailability', function(sched, cb) {
                     expect(sched).to.equal(schedules);
                     cb(error);
@@ -1949,7 +1949,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.RemoveAvailabilityFromSpot(req, res);
@@ -1990,7 +1990,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.GetAllBookedTimeForSpot(req, res);
@@ -2035,7 +2035,7 @@ describe('spotController', function() {
             it('should error if db encountered error', function() {
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.spotController.GetEntireScheduleForSpot(req, res);

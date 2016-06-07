@@ -568,7 +568,7 @@ describe('lotController', function() {
                 sadDbInjection: {
                     lots: {
                         find: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -589,7 +589,7 @@ describe('lotController', function() {
                 sadDbInjection: {
                     lots: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -609,7 +609,7 @@ describe('lotController', function() {
                 sadDbInjection: {
                     lots: {
                         create: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -707,7 +707,7 @@ describe('lotController', function() {
             it('should error if db encountered error', function() {
                 app.db.lots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.lotController.GetLot(req, res);
@@ -757,7 +757,7 @@ describe('lotController', function() {
             it('if couldnt create lot should send error', function() {
                 app.db.lots = {
                     create: function(obj, cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     }
                 }
                 app.lotController.CreateLot(req, res);
@@ -769,7 +769,7 @@ describe('lotController', function() {
                 app.db.lots = {
                     collection: {
                         insert: function(obj, cb) {
-                            cb(new Error('some error'));
+                            cb('some error');
                         }
                     }
                 }
@@ -875,7 +875,7 @@ describe('lotController', function() {
             it('should error if db encountered error', function() {
                 app.db.lots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.lotController.GetLocationOfLot(req, res);
@@ -1015,7 +1015,7 @@ describe('lotController', function() {
                         for(var i=0;i<expected.length;i++)
                             if (expected[i].id == id)
                                 return cb(null, expected[i]);
-                        return cb(new Error('Spot not found'));
+                        return cb('spot not found');
                     }
                 }
                 req.params.id = l.id;
@@ -1042,7 +1042,7 @@ describe('lotController', function() {
                     findById: function(id, cb) {
                         if (expected[0].id == id)
                             return cb(null, expected[0]);
-                        return cb(new Error(msg));
+                        return cb(msg);
                     }
                 }
                 req.params.id = l.id;
@@ -1055,7 +1055,7 @@ describe('lotController', function() {
             it('should error if db encountered error', function() {
                 app.db.lots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.lotController.GetSpotsForLot(req, res);
@@ -1190,7 +1190,7 @@ describe('lotController', function() {
                                 return found = spot;
                         })
                         if (!found)
-                            cb(new Error('Spot not found.'));
+                            cb('spot not found');
                         else
                             cb(null, found);
                     }
@@ -1227,7 +1227,7 @@ describe('lotController', function() {
             it('should error if db encountered error', function() {
                 app.db.lots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error');
                     }
                 }
                 app.lotController.AddSpotsToLot(req, res);
@@ -1325,7 +1325,7 @@ describe('lotController', function() {
                         }
                     }
                     sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                     req.body = {
                         count: 1
@@ -1348,7 +1348,7 @@ describe('lotController', function() {
                         cb(null, 1);
                     })
                     sinon.stub(Spot.prototype, 'save', function(cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                     req.body = {
                         count: 1
@@ -1372,7 +1372,7 @@ describe('lotController', function() {
                     }
                     app.db.spots = {
                         findById: function(id, cb) {
-                            cb(new Error('some error'));
+                            cb('some error');
                         }
                     }
                     req.body = {
@@ -1426,7 +1426,7 @@ describe('lotController', function() {
                         }
                     }
                     sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                     req.body = {
                         spots: ['123']
@@ -1457,7 +1457,7 @@ describe('lotController', function() {
                         cb(null, 1);
                     })
                     sinon.stub(Spot.prototype, 'save', function(cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                     req.body = {
                         spots: ['123']
@@ -1493,7 +1493,7 @@ describe('lotController', function() {
                         cb(null);
                     })
                     sinon.stub(l, 'addSpots', function(spots, cb) {
-                        cb([new Error('some error')]);
+                        cb(['some error']);
                     })
                     sinon.stub(s, 'save', function(cb) {
                         cb(null, this);
@@ -1531,7 +1531,7 @@ describe('lotController', function() {
                         cb(null);
                     })
                     sinon.stub(l, 'save', function(cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                     sinon.stub(Spot.prototype, 'save', function(cb) {
                         cb(null, this);
@@ -1569,7 +1569,7 @@ describe('lotController', function() {
                     if (l.claimSpotNumbers.callCount <= 1)
                         cb(null, l.claimSpotNumbers.callCount);
                     else
-                        cb(new Error('some error'));
+                        cb('some error');
                 })
                 sinon.stub(l, 'addSpots', function(spots, cb) {
                     expect(spots).to.have.length(1);
@@ -1626,7 +1626,7 @@ describe('lotController', function() {
                             if (s.id == id)
                                 return found = s;
                         })
-                        cb(found == null ? new Error('Could not find spot') : null, found);
+                        cb(found == null ? 'Could not find spot' : null, found);
                     },
                     find: function(search, cb) {
                         cb(null, [spots[0], spots[1]]);
@@ -1772,7 +1772,7 @@ describe('lotController', function() {
                 it('encounters error finding lot', function(done) {
                     app.db.lots = {
                         findById: function(id, cb) {
-                            cb(new Error('some error'));
+                            cb('some error');
                         }
                     }
                     res.send = sinon.spy(function() {
@@ -1807,7 +1807,7 @@ describe('lotController', function() {
                     }
                     app.db.spots = {
                         findById: function(id, cb) {
-                            cb(new Error('some error'));
+                            cb('some error');
                         }                        
                     }
                     req.body.spots = ['123']
@@ -1846,7 +1846,7 @@ describe('lotController', function() {
                 it('could not removeSpots', function(done) {
                     var l = new Lot();
                     sinon.stub(l, 'removeSpots', function(spots, cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                     app.db.lots = {
                         findById: function(id, cb) {
@@ -1876,7 +1876,7 @@ describe('lotController', function() {
                         cb(null, [s.id]);
                     })
                     sinon.stub(s, 'save', function(cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                     app.db.lots = {
                         findById: function(id, cb) {
@@ -2004,7 +2004,7 @@ describe('lotController', function() {
                             if (id == s.id)
                                 cb(null, s);
                             else
-                                cb(new Error('some error'));
+                                cb('some error');
                         }                        
                     }
                     req.body.spots = ['123', s.id]

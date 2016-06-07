@@ -600,7 +600,7 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         find: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -644,7 +644,7 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -667,12 +667,12 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     },
                     lots: {
                         find: function(search,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -709,7 +709,7 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -732,12 +732,12 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     },
                     spots: {
                         find: function(search,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -774,7 +774,7 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -797,12 +797,12 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     },
                     bookings: {
                         find: function(search,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -839,7 +839,7 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -864,7 +864,7 @@ describe('userController', function() {
                 sadDbInjection: {
                     users: {
                         findById: function(id,cb) {
-                            cb(new Error())
+                            cb('some error');
                         }
                     }
                 },
@@ -1289,7 +1289,7 @@ describe('userController', function() {
                         name: 'some value'
                     },
                     updateProfile: sinon.spy(function(profile, cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     })
                 }
                 app.db.users = {

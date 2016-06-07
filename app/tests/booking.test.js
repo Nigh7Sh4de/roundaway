@@ -308,7 +308,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         find: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -329,7 +329,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -349,7 +349,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         create: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -378,7 +378,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -412,12 +412,12 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     },
                     spots: {
                         findById: function(id, cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 }
@@ -438,7 +438,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -466,7 +466,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: sinon.spy(function(search, cb) {
-                            cb(new Error());
+                            cb('some error');
                         })
                     }
                 }
@@ -487,7 +487,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -515,7 +515,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: sinon.spy(function(search, cb) {
-                            cb(new Error());
+                            cb('some error');
                         })
                     }
                 }
@@ -536,7 +536,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -564,7 +564,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: sinon.spy(function(search, cb) {
-                            cb(new Error());
+                            cb('some error');
                         })
                     }
                 }
@@ -586,7 +586,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: function(id,cb) {
-                            cb(new Error());
+                            cb('some error');
                         }
                     }
                 },
@@ -619,7 +619,7 @@ describe('bookingController', function() {
                 sadDbInjection: {
                     bookings: {
                         findById: sinon.spy(function(search, cb) {
-                            cb(new Error());
+                            cb('some error');
                         })
                     }
                 }
@@ -680,7 +680,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.GetBooking(req, res);
@@ -730,7 +730,7 @@ describe('bookingController', function() {
             it('if couldnt create booking should send error', function() {
                 app.db.bookings = {
                     create: function(obj, cb) {
-                        cb(new Error('some error'));
+                        cb('some error');
                     }
                 }
                 app.bookingController.CreateBooking(req, res);
@@ -742,7 +742,7 @@ describe('bookingController', function() {
                 app.db.bookings = {
                     collection: {
                         insert: function(obj, cb) {
-                            cb(new Error('some error'));
+                            cb('some error');
                         }
                     }
                 }
@@ -850,7 +850,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.GetSpotForBooking(req, res);
@@ -879,7 +879,7 @@ describe('bookingController', function() {
                 }
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.GetSpotForBooking(req, res);
@@ -937,7 +937,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.SetSpotForBooking(req, res);
@@ -966,7 +966,7 @@ describe('bookingController', function() {
                 }
                 app.db.spots = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.SetSpotForBooking(req, res);
@@ -1013,7 +1013,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.GetStartOfBooking(req, res);
@@ -1060,7 +1060,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.SetStartOfBooking(req, res);
@@ -1103,7 +1103,7 @@ describe('bookingController', function() {
             it('should return error if schema getDuration returned error', function() {
                 var b = new Booking();
                 sinon.stub(b, 'getDuration', function() {
-                    return new Error('some message');
+                    return null;
                 })
                 app.db.bookings = {
                     findById: function(id, cb) {
@@ -1121,7 +1121,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.GetDurationForBooking(req, res);
@@ -1170,7 +1170,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.SetDurationForBooking(req, res);
@@ -1212,7 +1212,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.GetEndOfBooking(req, res);
@@ -1259,7 +1259,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.SetEndOfBooking(req, res);
@@ -1303,7 +1303,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.GetTimeOfBooking(req, res);
@@ -1357,7 +1357,7 @@ describe('bookingController', function() {
             it('should error if db encountered error', function() {
                 app.db.bookings = {
                     findById: function(id, cb) {
-                        cb(new Error(), null);
+                        cb('some error', null);
                     }
                 }
                 app.bookingController.SetTimeOfBooking(req, res);

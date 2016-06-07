@@ -76,7 +76,7 @@ controller.prototype = {
     GetSpot: function(req, res) {
         this.app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else
@@ -87,7 +87,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -107,7 +107,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, spot) {
             if (err != null) {
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             }
             else {
                 if (coords instanceof Array)
@@ -122,7 +122,7 @@ controller.prototype = {
                         total = 2;
                     var next = function(err) {
                         if (err != null)
-                            return res.status(500).send(err.message);
+                            return res.status(500).send(err);
                         if(++c >= total)
                             done();
                     }
@@ -139,7 +139,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -154,7 +154,7 @@ controller.prototype = {
                     bookings.forEach(function(booking) {
                         app.db.bookings.findById(booking, function(err, doc) {
                             if (err != null)
-                                next('Could not find booking ' + booking + ': ' + err.message);
+                                next('Could not find booking ' + booking + ': ' + err);
                             else if (doc == null)
                                 next('Could not find booking ' + booking);
                             else
@@ -182,7 +182,7 @@ controller.prototype = {
         };
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -243,7 +243,7 @@ controller.prototype = {
         });
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -270,7 +270,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -282,7 +282,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -299,7 +299,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -316,7 +316,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {
@@ -328,7 +328,7 @@ controller.prototype = {
         var app = this.app;
         app.db.spots.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Spot not found.');
             else {

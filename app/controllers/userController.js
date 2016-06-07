@@ -20,7 +20,7 @@ controller.prototype = {
     GetAllUsers: function(req, res) {
         this.app.db.users.find({}, function(err, docs) {
             if (err != null) {
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             }
             else {
                 return res.send(docs);
@@ -35,7 +35,7 @@ controller.prototype = {
     GetLotsForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get lots for user. User not found.');
                                 
@@ -88,7 +88,7 @@ controller.prototype = {
     GetSpotsForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get lots for user. User not found.');
                                 
@@ -141,7 +141,7 @@ controller.prototype = {
     GetBookingsForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get lots for user. User not found.');
                                 
@@ -194,13 +194,13 @@ controller.prototype = {
     UpdateProfileForfUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, user) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             if (user == null)
                 return res.status(500).send('Could not update user. User not found.');
 
             user.updateProfile(req.body, function(err) {
                 if (err != null)
-                    return res.status(500).send(err.message);
+                    return res.status(500).send(err);
                 res.status(200).send('User profile updated.\n' + JSON.stringify(user.profile));
             });
         })
@@ -208,7 +208,7 @@ controller.prototype = {
     GetProfileForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
             if (err != null)
-                return res.status(500).send(err.message);
+                return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get profile for user. User not found.');
                                 
