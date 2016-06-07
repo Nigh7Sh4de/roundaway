@@ -42,7 +42,7 @@ controller.prototype = {
         delete newLot._id;
         if (req.body.count != null) {
             if (typeof req.body.count !== 'number' || req.body.count <= 0)
-                return res.status(500).send(new Error('Could not create lot. Specified count was invalid.'));
+                return res.status(500).send('Could not create lot. Specified count was invalid.');
             var arr = [];
             for (var i=0;i<req.body.count;i++)
                 arr.push(newLot);
@@ -303,7 +303,7 @@ controller.prototype = {
                     }
                     spots.forEach(function(spot) {
                         if (spot == null || success.indexOf(spot.id) < 0)
-                            return spotFailed(new Error('Spot ' + (spot || {}).id + ' could not be removed.'));
+                            return spotFailed('Spot ' + (spot || {}).id + ' could not be removed.');
                         spot.number = null;
                         spot.save(function(err) {
                             if (err != null)
