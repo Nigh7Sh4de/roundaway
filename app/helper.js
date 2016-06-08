@@ -33,7 +33,10 @@ var exts = {
 
     deepCompare: function(a, b) {
         try {
-            expect(a).to.deep.equal(b);
+            if (a instanceof Array)
+                expect(a).to.deep.include.all.members(b);
+            else
+                expect(a).to.deep.equal(b);
             return true;
         } catch (e) {
             return false;

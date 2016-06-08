@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
 var server = require('./../../server');
@@ -660,19 +661,8 @@ describe('lotController', function() {
         
         beforeEach(function() {
             app = server(server.GetDefaultInjection());
-            req = {
-                body: {},
-                params: {
-                    id: 'user.id'
-                }
-            }
-            res = {
-                status: sinon.spy(function(s) {
-                    return this;
-                }),
-                send: sinon.spy(),
-                sendStatus: sinon.spy()
-            }
+            req = expressExtensions.mockRequest();
+            res = expressExtensions.mockResponse();
         })
         
         describe('GetAllLots', function() {
@@ -685,7 +675,7 @@ describe('lotController', function() {
                 }
                 app.lotController.GetAllLots(null, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(lots)).to.be.true;
+                expect(res.sentWith({lots: lots})).to.be.true;
             })
         })
         
@@ -701,7 +691,7 @@ describe('lotController', function() {
                 req.params.id = lot.id;
                 app.lotController.GetLot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(lot)).to.be.true;
+                expect(res.sentWith({lot: lot})).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -761,8 +751,7 @@ describe('lotController', function() {
                     }
                 }
                 app.lotController.CreateLot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0]).to.have.property('error');
+                expect(res.sendBad.calledOnce).to.be.true;
             })
             
             it('if couldnt insert entire collection should send error', function() {
@@ -775,8 +764,7 @@ describe('lotController', function() {
                 }
                 req.body.count = 5;
                 app.lotController.CreateLot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0]).to.have.property('error');
+                expect(res.sendBad.calledOnce).to.be.true;
             })
             
             it('should create n lots with the given props', function() {
@@ -869,7 +857,7 @@ describe('lotController', function() {
                 req.params.id = l.id;
                 app.lotController.GetLocationOfLot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(expected), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
+                expect(res.sentWith({location: expected}), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
             });
             
             it('should error if db encountered error', function() {
@@ -1021,7 +1009,7 @@ describe('lotController', function() {
                 req.params.id = l.id;
                 app.lotController.GetSpotsForLot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(expected)).to.be.true;
+                expect(res.sentWith({spots: expected})).to.be.true;
             });
             
             it('should return the lot\'s spots and error messages for failures', function() {
@@ -1048,8 +1036,7 @@ describe('lotController', function() {
                 req.params.id = l.id;
                 app.lotController.GetSpotsForLot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0][0]).to.deep.equal(expected[0]);
-                expect(res.send.firstCall.args[0][1]).to.be.a('string');
+                expect(res.sentWith({spots: expected})).to.be.true;
             });
             
             it('should error if db encountered error', function() {
@@ -1860,10 +1847,8 @@ describe('lotController', function() {
                     }
                     req.body.spots = ['123']
                     res.send = sinon.spy(function() {
-                        expect(res.send.calledOnce).to.be.true;
-                        expect(res.send.calledWith('some error')).to.be.true;
-                        expect(res.status.calledOnce).to.be.true;
-                        expect(res.status.calledWith(500)).to.be.true;
+                        expect(res.sendBad.calledOnce).to.be.true;
+                        expect(res.sendBad.calledWith('some error')).to.be.true;
                         done();
                     })
                     app.lotController.RemoveSpotsFromLot(req, res);
