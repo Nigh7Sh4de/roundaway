@@ -35,7 +35,7 @@ var _db = {
         search[searchProp] = profile.id;
 
         collections.prototype.users.findOne(search, function(err, doc) {
-            if (err != null)
+            if (err)
                 throw err;
             if (doc)
                 return cb(null, doc);
@@ -61,7 +61,7 @@ var _db = {
                 user.addAuth(strat, profile.id, cb);
             else
                 doc.remove(function(err) {
-                    if (err != null)
+                    if (err)
                         return cb(err);
                     else
                         user.addAuth(strat, profile.id, cb);

@@ -19,7 +19,7 @@ var controller = function(app) {
 controller.prototype = {
     GetAllUsers: function(req, res) {
         this.app.db.users.find({}, function(err, docs) {
-            if (err != null) {
+            if (err) {
                 return res.status(500).send(err);
             }
             else {
@@ -34,7 +34,7 @@ controller.prototype = {
     },
     GetLotsForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get lots for user. User not found.');
@@ -54,7 +54,7 @@ controller.prototype = {
         var done = function() {
             user.addLot(lots, function(err, count) {
                 var msg = count + ' lot' + (count != 1 ? 's' : '') + ' added to user.';
-                if (err != null) {
+                if (err) {
                     msg += '\nERRORS: \n'
                     err.forEach(function (e) {
                         msg += e + '\n';
@@ -67,7 +67,7 @@ controller.prototype = {
         var user = null;
         var lots = null;
         this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.send(err);
             if (doc == null)
                 return res.status(500).send('Could not add lot. User not found.');
@@ -77,7 +77,7 @@ controller.prototype = {
         if (typeof req.body.lots == 'string')
             req.body.lots = [req.body.lots];
         this.app.db.lots.find({_id: {$in: req.body.lots}}, function(err, docs) {
-            if (err != null)
+            if (err)
                 return res.send(err);
             if (docs.length == 0)
                 return res.status(500).send('Could not add lot. Lot not found.');
@@ -87,7 +87,7 @@ controller.prototype = {
     },
     GetSpotsForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get lots for user. User not found.');
@@ -107,7 +107,7 @@ controller.prototype = {
         var done = function() {
             user.addSpot(spots, function(err, count) {
                 var msg = count + ' spot' + (count != 1 ? 's' : '') + ' added to user.';
-                if (err != null) {
+                if (err) {
                     msg += '\nERRORS: \n'
                     err.forEach(function (e) {
                         msg += e + '\n';
@@ -120,7 +120,7 @@ controller.prototype = {
         var user = null;
         var spots = null;
         this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.send(err);
             if (doc == null)
                 return res.status(500).send('Could not add spot. User not found.');
@@ -130,7 +130,7 @@ controller.prototype = {
         if (typeof req.body.spots == 'string')
             req.body.spots = [req.body.spots];
         this.app.db.spots.find({_id: {$in: req.body.spots}}, function(err, docs) {
-            if (err != null)
+            if (err)
                 return res.send(err);
             if (docs.length == 0)
                 return res.status(500).send('Could not add spot. Spot not found.');
@@ -140,7 +140,7 @@ controller.prototype = {
     },
     GetBookingsForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get lots for user. User not found.');
@@ -160,7 +160,7 @@ controller.prototype = {
         var done = function() {
             user.addBooking(bookings, function(err, count) {
                 var msg = count + ' booking' + (count != 1 ? 's' : '') + ' added to user.';
-                if (err != null) {
+                if (err) {
                     msg += '\nERRORS: \n'
                     err.forEach(function (e) {
                         msg += e + '\n';
@@ -173,7 +173,7 @@ controller.prototype = {
         var user = null;
         var bookings = null;
         this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.send(err);
             if (doc == null)
                 return res.status(500).send('Could not add booking. User not found.');
@@ -183,7 +183,7 @@ controller.prototype = {
         if (typeof req.body.bookings == 'string')
             req.body.bookings = [req.body.bookings];
         this.app.db.bookings.find({_id: {$in: req.body.bookings}}, function(err, docs) {
-            if (err != null)
+            if (err)
                 return res.send(err);
             if (docs.length == 0)
                 return res.status(500).send('Could not add booking. Booking not found.');
@@ -193,13 +193,13 @@ controller.prototype = {
     },
     UpdateProfileForfUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, user) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             if (user == null)
                 return res.status(500).send('Could not update user. User not found.');
 
             user.updateProfile(req.body, function(err) {
-                if (err != null)
+                if (err)
                     return res.status(500).send(err);
                 res.status(200).send('User profile updated.\n' + JSON.stringify(user.profile));
             });
@@ -207,7 +207,7 @@ controller.prototype = {
     },
     GetProfileForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             if (doc == null)
                 return res.status(500).send('Could not get profile for user. User not found.');

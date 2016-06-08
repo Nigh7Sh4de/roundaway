@@ -29,7 +29,7 @@ userSchema.methods.addLot = function(lots, cb) {
     var added = 0;
     var count = 0;
     var next = function(err) {
-        if (err != null)
+        if (err)
             errors.push(err);
         if (++count >= lots.length)
             cb(errors.length > 0 ? errors : null, added);

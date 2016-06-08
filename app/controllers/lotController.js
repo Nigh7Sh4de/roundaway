@@ -18,7 +18,7 @@ controller.prototype = {
     GetAllLots: function(req, res) {
         var app = this.app;
         app.db.lots.find({}, function(err, docs) {
-            if (err != null) {
+            if (err) {
                 return res.status(500).send(err);
             }
             else {
@@ -29,7 +29,7 @@ controller.prototype = {
     GetLot: function(req, res) {
         var app = this.app;
         app.db.lots.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Lot not found.');
@@ -47,14 +47,14 @@ controller.prototype = {
             for (var i=0;i<req.body.count;i++)
                 arr.push(newLot);
             this.app.db.lots.collection.insert(arr, function(err, result) {
-                if (err != null)
+                if (err)
                     return res.send({status: 'ERROR', error: err});
                 res.send({status: 'SUCCESS', result: result});
             })
         }
         else {
             this.app.db.lots.create(newLot, function(err, result) {
-                if (err != null)
+                if (err)
                     return res.send({status: 'ERROR', error: err});
                 res.send({status: 'SUCCESS', result: result});
             })    
@@ -64,7 +64,7 @@ controller.prototype = {
     GetLocationOfLot: function(req, res) {
         var app = this.app;
         app.db.lots.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Lot not found.');
@@ -82,7 +82,7 @@ controller.prototype = {
         var coords = req.body.coordinates;
         var app = this.app;
         app.db.lots.findById(req.params.id, function(err, lot) {
-            if (err != null) {
+            if (err) {
                 return res.status(500).send(err);
             }
             else {
@@ -97,7 +97,7 @@ controller.prototype = {
                     var c = 0,
                         total = 2;
                     var next = function(err) {
-                        if (err != null)
+                        if (err)
                             return res.status(500).send(err);
                         if(++c >= total)
                             done();
@@ -114,7 +114,7 @@ controller.prototype = {
     GetSpotsForLot: function(req, res) {
         var app = this.app;
         app.db.lots.findById(req.params.id, function(err, doc) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             else if (doc == null)
                 return res.status(500).send('Lot not found.');
@@ -129,7 +129,7 @@ controller.prototype = {
                 if (spots.length > 0)
                     spots.forEach(function(spot) {
                         app.db.spots.findById(spot, function(err, doc) {
-                            if (err != null)
+                            if (err)
                                 next('Could not find spot ' + spot + ': ' + err);
                             else if (doc == null)
                                 next('Could not find spot ' + spot);
@@ -146,7 +146,7 @@ controller.prototype = {
         var app = this.app;
         app.db.lots.findById(req.params.id, function(err, lot) {
             var errors = [];
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             else if (lot == null)
                 return res.status(500).send('Lot not found.');
@@ -158,7 +158,7 @@ controller.prototype = {
                 var cleanup = function(cb) {
                     spots.forEach(function(spot, i) {
                         var next = function(err) {
-                            if (err != null)
+                            if (err)
                                 errors.push(err);
                             if (i+1>=spots.length)
                                 cb();
@@ -166,7 +166,7 @@ controller.prototype = {
                         if (lot.spots.indexOf(spot.id) >= 0)
                             return next();
                         lot.unClaimSpotNumbers(spot.number, function(err) {
-                            if (err != null)
+                            if (err)
                                 return errors.push(err);
                             spot.number = null;
                             spot.save(next)    
@@ -176,7 +176,7 @@ controller.prototype = {
                 }
                 var done = function() {
                     lot.addSpots(spots, function(err) {
-                        if (err != null) {
+                        if (err) {
                             return cleanup(function() {
                                 if (err instanceof Array) {
                                     errors.concat(err);
@@ -189,7 +189,7 @@ controller.prototype = {
                             })
                         }
                         lot.save(function(err) {
-                            if (err != null)
+                            if (err)
                                 return spotFailed(err);
                             res.status(200).send({errors: errors});
                         })
@@ -208,7 +208,7 @@ controller.prototype = {
                             if (lot.spots.indexOf(spot.id) >= 0)
                                 return spotFailed('Cannot add spot ' + spot.id + '. This spot is already in the lot.');
                             lot.claimSpotNumbers(null, function(err, num) {
-                                if (err != null)
+                                if (err)
                                     return spotFailed(err);
                                 claimedNums.push(num[0]);
                                 i++;
@@ -216,7 +216,7 @@ controller.prototype = {
                                 spot.address = lot.address;
                                 spot.number = num[0];
                                 spot.save(function(err, savedSpot) {
-                                    if (err != null)
+                                    if (err)
                                         return spotFailed(err);
                                     spots.push(savedSpot);
                                     if (spots.length + failedSpots >= req.body.spots.length)
@@ -226,7 +226,7 @@ controller.prototype = {
                         }
                         if (typeof req.body.spots[j] === 'string')
                             app.db.spots.findById(req.body.spots[j], function(err, doc) {
-                                if (err != null)
+                                if (err)
                                     return spotFailed(err);
                                 if (doc == null)
                                     return spotFailed('Spot not found.');
@@ -242,7 +242,7 @@ controller.prototype = {
                     total = req.body.count;
                     for (var i=0; i < req.body.count; i++) {
                         lot.claimSpotNumbers(null, function(err, num) {
-                            if (err != null)
+                            if (err)
                                 return spotFailed(err);
                             claimedNums.push(num[0]);
                             var spot = new Spot();
@@ -250,7 +250,7 @@ controller.prototype = {
                             spot.address = lot.address;
                             spot.number = num[0];
                             spot.save(function(err, savedSpot) {
-                                if (err != null)
+                                if (err)
                                     return spotFailed(err);
                                 spots.push(savedSpot);
                                 if (spots.length >= req.body.count)
@@ -267,7 +267,7 @@ controller.prototype = {
     RemoveSpotsFromLot: function(req, res) {
         var app = this.app;
         app.db.lots.findById(req.params.id, function(err, lot) {
-            if (err != null)
+            if (err)
                 return res.status(500).send(err);
             if (lot == null)
                 return res.status(500).send('Lot not found.');
@@ -306,7 +306,7 @@ controller.prototype = {
                             return spotFailed('Spot ' + (spot || {}).id + ' could not be removed.');
                         spot.number = null;
                         spot.save(function(err) {
-                            if (err != null)
+                            if (err)
                                 return spotFailed(err);
                             done(spot);
                         })
@@ -317,7 +317,7 @@ controller.prototype = {
                 spots.forEach(function(spot) {
                     if (typeof spot === 'string')
                         app.db.spots.findById(spot, function(err, spot) {
-                            if (err != null)
+                            if (err)
                                 return spotFailed(err);
                             if (spot == null)
                                 return spotFailed('Spot not found.');
@@ -346,7 +346,7 @@ controller.prototype = {
                     _id: {$in: lot.spots}, 
                     number: {$gte: req.body.from, $lte: req.body.to}
                 }, function(err, spots) {
-                    if (err != null)
+                    if (err)
                         return res.status(500).send(err);
                     if (spots == null || spots.length <= 0)
                         return res.status(500).send('Could not find spots in given range.');

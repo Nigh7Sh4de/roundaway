@@ -41,7 +41,7 @@ lotSchema.methods.addSpots = function(spots, cb) {
     this.save(function(err) {
         if (errs.length == 0 && err == null)
             errs = null;
-        else if (err != null)
+        else if (err)
             errs.push(err);
         cb(errs);
     });
@@ -62,7 +62,7 @@ lotSchema.methods.removeSpots = function(spots, cb) {
         success.push(spot.id);
     }.bind(this))
     this.save(function(err) {
-        if (err != null) 
+        if (err) 
             return cb(err);
         else if (errors.length > 0)
             return cb(errors, success);
@@ -152,7 +152,7 @@ lotSchema.methods.claimSpotNumbers = function(nums, cb) {
     }.bind(this))       
     
     this.save(function(err) {
-        if (err != null)
+        if (err)
             error.push(err);
         cb(error.length == 0 ? null : error, added)
     });
