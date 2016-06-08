@@ -47,7 +47,8 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
     st.expect(200).end(function (err, res) {
         expect(err).to.not.be.ok;
         if (testOutput != null) {
-            expect(res.text).to.contain(JSON.stringify(testOutput));
+            var expectedOutput = JSON.stringify(testOutput).slice(1, expectedOutput.length - 1);
+            expect(res.text).to.contain(expectedOutput);
         }
         if (assertions != null && typeof assertions === 'function')
             assertions();
