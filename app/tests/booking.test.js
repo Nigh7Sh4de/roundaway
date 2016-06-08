@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
 var server = require('./../../server');
@@ -353,7 +354,7 @@ describe('bookingController', function() {
                         }
                     }
                 },
-                output: { status: 'SUCCESS', result: { someProp: 'some value'} },
+                output: { someProp: 'some value'},
                 ignoreId: true
             },
             {
@@ -633,19 +634,8 @@ describe('bookingController', function() {
         
         beforeEach(function() {
             app = server(server.GetDefaultInjection());
-            req = {
-                body: {},
-                params: {
-                    id: 'user.id'
-                }
-            }
-            res = {
-                status: sinon.spy(function(s) {
-                    return this;
-                }),
-                send: sinon.spy(),
-                sendStatus: sinon.spy()
-            }
+            req = expressExtensions.mockRequest();
+            res = expressExtensions.mockResponse();
         })
         
         describe('GetAllBookings', function() {
@@ -658,7 +648,7 @@ describe('bookingController', function() {
                 }
                 app.bookingController.GetAllBookings(null, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(bookings)).to.be.true;
+                expect(res.sentWith({bookings: bookings})).to.be.true;
             })
         })
         
@@ -674,7 +664,7 @@ describe('bookingController', function() {
                 req.params.id = booking.id;
                 app.bookingController.GetBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(booking)).to.be.true;
+                expect(res.sentWith({booking: booking})).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -734,8 +724,7 @@ describe('bookingController', function() {
                     }
                 }
                 app.bookingController.CreateBooking(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0]).to.have.property('error');
+                expect(res.sendBad.calledOnce).to.be.true;
             })
             
             it('if couldnt insert entire collection should send error', function() {
@@ -748,8 +737,7 @@ describe('bookingController', function() {
                 }
                 req.body.count = 5;
                 app.bookingController.CreateBooking(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0]).to.have.property('error');
+                expect(res.sendBad.calledOnce).to.be.true;
             })
             
             it('should create n bookings with the given props', function() {
@@ -825,6 +813,17 @@ describe('bookingController', function() {
         })
                 
         describe('GetSpotForBooking', function() {
+            it('should return error if booking has no spot attached', function() {
+                var booking = new Booking();
+                app.db.bookings = {
+                    findById: function(id, cb) {
+                        cb(null, booking);
+                    }
+                }
+                app.bookingController.GetSpotForBooking(req, res);
+                expect(res.send.firstCall.args[0]).to.not.have.property('spot');
+            })
+
             it('should return the spot associated with the booking', function() {
                 var spot = new Spot();
                 var booking = new Booking();
@@ -844,7 +843,7 @@ describe('bookingController', function() {
                 req.params.id = booking.id;
                 app.bookingController.GetSpotForBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(spot)).to.be.true;
+                expect(res.sentWith({spot: spot})).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -931,7 +930,7 @@ describe('bookingController', function() {
                 app.bookingController.SetSpotForBooking(req, res);
                 expect(booking.setSpot.calledOnce).to.be.true;
                 expect(booking.setSpot.calledWith(spot)).to.be.true;
-                expect(res.sendStatus.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -1007,7 +1006,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetStartOfBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(start)).to.be.true;
+                expect(res.sentWith({start: start})).to.be.true;
             });
             
             it('should error if db encountered error', function() {
@@ -1053,8 +1052,7 @@ describe('bookingController', function() {
                 app.bookingController.SetStartOfBooking(req, res);
                 expect(b.setStart.calledOnce).to.be.true;
                 expect(b.setStart.calledWith(start)).to.be.true;
-                expect(res.sendStatus.calledOnce)
-                expect(res.sendStatus.calledWith(200)).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -1097,7 +1095,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetDurationForBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(dur.toString()), res.send.firstCall.args[0]).to.be.true;
+                expect(res.sentWith({duration: dur}), res.send.firstCall.args[0]).to.be.true;
             });
             
             it('should return error if schema getDuration returned error', function() {
@@ -1163,8 +1161,7 @@ describe('bookingController', function() {
                 app.bookingController.SetDurationForBooking(req, res);
                 expect(b.setDuration.calledOnce).to.be.true;
                 expect(b.setDuration.calledWith(duration)).to.be.true;
-                expect(res.sendStatus.calledOnce)
-                expect(res.sendStatus.calledWith(200)).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -1206,7 +1203,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetEndOfBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(end)).to.be.true;
+                expect(res.sentWith({end: end})).to.be.true;
             });
             
             it('should error if db encountered error', function() {
@@ -1252,8 +1249,7 @@ describe('bookingController', function() {
                 app.bookingController.SetEndOfBooking(req, res);
                 expect(b.setEnd.calledOnce).to.be.true;
                 expect(b.setEnd.calledWith(end)).to.be.true;
-                expect(res.sendStatus.calledOnce)
-                expect(res.sendStatus.calledWith(200)).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -1297,7 +1293,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetTimeOfBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith({start: start, end: end})).to.be.true;
+                expect(res.sentWith({start: start, end: end})).to.be.true;
             });
             
             it('should error if db encountered error', function() {
@@ -1350,8 +1346,7 @@ describe('bookingController', function() {
                 expect(b.setStart.calledWith(start)).to.be.true;
                 expect(b.setEnd.calledOnce).to.be.true;
                 expect(b.setEnd.calledWith(end)).to.be.true;
-                expect(res.sendStatus.calledOnce)
-                expect(res.sendStatus.calledWith(200)).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
             })
                         
             it('should error if db encountered error', function() {
