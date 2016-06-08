@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
 var server = require('./../../server');
@@ -896,19 +897,8 @@ describe('userController', function() {
         
         beforeEach(function() {
             app = server(inject);
-            req = {
-                body: {},
-                params: {
-                    id: 'user.id'
-                }
-            }
-            res = {
-                status: sinon.spy(function(s) {
-                    return this;
-                }),
-                send: sinon.spy(),
-                sendStatus: sinon.spy()
-            }
+            req = expressExtensions.mockRequest();
+            res = expressExtensions.mockResponse();
         })
         
         
@@ -921,7 +911,7 @@ describe('userController', function() {
                 }
                 app.userController.GetAllUsers(null, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(users)).to.be.true;
+                expect(res.sentWith({users: users})).to.be.true;
                 
             })
         })

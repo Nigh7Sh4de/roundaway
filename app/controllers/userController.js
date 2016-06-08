@@ -19,11 +19,10 @@ var controller = function(app) {
 controller.prototype = {
     GetAllUsers: function(req, res) {
         this.app.db.users.find({}, function(err, docs) {
-            if (err) {
-                return res.status(500).send(err);
-            }
+            if (err)
+                return res.sendBad(err);
             else {
-                return res.send(docs);
+                return res.sendGood('Found users', {users: docs});
             }
         });
     },

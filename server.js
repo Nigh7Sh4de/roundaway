@@ -24,6 +24,7 @@ var app = function(inject) {
     });
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
+    inject.expressExtensions.init(express);
 
     app.use(require('cookie-parser')());
     app.use(app.bodyParser.urlencoded({ extended: true }));
@@ -62,6 +63,7 @@ app.GetDefaultInjection = function(allowConnect) {
         db: require('./app/db'),
         passport: require('./app/passport'),
         helper: require('./app/helper'),
+        expressExtensions: require('./app/express'),
         userController: require('./app/controllers/userController'),
         bookingController: require('./app/controllers/bookingController'),
         spotController: require('./app/controllers/spotController'),

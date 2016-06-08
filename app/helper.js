@@ -28,6 +28,18 @@ var exts = {
         if (req.user.admin)
             return next();
         res.redirect('/home');
+    },
+
+    deepCompare: function(a, b) {
+        for(var prop in a) {
+            if (a[prop] != b[prop])
+                return false;
+        }
+        for (var prop in b) {
+            if (b[prop] != a[prop])
+                return false;
+        }
+        return true;
     }
 }
 
