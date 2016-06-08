@@ -1,6 +1,7 @@
 // var helper = function(obj) {
 //     Object.assign(obj, exts);
 // }
+var expect = require('chai').expect;
 
 var exts = {
     init: function(obj) {
@@ -31,17 +32,13 @@ var exts = {
     },
 
     deepCompare: function(a, b) {
-        for(var prop in a) {
-            if (a[prop] != b[prop])
-                return false;
+        try {
+            expect(a).to.deep.equal(b);
+            return true;
+        } catch (e) {
+            return false;
         }
-        for (var prop in b) {
-            if (b[prop] != a[prop])
-                return false;
-        }
-        return true;
     }
 }
 
 module.exports = exts;
-// module.exports = Object.assign(helper, exts);
