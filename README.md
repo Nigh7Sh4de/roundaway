@@ -25,7 +25,7 @@ Roundaway
    <td>dev</td>
    <td>8081</td>
    <td>http://dev.roundaway.com (DNE yet)</th>
-   <td>0.0.4</td>
+   <td>0.0.5</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
@@ -72,11 +72,11 @@ Roundaway
   </tr>
   <tr>
     <td>message</td>
-    <td>Optional for <code>ERROR</code>s. Contains some response message describe the back-end operation that took place</td>
+    <td>Optional for <code>ERROR</code> responses. Contains some response message describe the back-end operation that took place</td>
   </tr>
   <tr>
     <td>errors</td>
-    <td>Array of strings containing the different errors that occured. Sometimes present on <code>SUCCESS</code>' as well when performing an action on a collection and some documents documents succeeded while others did not</td>
+    <td>Array of strings containing the different errors that occured. Sometimes present on <code>SUCCESS</code> responses as well when performing an action on a collection and some documents documents succeeded while others did not</td>
   </tr>
   <tr>
     <td>data</td>
