@@ -63,6 +63,29 @@ Roundaway
 
 *All api calls are on the `/api` route*
 
+### Responses
+
+<table>
+  <tr>
+    <td>status</td>
+    <td>One word status description. Usually <code>ERROR</code> or <code>SUCCESS</code></td>
+  </tr>
+  <tr>
+    <td>message</td>
+    <td>Optional for <code>ERROR</code>s. Contains some response message describe the back-end operation that took place</td>
+  </tr>
+  <tr>
+    <td>errors</td>
+    <td>Array of strings containing the different errors that occured. Sometimes present on <code>SUCCESS</code>' as well when performing an action on a collection and some documents documents succeeded while others did not</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>Any data being returned by the server as per the request</td>
+  </tr>
+</table>
+
+### Requests
+
 #### GET `/api/users`
 <table>
   <tr>
