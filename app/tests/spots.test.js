@@ -1396,7 +1396,7 @@ describe('spotController', function() {
                 req.params.id = s.id;
                 app.spotController.GetAllBookingsForSpot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({bookings: expected})).to.be.true;
+                expect(res.sentWith(expected)).to.be.true;
             });
             
             it('should return the spot\'s bookings and error messages for failures', function() {
@@ -1423,8 +1423,8 @@ describe('spotController', function() {
                 req.params.id = s.id;
                 app.spotController.GetAllBookingsForSpot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].bookings).to.have.length(1);
-                expect(res.send.firstCall.args[0].bookings).to.deep.include(expected[0]);
+                expect(res.send.firstCall.args[0].data).to.have.length(1);
+                expect(res.send.firstCall.args[0].data).to.deep.include(expected[0]);
                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
             });
             
@@ -1803,7 +1803,7 @@ describe('spotController', function() {
                 req.body.schedules = schedules;
                 app.spotController.AddAvailabilityToSpot(req, res);
                 expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentWith({errors: [error]})).to.be.true;
+                expect(res.sentWith({errors: [error]}, true)).to.be.true;
             })
             
             it('should error if db encountered error', function() {

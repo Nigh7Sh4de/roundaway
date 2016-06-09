@@ -911,7 +911,7 @@ describe('userController', function() {
                 }
                 app.userController.GetAllUsers(null, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({users: users})).to.be.true;
+                expect(res.sentWith(users)).to.be.true;
                 
             })
         })
@@ -938,7 +938,7 @@ describe('userController', function() {
                 req.user = user;
                 app.userController.GetProfileForSessionUser(req, res);
                 expect(res.send.calledOnce, 'res.send').to.be.true;
-                var args = res.send.firstCall.args[0].profile;
+                var args = res.send.firstCall.args[0].data;
                 expect(args.name).to.equal(user.profile.name);
                 expect(args.authid).to.equal(user.authid);
             })
@@ -1310,7 +1310,7 @@ describe('userController', function() {
                 }
                 app.userController.GetProfileForUser(req,res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({profile: user.profile})).to.be.true;
+                expect(res.sentWith(user.profile)).to.be.true;
             })
             
             it('should error on bad id', function() {
@@ -1341,7 +1341,7 @@ describe('userController', function() {
                 }
                 app.userController.GetLotsForUser(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({lots: user.lotIds})).to.be.true;
+                expect(res.sentWith(user.lotIds)).to.be.true;
             })
             
             it('should error on bad id', function() {
@@ -1372,7 +1372,7 @@ describe('userController', function() {
                 }
                 app.userController.GetSpotsForUser(req,res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spots: user.spotIds})).to.be.true;
+                expect(res.sentWith(user.spotIds)).to.be.true;
             })
             
             it('should error on bad id', function() {
@@ -1403,7 +1403,7 @@ describe('userController', function() {
                 }
                 app.userController.GetBookingsForUser(req,res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({bookings: user.bookingIds})).to.be.true;
+                expect(res.sentWith(user.bookingIds)).to.be.true;
             })
             
             it('should error on bad id', function() {

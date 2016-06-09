@@ -23,7 +23,7 @@ controller.prototype = {
             if (err)
                 return res.sendBad(err);
             else
-                return res.sendGood('Found bookings', {bookings: docs});
+                return res.sendGood('Found bookings', docs);
         });
     },
     GetBooking: function(req, res) {
@@ -33,7 +33,7 @@ controller.prototype = {
             else if (!doc)
                 return res.sendBad('Booking not found');
             else
-                return res.sendGood('Found booking', {booking: doc});
+                return res.sendGood('Found booking', doc);
         })
     },
     CreateBooking: function(req, res) {
@@ -75,7 +75,7 @@ controller.prototype = {
                 else if (!spotDoc)
                     return res.sendBad('The spot associated with this booking does not exist');
                 else
-                    return res.sendGood('Found spot', {spot: spotDoc});
+                    return res.sendGood('Found spot', spotDoc);
             })
         }.bind(this))
     },
@@ -122,7 +122,7 @@ controller.prototype = {
                 return res.sendBad(err);
             else if (!doc)
                 return res.sendBad('Booking not found');
-            res.sendGood('Found start datetime', {start: doc.getStart()});
+            res.sendGood('Found start datetime', doc.getStart());
         });
     },
     SetStartOfBooking: function(req, res) {
@@ -147,7 +147,7 @@ controller.prototype = {
             var dur = doc.getDuration();
             if (!dur)
                 return res.sendBad('This booking does not have valid start and/or end dates. Start: ' + doc.getStart() + ', End: ' + doc.getEnd());
-            res.sendGood('Found duration', {duration: dur});
+            res.sendGood('Found duration', dur);
         })
     },
     SetDurationForBooking: function(req, res) {
@@ -169,7 +169,7 @@ controller.prototype = {
                 return res.sendBad(err);
             else if (!doc)
                 return res.sendBad('Booking not found');
-            res.sendGood('Found end datetime', {end: doc.getEnd()});
+            res.sendGood('Found end datetime', doc.getEnd());
         });
     },
     SetEndOfBooking: function(req, res) {

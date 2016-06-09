@@ -10,20 +10,23 @@ var exts = {
     sendGood: function(msg, obj, opt) {
         opt = opt || {};
         return this.status(opt.code || 200).
-                send(Object.assign({
+                send({
                     status: opt.status || 'SUCCESS',
-                    message: msg || 'Operation successful'
-                }, obj));
+                    message: msg || 'Operation successful',
+                    errors: opt.errors || [],
+                    data: obj
+                });
     },
 
     sendBad: function(errs, obj, opt) {
         opt = opt || {};
         return this.status(opt.status || 500)
-                .send(Object.assign({
+                .send({
                     status: opt.status || 'ERROR',
                     errors: errs instanceof Array ?
-                        errs : [errs]
-                }, obj));
+                        errs : [errs],
+                    data: obj
+                });
     },
 
     mockResponse: function() {
@@ -31,13 +34,19 @@ var exts = {
             sent: function() {
 
             },
-            sentWith: function(obj) {
-                for (var prop in obj) { 
-                    if (!this.send.firstCall.args[0][prop] ||
-                        !helper.deepCompare(this.send.firstCall.args[0][prop], obj[prop]))
+            sentWith: function(obj, onBody) {
+                var body = this.send.firstCall.args[0];
+                if (onBody) {
+                    if (!body)
                         return false;
+                    for (var prop in obj) {
+                        if (!helper.deepCompare(body[prop], obj[prop]))
+                            return false;
+                    }
+                    return true;
                 }
-                return true;
+                else
+                    return helper.deepCompare(body.data, obj);
             },
             status: sinon.spy(function(s) {
                 return this;

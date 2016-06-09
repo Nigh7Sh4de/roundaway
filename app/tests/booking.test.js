@@ -648,7 +648,7 @@ describe('bookingController', function() {
                 }
                 app.bookingController.GetAllBookings(null, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({bookings: bookings})).to.be.true;
+                expect(res.sentWith(bookings)).to.be.true;
             })
         })
         
@@ -664,7 +664,7 @@ describe('bookingController', function() {
                 req.params.id = booking.id;
                 app.bookingController.GetBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({booking: booking})).to.be.true;
+                expect(res.sentWith(booking)).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -843,7 +843,7 @@ describe('bookingController', function() {
                 req.params.id = booking.id;
                 app.bookingController.GetSpotForBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spot: spot})).to.be.true;
+                expect(res.sentWith(spot)).to.be.true;
             })
             
             it('should error if db encountered error', function() {
@@ -1006,7 +1006,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetStartOfBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({start: start})).to.be.true;
+                expect(res.sentWith(start)).to.be.true;
             });
             
             it('should error if db encountered error', function() {
@@ -1095,7 +1095,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetDurationForBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({duration: dur}), res.send.firstCall.args[0]).to.be.true;
+                expect(res.sentWith(dur), res.send.firstCall.args[0]).to.be.true;
             });
             
             it('should return error if schema getDuration returned error', function() {
@@ -1203,7 +1203,7 @@ describe('bookingController', function() {
                 req.params.id = b.id;
                 app.bookingController.GetEndOfBooking(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({end: end})).to.be.true;
+                expect(res.sentWith(end)).to.be.true;
             });
             
             it('should error if db encountered error', function() {

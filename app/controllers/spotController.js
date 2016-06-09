@@ -155,7 +155,7 @@ controller.prototype = {
                     if (errs.length >= bookings.length)
                         return res.sendBad('Failed to find bookings attached to this spot');
                     else if (result.length + errs.length >= bookings.length)
-                        return res.sendGood('Found bookings', {bookings: result, errors: errs});
+                        return res.sendGood('Found bookings', result, {errors: errs});
                 }
                 if (bookings.length > 0)
                     bookings.forEach(function(booking) {

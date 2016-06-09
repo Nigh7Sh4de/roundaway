@@ -120,7 +120,7 @@ controller.prototype = {
                 var next = function(obj) {
                     result.push(obj);
                     if (result.length >= spots.length)
-                        return res.sendGood('Found spots for lot', {spots: result});
+                        return res.sendGood('Found spots for lot', result);
                 }
                 if (spots.length > 0)
                     spots.forEach(function(spot) {
@@ -181,7 +181,7 @@ controller.prototype = {
                                 return res.sendBad(errors);
                             })
                         }
-                        else res.sendGood('Added spots to lot', {errors: errors});
+                        else res.sendGood('Added spots to lot', {}, {errors: errors});
                     })
                 }
                 var spotFailed = function(err) {
@@ -275,7 +275,7 @@ controller.prototype = {
                 if (spot)
                     successSpots.push(spot);
                 if (failedSpots + successSpots.length >= total)
-                    return res.sendGood('Removed spots from lot', {errors: errors, spotsRemoved: successSpots});
+                    return res.sendGood('Removed spots from lot', successSpots, {errors: errors});
             }
             var next = function(spot) {
                 spots.push(spot);

@@ -1008,7 +1008,7 @@ describe('lotController', function() {
                 req.params.id = l.id;
                 app.lotController.GetSpotsForLot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spots: expected})).to.be.true;
+                expect(res.sentWith(expected)).to.be.true;
             });
             
             it('should return the lot\'s spots and error messages for failures', function() {
@@ -1035,8 +1035,8 @@ describe('lotController', function() {
                 req.params.id = l.id;
                 app.lotController.GetSpotsForLot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].spots[0]).to.deep.equal(expected[0]);
-                expect(res.send.firstCall.args[0].spots[1]).to.be.a('string');
+                expect(res.send.firstCall.args[0].data[0]).to.deep.equal(expected[0]);
+                expect(res.send.firstCall.args[0].data[1]).to.be.a('string');
             });
             
             it('should error if db encountered error', function() {
@@ -1390,13 +1390,10 @@ describe('lotController', function() {
                     req.body = {
                         spots: ['123']
                     }
-                    res.send = sinon.spy(function() {
-                        expect(res.status.calledOnce).to.be.true;
-                        expect(res.status.calledWith(500)).to.be.true;
-                        expect(res.send.calledOnce).to.be.true;
-                        expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                    res.sent = function() {
+                        expect(res.sendBad.calledOnce).to.be.true;
                         done();
-                    });
+                    };
                     app.lotController.AddSpotsToLot(req,res);
                 })
                 
@@ -1538,13 +1535,11 @@ describe('lotController', function() {
                         return spot.id;
                     })
                 }
-                res.send = sinon.spy(function() {
-                    expect(res.status.calledOnce).to.be.true;
-                    expect(res.status.calledWith(200)).to.be.true;
-                    expect(res.send.calledOnce).to.be.true;
+                res.sent = function() {
+                    expect(res.sendGood.calledOnce).to.be.true;
                     expect(res.send.firstCall.args[0].errors).to.have.length(1);
                     done();
-                });
+                };
                 app.lotController.AddSpotsToLot(req,res);
             })   
         })
@@ -1954,13 +1949,11 @@ describe('lotController', function() {
                         }                        
                     }
                     req.body.spots = ['123', s.id]
-                    res.send = sinon.spy(function() {
+                    res.sent = function() {
                         expect(res.send.calledOnce).to.be.true;
                         expect(res.send.firstCall.args[0].errors).to.have.length(1);
-                        expect(res.status.calledOnce).to.be.true;
-                        expect(res.status.calledWith(200)).to.be.true;
                         done();
-                    })
+                    }
                     app.lotController.RemoveSpotsFromLot(req, res);
             })
         })

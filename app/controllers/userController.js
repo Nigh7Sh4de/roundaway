@@ -22,19 +22,16 @@ controller.prototype = {
             if (err)
                 return res.sendBad(err);
             else {
-                return res.sendGood('Found users', {users: docs});
+                return res.sendGood('Found users', docs);
             }
         });
     },
     GetProfileForSessionUser: function(req, res) {
         if (req.user == null)
             return res.sendBad('Could not get session user');
-        return res.sendGood('Found profile for current session user', { 
-            profile: (Object.assign({}, req.user.profile.toJSON(), 
-            {
-                authid: req.user.authid.toJSON()
-            }))
-        });
+        return res.sendGood('Found profile for current session user', 
+                Object.assign({}, req.user.profile.toJSON(),{authid: req.user.authid.toJSON()})
+            )
     },
     GetLotsForUser: function(req, res) {
         this.app.db.users.findById(req.params.id, function(err, doc) {
@@ -43,7 +40,7 @@ controller.prototype = {
             if (doc == null)
                 return res.sendBad('Could not get lots for user because this user was not found');
                                 
-            res.sendGood('Found lots for user', {lots: doc.lotIds});
+            res.sendGood('Found lots for user', doc.lotIds);
         })
     },
     AddLotsToUser: function(req, res) {
@@ -96,7 +93,7 @@ controller.prototype = {
             if (doc == null)
                 return res.sendBad('Could not get lots for user as this user was not found');
                                 
-            res.sendGood('Found spots', {spots: doc.spotIds});
+            res.sendGood('Found spots', doc.spotIds);
         })
     },
     AddSpotsToUser: function(req, res) {
@@ -149,7 +146,7 @@ controller.prototype = {
             if (doc == null)
                 return res.sendBad('Could not get lots for user as this user was not found');
                                 
-            res.sendGood('Fonud bookings', {bookings: doc.bookingIds});
+            res.sendGood('Fonud bookings', doc.bookingIds);
         })
     },
     AddBookingsToUser: function(req, res) {
@@ -205,7 +202,7 @@ controller.prototype = {
             user.updateProfile(req.body, function(err) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Profile updated', {profile: user.profile})
+                res.sendGood('Profile updated', user.profile)
             });
         })
     },
@@ -216,7 +213,7 @@ controller.prototype = {
             if (doc == null)
                 return res.sendBad('Could not get profile for user as this user was not found');
                                 
-            res.sendGood('Found profile for user', {profile: doc.profile});
+            res.sendGood('Found profile for user', doc.profile);
         })
     }
 }
