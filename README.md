@@ -29,7 +29,7 @@ Roundaway
    <td>staging (completed items)</td>
   </tr>
   <tr>
-   <td><i>topic</i></td>
+   <td><i>#-topic</i></td>
    <td colspan="3">LOCAL</td>
    <td>development (tasks in progress)</td>
   </tr>
