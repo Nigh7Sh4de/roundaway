@@ -938,7 +938,7 @@ describe('userController', function() {
                 req.user = user;
                 app.userController.GetProfileForSessionUser(req, res);
                 expect(res.send.calledOnce, 'res.send').to.be.true;
-                var args = res.send.firstCall.args[0];
+                var args = res.send.firstCall.args[0].profile;
                 expect(args.name).to.equal(user.profile.name);
                 expect(args.authid).to.equal(user.authid);
             })
@@ -1174,19 +1174,8 @@ describe('userController', function() {
             })
             
             it('should error if no bookings in request body', function() {
-                var req = {
-                    body: {}
-                }
-                var res = {
-                    status: sinon.spy(function(s) {
-                        return this;
-                    }),
-                    send: sinon.spy()
-                }
                 app.userController.AddBookingsToUser(req, res);
-                expect(res.status.calledOnce);
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
             })
             
             it('should error if no user found', function() {
@@ -1290,10 +1279,7 @@ describe('userController', function() {
                 }
                 req.body = updateProfile;
                 app.userController.UpdateProfileForfUser(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith('some error')).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
             })
             
             it('should error if user is not found', function() {
@@ -1304,9 +1290,7 @@ describe('userController', function() {
                     })
                 }
                 app.userController.UpdateProfileForfUser(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
             })
         })
         
@@ -1326,7 +1310,7 @@ describe('userController', function() {
                 }
                 app.userController.GetProfileForUser(req,res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(user.profile)).to.be.true;
+                expect(res.sentWith({profile: user.profile})).to.be.true;
             })
             
             it('should error on bad id', function() {
@@ -1357,7 +1341,7 @@ describe('userController', function() {
                 }
                 app.userController.GetLotsForUser(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(user.lotIds)).to.be.true;
+                expect(res.sentWith({lots: user.lotIds})).to.be.true;
             })
             
             it('should error on bad id', function() {
@@ -1388,7 +1372,7 @@ describe('userController', function() {
                 }
                 app.userController.GetSpotsForUser(req,res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(user.spotIds)).to.be.true;
+                expect(res.sentWith({spots: user.spotIds})).to.be.true;
             })
             
             it('should error on bad id', function() {
@@ -1419,7 +1403,7 @@ describe('userController', function() {
                 }
                 app.userController.GetBookingsForUser(req,res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.send.calledWith(user.bookingIds)).to.be.true;
+                expect(res.sentWith({bookings: user.bookingIds})).to.be.true;
             })
             
             it('should error on bad id', function() {
@@ -1430,9 +1414,7 @@ describe('userController', function() {
                     })
                 }
                 app.userController.GetBookingsForUser(req,res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
             })
         })
         
