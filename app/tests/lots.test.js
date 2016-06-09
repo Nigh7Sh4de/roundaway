@@ -975,12 +975,11 @@ describe('lotController', function() {
                         return cb(null, l);
                     }
                 }
-                res.send = function(body) {
-                    expect(body).to.be.ok;
-                    expect(body).to.have.length(0);
+                req.params.id = l.id;
+                res.sent = function(body) {
+                    expect(res.sentWith({spots: []})).to.be.true;
                     done();
                 }
-                req.params.id = l.id;
                 app.lotController.GetSpotsForLot(req, res);
             })
             
@@ -1036,7 +1035,8 @@ describe('lotController', function() {
                 req.params.id = l.id;
                 app.lotController.GetSpotsForLot(req, res);
                 expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spots: expected})).to.be.true;
+                expect(res.send.firstCall.args[0].spots[0]).to.deep.equal(expected[0]);
+                expect(res.send.firstCall.args[0].spots[1]).to.be.a('string');
             });
             
             it('should error if db encountered error', function() {
@@ -1489,48 +1489,9 @@ describe('lotController', function() {
                         spots: [s.id]
                     }
                     res.send = sinon.spy(function() {
-                        expect(res.status.calledOnce).to.be.true;
-                        expect(res.status.calledWith(500)).to.be.true;
-                        expect(res.send.calledOnce).to.be.true;
-                        expect(res.send.firstCall.args[0].errors).to.have.length(1);
+                        expect(res.sendBad.calledOnce).to.be.true;
+                        expect(res.sendBad.firstCall.args[0]).to.have.length(1);
                         expect(s.number).to.not.be.ok;
-                        done();
-                    });
-                    app.lotController.AddSpotsToLot(req,res);
-                })
-                
-                it('could not save Lot', function(done) {
-                    var l = new Lot();
-                    app.db.lots = {
-                        findById: function(id, cb) {
-                            cb(null, l);
-                        }
-                    }
-                    app.db.spots = {
-                        findById: function(id, cb) {
-                            cb(null, new Spot());
-                        }
-                    }
-                    sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-                        cb(null, 1);
-                    })
-                    sinon.stub(l, 'addSpots', function(spots, cb) {
-                        cb(null);
-                    })
-                    sinon.stub(l, 'save', function(cb) {
-                        cb('some error');
-                    })
-                    sinon.stub(Spot.prototype, 'save', function(cb) {
-                        cb(null, this);
-                    })
-                    req.body = {
-                        spots: ['123']
-                    }
-                    res.send = sinon.spy(function() {
-                        expect(res.status.calledOnce).to.be.true;
-                        expect(res.status.calledWith(500)).to.be.true;
-                        expect(res.send.calledOnce).to.be.true;
-                        expect(res.send.firstCall.args[0].errors).to.have.length(1);
                         done();
                     });
                     app.lotController.AddSpotsToLot(req,res);
