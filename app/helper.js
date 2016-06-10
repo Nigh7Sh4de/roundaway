@@ -10,8 +10,8 @@ var exts = {
         Object.assign(obj, x);
     },
 
-    start: function() {
-        this.listen(this.config.PORT, this.started);
+    start: function(cb) {
+        this.listen(this.config.PORT, cb || this.started);
     },
 
     started: function() {
