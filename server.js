@@ -8,14 +8,15 @@ var app = function(inject) {
         "GOOGLE_CLIENT_ID",
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_API_KEY",
-        "PORT"
+        "PORT",
+        "DB_CONNECTION_STRING"
     ].forEach(function(configKey) {
         if (!inject.config[configKey])
             throw new Error('Must define config: ' + configKey);
     })
     app.config = inject.config;
     
-    app.db = new inject.db();
+    app.db = new inject.db(app.config.DB_CONNECTION_STRING);
     if (app.db.connect != null && typeof app.db.connect === 'function')
         app.db.connect();
     app.passport = inject.passport(app.db, app.config);

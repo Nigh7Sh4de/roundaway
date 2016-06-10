@@ -78,12 +78,16 @@ var _db = {
     }
 }
 
-var collections = function() {}
+var collections = function(connString) {
+    if (!connString)
+        throw new Error('Must supply a connection string for the db');
+    this.connectionString = connString;
+}
 
 collections.prototype = {
     
     connect: function() {
-        mongoose.connect('mongodb://localhost/roundaway');
+        mongoose.connect(this.connectionString);
     },
     users: User,
     bookings: Booking,
