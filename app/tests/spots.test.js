@@ -815,1190 +815,1068 @@ describe('Spot schema', function() {
 })
 
 describe('spotController', function() {
-    describe('route', function() {
-        routeTest('spotController', [
-            {
-                verb: verbs.GET,
-                route: '/api/spots',
-                method: 'GetAllSpots',
-                dbInjection: {
-                    spots: {
-                        find: sinon.spy(function(search, cb) {
-                            expect(search).to.eql({});
-                            cb(null, [{someProp:'some value'},{someProp:'some other value'}]);
-                        })
-                    }
-                },
-                sadDbInjection: {
-                    spots: {
-                        find: function(id,cb) {
-                            cb('some error');
-                        }
-                    }
-                },
-                output: [{someProp:'some value'},{someProp:'some other value'}],
-                ignoreId: true
-            },
-            {
-                verb: verbs.PUT,
-                route: '/api/spots',
-                method: 'CreateSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true,
-                ignoreId: true
-            },
-            {
-                verb: verbs.GET,
-                route: '/api/spots/near',
-                method: 'GetNearestSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true,
-                ignoreId: true
-            },
-            {
-                verb: verbs.GET,
-                route: '/api/spots/:id',
-                method: 'GetSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.GET,
-                route: '/api/spots/:id/location',
-                method: 'GetLocationForSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.POST,
-                route: '/api/spots/:id/location',
-                method: 'SetLocationForSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.GET,
-                route: '/api/spots/:id/bookings',
-                method: 'GetAllBookingsForSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.PUT,
-                route: '/api/spots/:id/bookings',
-                method: 'AddBookingsToSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.PUT,
-                route: '/api/spots/:id/bookings/remove',
-                method: 'RemoveBookingsFromSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.GET,
-                route: '/api/spots/:id/available',
-                method: 'GetAllAvailabilityForSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.PUT,
-                route: '/api/spots/:id/available',
-                method: 'AddAvailabilityToSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.PUT,
-                route: '/api/spots/:id/available/remove',
-                method: 'RemoveAvailabilityFromSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.GET,
-                route: '/api/spots/:id/booked',
-                method: 'GetAllBookedTimeForSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            },
-            {
-                verb: verbs.GET,
-                route: '/api/spots/:id/schedule',
-                method: 'GetEntireScheduleForSpot',
-                ignoreHappyPath: true,
-                ignoreSadPath: true
-            }
-        ])
+    var app,
+        req = {},
+        res = {};
+    
+    beforeEach(function() {
+        var inject = server.GetDefaultInjection();
+        // inject.passport = function(){
+        //     return {
+        //         initialize: function(){
+        //             return function(){}
+        //         },
+        //         session: function(){
+        //             return function(){}
+        //         }
+        //     }
+        // };
+        // inject.authController = function(){};
+        app = server(inject);
+        req = expressExtensions.mockRequest();
+        res = expressExtensions.mockResponse();
     })
     
-    describe('method', function() {
-        var app,
-            req = {},
-            res = {};
+    describe('GetAllSpots', function() {
+        it('should return all spots', function() {
+            var spots = [new Spot(), new Spot()];
+            app.db.spots = {
+                find: function(obj, cb) {
+                    cb(null, spots);
+                }
+            }
+            app.spotController.GetAllSpots(null, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({spots: spots})).to.be.true;
+        })
+    })
+    
+    describe('GetSpot', function() {
+        it('should get spot with specified id', function() {
+            var spot = new Spot();
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(spot.id);
+                    cb(null, spot);
+                }
+            }
+            req.params.id = spot.id;
+            app.spotController.GetSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({spot: spot})).to.be.true;
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.GetSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.GetSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('CreateSpot', function() {
+        var emptySpot;
+        
+        before(function() {
+            emptySpot = new Spot().toJSON();
+            delete emptySpot._id;    
+        })
+        
+        it('should send error if req count is invalid (and not null)', function() {
+            [
+                'abc',
+                {},
+                function(){expect.fail()},
+                []
+            ].forEach(function(input) {
+                req.body.count = input;
+                app.spotController.CreateSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+                res.status.reset();
+                res.send.reset();
+            })
+        })
+        
+        it('if couldnt create spot should send error', function() {
+            app.db.spots = {
+                create: function(obj, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.CreateSpot(req, res);
+            expect(res.sendBad.calledOnce).to.be.true;
+        })
+        
+        it('if couldnt insert entire collection should send error', function() {
+            app.db.spots = {
+                collection: {
+                    insert: function(obj, cb) {
+                        cb('some error');
+                    }
+                }
+            }
+            req.body.count = 5;
+            app.spotController.CreateSpot(req, res);
+            expect(res.sendBad.calledOnce).to.be.true;
+        })
+        
+        it('should create n spots with the given props', function() {
+            var count = 5;
+            var spot = Object.assign({}, emptySpot);
+            var arr = [];
+            for (var i=0;i<count;i++)
+                arr.push(spot);
+            spot.address = '123 fake st';
+            app.db.spots = {
+                collection: {
+                    insert: function(obj, cb) {
+                        expect(obj).to.have.length(count);
+                        expect(obj[0]).to.have.property('address');
+                        expect(obj).to.deep.include.all.members(arr);
+                        cb(null, obj);
+                    }
+                }
+            }
+            req.body.count = count;
+            req.body.spot = spot;
+            app.spotController.CreateSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+        })
+        
+        it('should create a spot with the given props', function() {
+            var spot = Object.assign({}, emptySpot);
+            spot.address = '123 fake st';
+            app.db.spots = {
+                create: function(obj, cb) {
+                    expect(obj).to.have.property('address');
+                    cb(null, obj);
+                }
+            }
+            req.body.spot = spot;
+            app.spotController.CreateSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+        })
+        
+        it('should create a blank spot given no params', function() {
+            app.db.spots = {
+                create: function(obj, cb) {
+                    expect(obj).to.deep.equal(emptySpot);
+                    cb(null, obj);
+                }
+            }
+            app.spotController.CreateSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+        })
+        
+        it('should create n blank spots given a count n', function() {
+            var count = 5;
+            var arr = [];
+            for (var i=0;i<count;i++)
+                arr.push(emptySpot);
+            app.db.spots = {
+                collection: {
+                    insert: sinon.spy(function(obj, cb) {
+                        expect(obj).to.have.length(count);
+                        expect(obj).to.deep.include.all.members(arr);
+                        cb(null, obj);
+                    })
+                }
+            }
+            req.body.count = count;
+            app.spotController.CreateSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+        })
+    })
+    
+    describe('GetNearestSpot', function() {
+        it('should return nearest AVAILABLE spots', function() {
+            var spots = [new Spot(), new Spot];
+            var limitedSpots = spots.slice(0, 1);
+            var long = 12;
+            var lat = 21;
+            var find = function(cb) { 
+                cb(null, spots); 
+            };
+            var fakeQueryObject = function() {
+                this.limit = function() { return this; }
+                this.elemMatch = function() {
+                    spots.splice(1, 1); 
+                    return this; 
+                }
+                this.exec = find;
+                return this;
+            }
+            app.db.spots = {
+                find: fakeQueryObject
+            }
+            req.query = {
+                long: long,
+                lat: lat,
+                available: new Date()
+            }
+            app.spotController.GetNearestSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({spots: limitedSpots})).to.be.true;
+        })
+        
+        it('should return nearest COUNT spots', function() {
+            var spots = [new Spot(), new Spot];
+            var limitedSpots = spots.slice(0, 1);
+            var long = 12;
+            var lat = 21;
+            var find = function(cb) { 
+                cb(null, spots); 
+            };
+            var fakeQueryObject = function() {
+                this.limit = function() {
+                    spots.splice(1, 1); 
+                    return this; 
+                }
+                this.exec = find;
+                return this;
+            }
+            app.db.spots = {
+                find: fakeQueryObject
+            }
+            req.query = {
+                long: long,
+                lat: lat,
+                count: 1
+            }
+            app.spotController.GetNearestSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({spots: limitedSpots})).to.be.true;
+        })
+        
+        it('should return nearest spots', function() {
+            var spots = [new Spot()];
+            var long = 12;
+            var lat = 21;
+            var find = sinon.spy(function(cb) { cb(null, spots); });
+            var fakeQueryObject = function() {
+                this.limit = function() { return this; }
+                this.exec = find;
+                return this;
+            }
+            app.db.spots = {
+                find: fakeQueryObject
+            }
+            req.query = {
+                long: long,
+                lat: lat
+            }
+            app.spotController.GetNearestSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({spots: spots})).to.be.true;
+        })
+        
+        it('should error if long and lat are not specified', function() {
+            app.spotController.GetNearestSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should error if db encountered error', function() {
+            req.query.long = req.query.lat = 123;
+            var find = sinon.spy(function(cb) { cb('some error'); });
+            var fakeQueryObject = function() {
+                this.limit = function() { return this; }
+                this.exec = find;
+                return this;
+            }
+            app.db.spots = {
+                find: fakeQueryObject
+            }
+            app.spotController.GetNearestSpot(req, res);
+            expect(find.calledOnce).to.be.true;
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('GetLocationForSpot', function() {
+        it('should return the spot\'s location', function() {
+            var s = new Spot();
+            s.address = '123 fake st';
+            s.location.coordinates = [123, 456];
+            var expected = {
+                address: s.getAddress(),
+                coordinates: s.getLocation()
+            }
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            app.spotController.GetLocationForSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({location: expected}), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
+        });
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.GetLocationForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.GetLocationForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('SetLocationForSpot', function() {
+        var s = new Spot();
+        var coords = {
+            long: 123,
+            lat: 456
+        };
+        var address = '123 fake st';
         
         beforeEach(function() {
-            var inject = server.GetDefaultInjection();
-            // inject.passport = function(){
-            //     return {
-            //         initialize: function(){
-            //             return function(){}
-            //         },
-            //         session: function(){
-            //             return function(){}
-            //         }
-            //     }
-            // };
-            // inject.authController = function(){};
-            app = server(inject);
-            req = expressExtensions.mockRequest();
-            res = expressExtensions.mockResponse();
+            s = new Spot();
+            sinon.stub(s, 'setLocation', function(l,cb) {
+                cb();
+            })
+            sinon.stub(s, 'setAddress', function(l,cb) {
+                cb();
+            })
+            sinon.stub(app.geocoder, 'reverse', function(opt, cb) {
+                expect(opt.lat).to.equal(coords.lat);
+                expect(opt.lon).to.equal(coords.long);
+                cb(null, [{formattedAddress: address}]);
+            })
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
         })
         
-        describe('GetAllSpots', function() {
-            it('should return all spots', function() {
-                var spots = [new Spot(), new Spot()];
-                app.db.spots = {
-                    find: function(obj, cb) {
-                        cb(null, spots);
-                    }
-                }
-                app.spotController.GetAllSpots(null, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spots: spots})).to.be.true;
-            })
+        it('should set location given coordinates as array', function(done) {
+            req.body = {
+                coordinates: [coords.lat, coords.long]
+            }
+            res.sent = function(status) {
+                expect(s.setLocation.calledOnce).to.be.true;
+                expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
+                expect(s.setAddress.calledOnce).to.be.true;
+                expect(s.setAddress.calledWith(address)).to.be.true;
+                done();
+            }
+            app.spotController.SetLocationForSpot(req, res);
         })
         
-        describe('GetSpot', function() {
-            it('should get spot with specified id', function() {
-                var spot = new Spot();
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(spot.id);
-                        cb(null, spot);
-                    }
+        it('should set location given long and lat as object', function(done) {
+            req.body = {
+                coordinates: {
+                    long: coords.long,
+                    lat: coords.lat
                 }
-                req.params.id = spot.id;
-                app.spotController.GetSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spot: spot})).to.be.true;
-            })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.GetSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.GetSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            }
+            res.sent = function() {
+                expect(s.setLocation.calledOnce).to.be.true;
+                expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
+                expect(s.setAddress.calledOnce).to.be.true;
+                expect(s.setAddress.calledWith(address)).to.be.true;
+                done();
+            }
+            app.spotController.SetLocationForSpot(req, res);
         })
         
-        describe('CreateSpot', function() {
-            var emptySpot;
-            
-            before(function() {
-                emptySpot = new Spot().toJSON();
-                delete emptySpot._id;    
-            })
-            
-            it('should send error if req count is invalid (and not null)', function() {
-                [
-                    'abc',
-                    {},
-                    function(){expect.fail()},
-                    []
-                ].forEach(function(input) {
-                    req.body.count = input;
-                    app.spotController.CreateSpot(req, res);
-                    expect(res.status.calledOnce).to.be.true;
-                    expect(res.status.calledWith(500)).to.be.true;
-                    expect(res.send.calledOnce).to.be.true;
-                    res.status.reset();
-                    res.send.reset();
-                })
-            })
-            
-            it('if couldnt create spot should send error', function() {
-                app.db.spots = {
-                    create: function(obj, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.CreateSpot(req, res);
-                expect(res.sendBad.calledOnce).to.be.true;
-            })
-            
-            it('if couldnt insert entire collection should send error', function() {
-                app.db.spots = {
-                    collection: {
-                        insert: function(obj, cb) {
-                            cb('some error');
-                        }
-                    }
-                }
-                req.body.count = 5;
-                app.spotController.CreateSpot(req, res);
-                expect(res.sendBad.calledOnce).to.be.true;
-            })
-            
-            it('should create n spots with the given props', function() {
-                var count = 5;
-                var spot = Object.assign({}, emptySpot);
-                var arr = [];
-                for (var i=0;i<count;i++)
-                    arr.push(spot);
-                spot.address = '123 fake st';
-                app.db.spots = {
-                    collection: {
-                        insert: function(obj, cb) {
-                            expect(obj).to.have.length(count);
-                            expect(obj[0]).to.have.property('address');
-                            expect(obj).to.deep.include.all.members(arr);
-                            cb(null, obj);
-                        }
-                    }
-                }
-                req.body.count = count;
-                req.body.spot = spot;
-                app.spotController.CreateSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-            })
-            
-            it('should create a spot with the given props', function() {
-                var spot = Object.assign({}, emptySpot);
-                spot.address = '123 fake st';
-                app.db.spots = {
-                    create: function(obj, cb) {
-                        expect(obj).to.have.property('address');
-                        cb(null, obj);
-                    }
-                }
-                req.body.spot = spot;
-                app.spotController.CreateSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-            })
-            
-            it('should create a blank spot given no params', function() {
-                app.db.spots = {
-                    create: function(obj, cb) {
-                        expect(obj).to.deep.equal(emptySpot);
-                        cb(null, obj);
-                    }
-                }
-                app.spotController.CreateSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-            })
-            
-            it('should create n blank spots given a count n', function() {
-                var count = 5;
-                var arr = [];
-                for (var i=0;i<count;i++)
-                    arr.push(emptySpot);
-                app.db.spots = {
-                    collection: {
-                        insert: sinon.spy(function(obj, cb) {
-                            expect(obj).to.have.length(count);
-                            expect(obj).to.deep.include.all.members(arr);
-                            cb(null, obj);
-                        })
-                    }
-                }
-                req.body.count = count;
-                app.spotController.CreateSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-            })
+        it('should fail if no coordinates object in body', function() {
+            app.spotController.SetLocationForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
         })
-        
-        describe('GetNearestSpot', function() {
-            it('should return nearest AVAILABLE spots', function() {
-                var spots = [new Spot(), new Spot];
-                var limitedSpots = spots.slice(0, 1);
-                var long = 12;
-                var lat = 21;
-                var find = function(cb) { 
-                    cb(null, spots); 
-                };
-                var fakeQueryObject = function() {
-                    this.limit = function() { return this; }
-                    this.elemMatch = function() {
-                        spots.splice(1, 1); 
-                        return this; 
-                    }
-                    this.exec = find;
-                    return this;
-                }
-                app.db.spots = {
-                    find: fakeQueryObject
-                }
-                req.query = {
-                    long: long,
-                    lat: lat,
-                    available: new Date()
-                }
-                app.spotController.GetNearestSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spots: limitedSpots})).to.be.true;
-            })
-            
-            it('should return nearest COUNT spots', function() {
-                var spots = [new Spot(), new Spot];
-                var limitedSpots = spots.slice(0, 1);
-                var long = 12;
-                var lat = 21;
-                var find = function(cb) { 
-                    cb(null, spots); 
-                };
-                var fakeQueryObject = function() {
-                    this.limit = function() {
-                        spots.splice(1, 1); 
-                        return this; 
-                    }
-                    this.exec = find;
-                    return this;
-                }
-                app.db.spots = {
-                    find: fakeQueryObject
-                }
-                req.query = {
-                    long: long,
-                    lat: lat,
-                    count: 1
-                }
-                app.spotController.GetNearestSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spots: limitedSpots})).to.be.true;
-            })
-            
-            it('should return nearest spots', function() {
-                var spots = [new Spot()];
-                var long = 12;
-                var lat = 21;
-                var find = sinon.spy(function(cb) { cb(null, spots); });
-                var fakeQueryObject = function() {
-                    this.limit = function() { return this; }
-                    this.exec = find;
-                    return this;
-                }
-                app.db.spots = {
-                    find: fakeQueryObject
-                }
-                req.query = {
-                    long: long,
-                    lat: lat
-                }
-                app.spotController.GetNearestSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({spots: spots})).to.be.true;
-            })
-            
-            it('should error if long and lat are not specified', function() {
-                app.spotController.GetNearestSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should error if db encountered error', function() {
-                req.query.long = req.query.lat = 123;
-                var find = sinon.spy(function(cb) { cb('some error'); });
-                var fakeQueryObject = function() {
-                    this.limit = function() { return this; }
-                    this.exec = find;
-                    return this;
-                }
-                app.db.spots = {
-                    find: fakeQueryObject
-                }
-                app.spotController.GetNearestSpot(req, res);
-                expect(find.calledOnce).to.be.true;
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-        })
-        
-        describe('GetLocationForSpot', function() {
-            it('should return the spot\'s location', function() {
-                var s = new Spot();
-                s.address = '123 fake st';
-                s.location.coordinates = [123, 456];
-                var expected = {
-                    address: s.getAddress(),
-                    coordinates: s.getLocation()
-                }
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
-                }
-                req.params.id = s.id;
-                app.spotController.GetLocationForSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({location: expected}), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
-            });
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.GetLocationForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.GetLocationForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-        })
-        
-        describe('SetLocationForSpot', function() {
+    })
+    
+    describe('GetAllBookingsForSpot', function() {
+        it('should return an empty array if no bookings are assigned', function(done) {
             var s = new Spot();
-            var coords = {
-                long: 123,
-                lat: 456
-            };
-            var address = '123 fake st';
-            
-            beforeEach(function() {
-                s = new Spot();
-                sinon.stub(s, 'setLocation', function(l,cb) {
-                    cb();
-                })
-                sinon.stub(s, 'setAddress', function(l,cb) {
-                    cb();
-                })
-                sinon.stub(app.geocoder, 'reverse', function(opt, cb) {
-                    expect(opt.lat).to.equal(coords.lat);
-                    expect(opt.lon).to.equal(coords.long);
-                    cb(null, [{formattedAddress: address}]);
-                })
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+            app.db.spots = {
+                findById: function(id,cb) {
+                    return cb(null, s);
                 }
-                req.params.id = s.id;
-            })
-            
-            it('should set location given coordinates as array', function(done) {
-                req.body = {
-                    coordinates: [coords.lat, coords.long]
-                }
-                res.sent = function(status) {
-                    expect(s.setLocation.calledOnce).to.be.true;
-                    expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
-                    expect(s.setAddress.calledOnce).to.be.true;
-                    expect(s.setAddress.calledWith(address)).to.be.true;
-                    done();
-                }
-                app.spotController.SetLocationForSpot(req, res);
-            })
-            
-            it('should set location given long and lat as object', function(done) {
-                req.body = {
-                    coordinates: {
-                        long: coords.long,
-                        lat: coords.lat
-                    }
-                }
-                res.sent = function() {
-                    expect(s.setLocation.calledOnce).to.be.true;
-                    expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
-                    expect(s.setAddress.calledOnce).to.be.true;
-                    expect(s.setAddress.calledWith(address)).to.be.true;
-                    done();
-                }
-                app.spotController.SetLocationForSpot(req, res);
-            })
-            
-            it('should fail if no coordinates object in body', function() {
-                app.spotController.SetLocationForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            }
+            res.sent = function(body) {
+                expect(res.sentWith({bookings: []}))
+                done();
+            }
+            req.params.id = s.id;
+            app.spotController.GetAllBookingsForSpot(req, res);
         })
         
-        describe('GetAllBookingsForSpot', function() {
-            it('should return an empty array if no bookings are assigned', function(done) {
-                var s = new Spot();
-                app.db.spots = {
-                    findById: function(id,cb) {
-                        return cb(null, s);
-                    }
+        
+        it('should return the spot\'s bookings', function() {
+            var s = new Spot();
+            var expected = [
+                new Booking(),
+                new Booking()
+            ]
+            s.bookings = [expected[0].id, expected[1].id];
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                res.sent = function(body) {
-                    expect(res.sentWith({bookings: []}))
-                    done();
+            }
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    for(var i=0;i<expected.length;i++)
+                        if (expected[i].id == id)
+                            return cb(null, expected[i]);
+                    return cb('Booking not found');
                 }
-                req.params.id = s.id;
-                app.spotController.GetAllBookingsForSpot(req, res);
-            })
-            
-            
-            it('should return the spot\'s bookings', function() {
-                var s = new Spot();
-                var expected = [
-                    new Booking(),
-                    new Booking()
-                ]
-                s.bookings = [expected[0].id, expected[1].id];
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+            }
+            req.params.id = s.id;
+            app.spotController.GetAllBookingsForSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith(expected)).to.be.true;
+        });
+        
+        it('should return the spot\'s bookings and error messages for failures', function() {
+            var s = new Spot();
+            var msg = 'Booking not found';
+            var expected = [
+                new Booking(),
+                msg
+            ]
+            s.bookings = [expected[0].id, '123'];
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                app.db.bookings = {
-                    findById: function(id, cb) {
-                        for(var i=0;i<expected.length;i++)
-                            if (expected[i].id == id)
-                                return cb(null, expected[i]);
-                        return cb('Booking not found');
-                    }
+            }
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    if (expected[0].id == id)
+                        return cb(null, expected[0]);
+                    return cb(msg);
                 }
-                req.params.id = s.id;
-                app.spotController.GetAllBookingsForSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith(expected)).to.be.true;
-            });
-            
-            it('should return the spot\'s bookings and error messages for failures', function() {
-                var s = new Spot();
-                var msg = 'Booking not found';
-                var expected = [
-                    new Booking(),
-                    msg
-                ]
-                s.bookings = [expected[0].id, '123'];
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+            }
+            req.params.id = s.id;
+            app.spotController.GetAllBookingsForSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.send.firstCall.args[0].data).to.have.length(1);
+            expect(res.send.firstCall.args[0].data).to.deep.include(expected[0]);
+            expect(res.send.firstCall.args[0].errors).to.have.length(1);
+        });
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
                 }
-                app.db.bookings = {
-                    findById: function(id, cb) {
-                        if (expected[0].id == id)
-                            return cb(null, expected[0]);
-                        return cb(msg);
-                    }
-                }
-                req.params.id = s.id;
-                app.spotController.GetAllBookingsForSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].data).to.have.length(1);
-                expect(res.send.firstCall.args[0].data).to.deep.include(expected[0]);
-                expect(res.send.firstCall.args[0].errors).to.have.length(1);
-            });
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.GetAllBookingsForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.GetAllBookingsForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            }
+            app.spotController.GetAllBookingsForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
         })
         
-        describe('AddBookingsToSpot', function() {
-            it('should update booking object being added', function(done) {
-                var s = new Spot();
-                var b = new Booking();
-                b.setSpot = sinon.spy(function(spot, cb) {
-                    cb(null);
-                });
-                b.start = b.end = new Date();
-                sinon.stub(s, 'addBookings', function(_b, cb) {
-                    expect(_b).to.deep.include(b);
-                    cb(null);
-                })
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
                 }
-                req.params.id = s.id;
-                req.body.bookings = b;
-                res.sent = function() {
-                    expect(res.sendGood.calledOnce).to.be.true;
-                    expect(b.setSpot.calledOnce).to.be.true;
-                    done();
-                }
-                app.spotController.AddBookingsToSpot(req, res);
+            }
+            app.spotController.GetAllBookingsForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('AddBookingsToSpot', function() {
+        it('should update booking object being added', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            b.setSpot = sinon.spy(function(spot, cb) {
+                cb(null);
+            });
+            b.start = b.end = new Date();
+            sinon.stub(s, 'addBookings', function(_b, cb) {
+                expect(_b).to.deep.include(b);
+                cb(null);
             })
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            req.body.bookings = b;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(b.setSpot.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+        })
 
-            it('should add the given booking objects arr', function(done) {
-                var s = new Spot();
-                var b = new Booking();
-                b.setSpot = function(spot, cb) { cb() }
-                b.start = b.end = new Date();
-                sinon.stub(s, 'addBookings', function(_b, cb) {
-                    expect(_b).to.deep.include(b);
-                    cb(null);
-                })
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
-                }
-                req.params.id = s.id;
-                req.body.bookings = b;
-                res.sent = function(status) {
-                    expect(res.sendGood.calledOnce).to.be.true;
-                    done();
-                }
-                app.spotController.AddBookingsToSpot(req, res);
+        it('should add the given booking objects arr', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            b.setSpot = function(spot, cb) { cb() }
+            b.start = b.end = new Date();
+            sinon.stub(s, 'addBookings', function(_b, cb) {
+                expect(_b).to.deep.include(b);
+                cb(null);
             })
-            
-            it('should find and add the given booking ids', function(done) {
-                var s = new Spot();
-                var b = new Booking();
-                b.setSpot = function(spot, cb) { cb() }
-                b.start = b.end = new Date();
-                sinon.stub(s, 'addBookings', function(_b, cb) {
-                    expect(_b).to.deep.include(b);
-                    cb(null);
-                })
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                app.db.bookings = {
-                    find: function(search, cb) {
-                        expect(search._id.$in).to.deep.include(b._id.toString());
-                        cb(null, [b]);
-                    }
-                }
-                req.params.id = s.id;
-                req.body.bookings = b.id;
-                res.sent = function() {
-                    expect(res.sendGood.calledOnce).to.be.true;
-                    done();
-                }
-                app.spotController.AddBookingsToSpot(req, res);
+            }
+            req.params.id = s.id;
+            req.body.bookings = b;
+            res.sent = function(status) {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+        })
+        
+        it('should find and add the given booking ids', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            b.setSpot = function(spot, cb) { cb() }
+            b.start = b.end = new Date();
+            sinon.stub(s, 'addBookings', function(_b, cb) {
+                expect(_b).to.deep.include(b);
+                cb(null);
             })
-            
-            it('should fail if addBookings failed', function(done) {
-                var s = new Spot();
-                sinon.stub(s, 'addBookings', function(b, cb) {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            app.db.bookings = {
+                find: function(search, cb) {
+                    expect(search._id.$in).to.deep.include(b._id.toString());
+                    cb(null, [b]);
+                }
+            }
+            req.params.id = s.id;
+            req.body.bookings = b.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+        })
+        
+        it('should fail if addBookings failed', function(done) {
+            var s = new Spot();
+            sinon.stub(s, 'addBookings', function(b, cb) {
+                cb('some error');
+            });
+            req.body.bookings = new Booking();
+            res.send = function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                done();
+            };
+            app.spotController.AddBookingsToSpot(req, res);
+        })
+        
+        it('should fail if given bad input', function(done) {
+            [
+                null,
+                undefined,
+                123,
+                function(){expect.fail()},
+                {badProp: 'bad value'}
+            ].forEach(function(input, i, arr) {
+                req.body.bookings = input;
+                app.spotController.AddBookingsToSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+                res.status.reset();
+                res.send.reset();
+                if (i+1 >= arr.length)
+                    done();
+            })
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
                     cb('some error');
-                });
-                req.body.bookings = new Booking();
-                res.send = function() {
-                    expect(res.status.calledOnce).to.be.true;
-                    expect(res.status.calledWith(500)).to.be.true;
+                }
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('RemoveBookingsFromSpot', function() {
+        it('should remove the given booking objects arr', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            b.start = b.end = new Date();
+            sinon.stub(s, 'removeBookings', function(_b, cb) {
+                expect(_b).to.deep.include(b);
+                cb(null);
+            })
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            req.body.bookings = b;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.RemoveBookingsFromSpot(req, res);
+        })
+        
+        it('should find and remove the given booking ids', function(done) {
+            var s = new Spot();
+            var b = new Booking();
+            b.start = b.end = new Date();
+            sinon.stub(s, 'removeBookings', function(_b, cb) {
+                expect(_b).to.deep.include(b);
+                cb(null);
+            })
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            app.db.bookings = {
+                find: function(search, cb) {
+                    expect(search._id.$in).to.deep.include(b._id.toString());
+                    cb(null, [b]);
+                }
+            }
+            req.params.id = s.id;
+            req.body.bookings = b.id;
+            res.sent = function(status) {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.RemoveBookingsFromSpot(req, res);
+        })
+        
+        it('should fail if removeBookings failed', function(done) {
+            var s = new Spot();
+            sinon.stub(s, 'removeBookings', function(b, cb) {
+                cb('some error');
+            });
+            req.body.bookings = new Booking();
+            res.send = function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                done();
+            };
+            app.spotController.RemoveBookingsFromSpot(req, res);
+        })
+        
+        it('should fail if given bad input', function(done) {
+            [
+                null,
+                undefined,
+                123,
+                function(){expect.fail()},
+                {badProp: 'bad value'}
+            ].forEach(function(input, i, arr) {
+                req.body.bookings = input;
+                app.spotController.RemoveBookingsFromSpot(req, res);
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+                res.status.reset();
+                res.send.reset();
+                if (i+1 >= arr.length)
                     done();
-                };
-                app.spotController.AddBookingsToSpot(req, res);
-            })
-            
-            it('should fail if given bad input', function(done) {
-                [
-                    null,
-                    undefined,
-                    123,
-                    function(){expect.fail()},
-                    {badProp: 'bad value'}
-                ].forEach(function(input, i, arr) {
-                    req.body.bookings = input;
-                    app.spotController.AddBookingsToSpot(req, res);
-                    expect(res.status.calledOnce).to.be.true;
-                    expect(res.status.calledWith(500)).to.be.true;
-                    expect(res.send.calledOnce).to.be.true;
-                    res.status.reset();
-                    res.send.reset();
-                    if (i+1 >= arr.length)
-                        done();
-                })
-            })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.AddBookingsToSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.AddBookingsToSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
             })
         })
         
-        describe('RemoveBookingsFromSpot', function() {
-            it('should remove the given booking objects arr', function(done) {
-                var s = new Spot();
-                var b = new Booking();
-                b.start = b.end = new Date();
-                sinon.stub(s, 'removeBookings', function(_b, cb) {
-                    expect(_b).to.deep.include(b);
-                    cb(null);
-                })
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
-                }
-                req.params.id = s.id;
-                req.body.bookings = b;
-                res.sent = function() {
-                    expect(res.sendGood.calledOnce).to.be.true;
-                    done();
-                }
-                app.spotController.RemoveBookingsFromSpot(req, res);
-            })
-            
-            it('should find and remove the given booking ids', function(done) {
-                var s = new Spot();
-                var b = new Booking();
-                b.start = b.end = new Date();
-                sinon.stub(s, 'removeBookings', function(_b, cb) {
-                    expect(_b).to.deep.include(b);
-                    cb(null);
-                })
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
-                }
-                app.db.bookings = {
-                    find: function(search, cb) {
-                        expect(search._id.$in).to.deep.include(b._id.toString());
-                        cb(null, [b]);
-                    }
-                }
-                req.params.id = s.id;
-                req.body.bookings = b.id;
-                res.sent = function(status) {
-                    expect(res.sendGood.calledOnce).to.be.true;
-                    done();
-                }
-                app.spotController.RemoveBookingsFromSpot(req, res);
-            })
-            
-            it('should fail if removeBookings failed', function(done) {
-                var s = new Spot();
-                sinon.stub(s, 'removeBookings', function(b, cb) {
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
                     cb('some error');
-                });
-                req.body.bookings = new Booking();
-                res.send = function() {
-                    expect(res.status.calledOnce).to.be.true;
-                    expect(res.status.calledWith(500)).to.be.true;
-                    done();
-                };
-                app.spotController.RemoveBookingsFromSpot(req, res);
-            })
-            
-            it('should fail if given bad input', function(done) {
-                [
-                    null,
-                    undefined,
-                    123,
-                    function(){expect.fail()},
-                    {badProp: 'bad value'}
-                ].forEach(function(input, i, arr) {
-                    req.body.bookings = input;
-                    app.spotController.RemoveBookingsFromSpot(req, res);
-                    expect(res.status.calledOnce).to.be.true;
-                    expect(res.status.calledWith(500)).to.be.true;
-                    expect(res.send.calledOnce).to.be.true;
-                    res.status.reset();
-                    res.send.reset();
-                    if (i+1 >= arr.length)
-                        done();
-                })
-            })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
                 }
-                app.spotController.RemoveBookingsFromSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.RemoveBookingsFromSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            }
+            app.spotController.RemoveBookingsFromSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
         })
         
-        describe('GetAllAvailabilityForSpot', function() {
-            it('should return the available ranges for the spot', function() {
-                var s = new Spot();
-                s.available.addRange(new Date('2016/01/01'), new Date());
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
                 }
-                req.params.id = s.id;
-                app.spotController.GetAllAvailabilityForSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({available: s.available.ranges})).to.be.true;
-            })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
+            }
+            app.spotController.RemoveBookingsFromSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('GetAllAvailabilityForSpot', function() {
+        it('should return the available ranges for the spot', function() {
+            var s = new Spot();
+            s.available.addRange(new Date('2016/01/01'), new Date());
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                app.spotController.GetAllAvailabilityForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.GetAllAvailabilityForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            }
+            req.params.id = s.id;
+            app.spotController.GetAllAvailabilityForSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({available: s.available.ranges})).to.be.true;
         })
         
-        describe('AddAvailabilityToSpot', function() {
-            it('should add the entire request body as a schedule if no shedules are specified', function() {
-                var s = new Spot();
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
                 }
-                var schedule = {someProp: 'somevalue'};
-                sinon.stub(s, 'addAvailability', function(sched, cb) {
-                    expect(sched).to.equal(schedule);
-                    cb(null);
-                })
-                req.params.id = s.id;
-                req.body = schedule;
-                app.spotController.AddAvailabilityToSpot(req, res);
-                expect(res.sendGood.calledOnce).to.be.true;
-            })
-            it('should add the given schedules to the spot\'s availability', function() {
-                var s = new Spot();
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
-                }
-                var schedules = [{someProp: 'somevalue'}];
-                sinon.stub(s, 'addAvailability', function(sched, cb) {
-                    expect(sched).to.equal(schedules);
-                    cb(null);
-                })
-                req.params.id = s.id;
-                req.body.schedules = schedules;
-                app.spotController.AddAvailabilityToSpot(req, res);
-                expect(res.sendGood.calledOnce).to.be.true;
-            })
-            
-            it('should fail if addAvailability failed', function() {
-                var s = new Spot();
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
-                }
-                var schedules = [{someProp: 'somevalue'}];
-                var error = 'some error';
-                sinon.stub(s, 'addAvailability', function(sched, cb) {
-                    expect(sched).to.equal(schedules);
-                    cb(error);
-                })
-                req.params.id = s.id;
-                req.body.schedules = schedules;
-                app.spotController.AddAvailabilityToSpot(req, res);
-                expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentWith({errors: [error]}, true)).to.be.true;
-            })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.AddAvailabilityToSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.AddAvailabilityToSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            }
+            app.spotController.GetAllAvailabilityForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
         })
         
-        describe('RemoveAvailabilityFromSpot', function() {
-            it('should remove the entire request body as a schedule if no shedules are specified', function() {
-                var s = new Spot();
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
                 }
-                var schedule = {someProp: 'somevalue'};
-                sinon.stub(s, 'removeAvailability', function(sched, cb) {
-                    expect(sched).to.equal(schedule);
-                    cb(null);
-                })
-                req.params.id = s.id;
-                req.body = schedule;
-                app.spotController.RemoveAvailabilityFromSpot(req, res);
-                expect(res.sendGood.calledOnce).to.be.true;
-            })
-            it('should remove the given schedules to the spot\'s availability', function() {
-                var s = new Spot();
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+            }
+            app.spotController.GetAllAvailabilityForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('AddAvailabilityToSpot', function() {
+        it('should add the entire request body as a schedule if no shedules are specified', function() {
+            var s = new Spot();
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                var schedules = [{someProp: 'somevalue'}];
-                sinon.stub(s, 'removeAvailability', function(sched, cb) {
-                    expect(sched).to.equal(schedules);
-                    cb(null);
-                })
-                req.params.id = s.id;
-                req.body.schedules = schedules;
-                app.spotController.RemoveAvailabilityFromSpot(req, res);
-                expect(res.sendGood.calledOnce).to.be.true;
+            }
+            var schedule = {someProp: 'somevalue'};
+            sinon.stub(s, 'addAvailability', function(sched, cb) {
+                expect(sched).to.equal(schedule);
+                cb(null);
             })
-            
-            it('should fail if removeAvailability failed', function() {
-                var s = new Spot();
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+            req.params.id = s.id;
+            req.body = schedule;
+            app.spotController.AddAvailabilityToSpot(req, res);
+            expect(res.sendGood.calledOnce).to.be.true;
+        })
+        it('should add the given schedules to the spot\'s availability', function() {
+            var s = new Spot();
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                var schedules = [{someProp: 'somevalue'}];
-                var error = 'some error';
-                sinon.stub(s, 'removeAvailability', function(sched, cb) {
-                    expect(sched).to.equal(schedules);
-                    cb(error);
-                })
-                req.params.id = s.id;
-                req.body.schedules = schedules;
-                app.spotController.RemoveAvailabilityFromSpot(req, res);
-                expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentWith({errors: [error]}));
+            }
+            var schedules = [{someProp: 'somevalue'}];
+            sinon.stub(s, 'addAvailability', function(sched, cb) {
+                expect(sched).to.equal(schedules);
+                cb(null);
             })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.RemoveAvailabilityFromSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.RemoveAvailabilityFromSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            req.params.id = s.id;
+            req.body.schedules = schedules;
+            app.spotController.AddAvailabilityToSpot(req, res);
+            expect(res.sendGood.calledOnce).to.be.true;
         })
         
-        describe('GetAllBookedTimeForSpot', function() {
-            it('should return the available ranges for the spot', function() {
-                var s = new Spot();
-                s.booked.addRange(new Date('2016/01/01'), new Date());
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+        it('should fail if addAvailability failed', function() {
+            var s = new Spot();
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                req.params.id = s.id;
-                app.spotController.GetAllBookedTimeForSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({booked: s.booked.ranges})).to.be.true;
+            }
+            var schedules = [{someProp: 'somevalue'}];
+            var error = 'some error';
+            sinon.stub(s, 'addAvailability', function(sched, cb) {
+                expect(sched).to.equal(schedules);
+                cb(error);
             })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
-                }
-                app.spotController.GetAllBookedTimeForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
-                }
-                app.spotController.GetAllBookedTimeForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
+            req.params.id = s.id;
+            req.body.schedules = schedules;
+            app.spotController.AddAvailabilityToSpot(req, res);
+            expect(res.sendBad.calledOnce).to.be.true;
+            expect(res.sentWith({errors: [error]}, true)).to.be.true;
         })
         
-        describe('GetEntireScheduleForSpot', function() {
-            it('should return the available ranges for the spot', function() {
-                var s = new Spot();
-                s.booked.addRange(new Date('2016/01/01'), new Date());
-                s.available.addRange(new Date('2016/01/01'), new Date());
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        expect(id).to.equal(s.id);
-                        cb(null, s);
-                    }
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
                 }
-                req.params.id = s.id;
-                app.spotController.GetEntireScheduleForSpot(req, res);
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.sentWith({
-                        booked: s.booked.ranges,
-                        available: s.available.ranges
-                    })).to.be.true;
-            })
-            
-            it('should error if db encountered error', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb('some error');
-                    }
+            }
+            app.spotController.AddAvailabilityToSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
                 }
-                app.spotController.GetEntireScheduleForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-            })
-            
-            it('should return error if spot found is null', function() {
-                app.db.spots = {
-                    findById: function(id, cb) {
-                        cb(null, null);
-                    }
+            }
+            app.spotController.AddAvailabilityToSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('RemoveAvailabilityFromSpot', function() {
+        it('should remove the entire request body as a schedule if no shedules are specified', function() {
+            var s = new Spot();
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
                 }
-                app.spotController.GetEntireScheduleForSpot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+            }
+            var schedule = {someProp: 'somevalue'};
+            sinon.stub(s, 'removeAvailability', function(sched, cb) {
+                expect(sched).to.equal(schedule);
+                cb(null);
             })
+            req.params.id = s.id;
+            req.body = schedule;
+            app.spotController.RemoveAvailabilityFromSpot(req, res);
+            expect(res.sendGood.calledOnce).to.be.true;
+        })
+        it('should remove the given schedules to the spot\'s availability', function() {
+            var s = new Spot();
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            var schedules = [{someProp: 'somevalue'}];
+            sinon.stub(s, 'removeAvailability', function(sched, cb) {
+                expect(sched).to.equal(schedules);
+                cb(null);
+            })
+            req.params.id = s.id;
+            req.body.schedules = schedules;
+            app.spotController.RemoveAvailabilityFromSpot(req, res);
+            expect(res.sendGood.calledOnce).to.be.true;
+        })
+        
+        it('should fail if removeAvailability failed', function() {
+            var s = new Spot();
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            var schedules = [{someProp: 'somevalue'}];
+            var error = 'some error';
+            sinon.stub(s, 'removeAvailability', function(sched, cb) {
+                expect(sched).to.equal(schedules);
+                cb(error);
+            })
+            req.params.id = s.id;
+            req.body.schedules = schedules;
+            app.spotController.RemoveAvailabilityFromSpot(req, res);
+            expect(res.sendBad.calledOnce).to.be.true;
+            expect(res.sentWith({errors: [error]}));
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.RemoveAvailabilityFromSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.RemoveAvailabilityFromSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('GetAllBookedTimeForSpot', function() {
+        it('should return the available ranges for the spot', function() {
+            var s = new Spot();
+            s.booked.addRange(new Date('2016/01/01'), new Date());
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            app.spotController.GetAllBookedTimeForSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({booked: s.booked.ranges})).to.be.true;
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.GetAllBookedTimeForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.GetAllBookedTimeForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('GetEntireScheduleForSpot', function() {
+        it('should return the available ranges for the spot', function() {
+            var s = new Spot();
+            s.booked.addRange(new Date('2016/01/01'), new Date());
+            s.available.addRange(new Date('2016/01/01'), new Date());
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            app.spotController.GetEntireScheduleForSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({
+                    booked: s.booked.ranges,
+                    available: s.available.ranges
+                })).to.be.true;
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.GetEntireScheduleForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.GetEntireScheduleForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
         })
     })
 })
