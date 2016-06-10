@@ -62,8 +62,8 @@ app.GetDefaultInjection = function(allowConnect) {
     var inject = {
         config: new (require('./config'))(),
         db: new (require('./app/db'))(),
+        helper: new (require('./app/helper'))(),
 
-        helper: require('./app/helper'),
         expressExtensions: require('./app/express'),
         passport: require('./app/passport'),
 

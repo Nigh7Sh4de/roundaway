@@ -1,11 +1,10 @@
-// var helper = function(obj) {
-//     Object.assign(obj, exts);
-// }
-var expect = require('chai').expect;
+var helper = function() {}
 
-var exts = {
+helper.prototype = {
     init: function(obj) {
-        var x = Object.assign({}, this);
+        var proto = Object.getPrototypeOf(this);
+        var x = {};
+        Object.assign(x, proto, this);
         delete x.init;
         Object.assign(obj, x);
     },
@@ -41,4 +40,4 @@ var exts = {
     }
 }
 
-module.exports = exts;
+module.exports = helper;
