@@ -24,6 +24,7 @@
   "scripts": {
     "test": "mocha app/tests",
     "test-debug": "mocha --debug-brk app/tests",
+    "test-all": "mocha alltest.js",
     "start": "node server.js"
   },
   "description": "Roundaway",
