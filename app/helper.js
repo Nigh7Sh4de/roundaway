@@ -38,18 +38,6 @@ var exts = {
         if (req.user.admin)
             return next();
         res.redirect('/home');
-    },
-
-    deepCompare: function(a, b) {
-        try {
-            if (a instanceof Array)
-                expect(a).to.deep.include.all.members(b);
-            else
-                expect(a).to.deep.equal(b);
-            return true;
-        } catch (e) {
-            return false;
-        }
     }
 }
 

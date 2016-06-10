@@ -1,5 +1,5 @@
+var deepEqual = require('deep-equal');
 var sinon = require('sinon');
-var helper = require('./helper');
 
 var exts = {
     init: function(express) {
@@ -40,13 +40,13 @@ var exts = {
                     if (!body)
                         return false;
                     for (var prop in obj) {
-                        if (!helper.deepCompare(body[prop], obj[prop]))
+                        if (!deepEqual(body[prop], obj[prop]))
                             return false;
                     }
                     return true;
                 }
                 else
-                    return helper.deepCompare(body.data, obj);
+                    return deepEqual(body.data, obj);
             },
             status: sinon.spy(function(s) {
                 return this;
