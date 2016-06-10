@@ -1,7 +1,6 @@
 var app = function(inject) {
     var express = require('express');
     var app = express();
-    var config = new inject.config();
     
     [
         "FACEBOOK_CLIENT_ID",
@@ -12,14 +11,14 @@ var app = function(inject) {
         "PORT",
         "DB_CONNECTION_STRING"
     ].forEach(function(configKey) {
-        if (!config[configKey])
+        if (!inject.config[configKey])
             throw new Error('Must define config: ' + configKey);
     })
-    app.config = config;
+    app.config = inject.config;
     
-    app.db = new inject.db(app.config.DB_CONNECTION_STRING);
+    app.db = inject.db;
     if (app.db.connect != null && typeof app.db.connect === 'function')
-        app.db.connect();
+        app.db.connect(app.config.DB_CONNECTION_STRING);
     app.passport = inject.passport(app.db, app.config);
     app.geocoder = require('node-geocoder')('google','https',{
         apiKey: app.config.GOOGLE_API_KEY
@@ -61,11 +60,13 @@ var app = function(inject) {
 
 app.GetDefaultInjection = function(allowConnect) {
     var inject = {
-        config: require('./config'),
-        db: require('./app/db'),
-        passport: require('./app/passport'),
+        config: new (require('./config'))(),
+        db: new (require('./app/db'))(),
+
         helper: require('./app/helper'),
         expressExtensions: require('./app/express'),
+        passport: require('./app/passport'),
+
         userController: require('./app/controllers/userController'),
         bookingController: require('./app/controllers/bookingController'),
         spotController: require('./app/controllers/spotController'),
@@ -73,7 +74,7 @@ app.GetDefaultInjection = function(allowConnect) {
         lotController: require('./app/controllers/lotController')
     }
     if (!allowConnect)
-        inject.db.prototype.connect = null;
+        inject.db.connect = null;
     return inject;
 }
 
