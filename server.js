@@ -77,14 +77,7 @@ app.GetDefaultInjection = function(allowConnect) {
     return inject;
 }
 
-app.Start = function(live) {
-    var roundaway = app(app.GetDefaultInjection(live)); 
-    roundaway.listen(roundaway.config.PORT, function() {
-        console.log('Roundaway started. Listening on port ' + roundaway.config.PORT + '!');
-    });
-}
-
 if (require.main == module)
-    app.Start(true);
+    app(app.GetDefaultInjection(true)).start();
 else
     module.exports = app;

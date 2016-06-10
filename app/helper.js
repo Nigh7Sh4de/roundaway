@@ -9,6 +9,15 @@ var exts = {
         delete x.init;
         Object.assign(obj, x);
     },
+
+    start: function() {
+        this.listen(this.config.PORT, this.started);
+    },
+
+    started: function() {
+        console.log('Roundaway started on port ' + this.address().port);
+    },
+
     allowGet: function(file) {
         this.get(file, function(req, res) {
             return res.sendFile(file, { root: __dirname + '/..' });
