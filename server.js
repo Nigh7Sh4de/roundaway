@@ -1,6 +1,7 @@
 var app = function(inject) {
     var express = require('express');
     var app = express();
+    var config = new inject.config();
     
     [
         "FACEBOOK_CLIENT_ID",
@@ -11,10 +12,10 @@ var app = function(inject) {
         "PORT",
         "DB_CONNECTION_STRING"
     ].forEach(function(configKey) {
-        if (!inject.config[configKey])
+        if (!config[configKey])
             throw new Error('Must define config: ' + configKey);
     })
-    app.config = inject.config;
+    app.config = config;
     
     app.db = new inject.db(app.config.DB_CONNECTION_STRING);
     if (app.db.connect != null && typeof app.db.connect === 'function')
