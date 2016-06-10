@@ -84,7 +84,7 @@ collections.prototype = {
     connect: function(connString) {
         if (!connString)
             throw new Error('Must supply a connection string for the db');
-        mongoose.connect(connString);
+        this.connection = mongoose.connect(connString).connection;
     },
     users: User,
     bookings: Booking,

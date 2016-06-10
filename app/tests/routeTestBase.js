@@ -1,3 +1,4 @@
+var testConnectionString = "mongodb://localhost/roundaway_test"
 var sinon = require('sinon');
 var request = require('supertest');
 var expect = require('chai').expect;
@@ -25,8 +26,11 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     if (!ignoreAdmin)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
-    inject.db = dbInjection || {};
     var app = server(inject);
+    for (var collection in dbInjection)
+        app.db[collection].collection.insert(dbInjection[collection], function(err) {
+            expect(err).to.not.be.ok;
+        })
     var st = null;
     if (verb == verbs.GET)
         st = request(app).get(route)
@@ -46,7 +50,8 @@ function HappyPathRouteTest(ctrl, verb, route, ignoreAdmin, ignoreAuth, method, 
     st.expect(200).end(function (err, res) {
         expect(err).to.not.be.ok;
         if (testOutput != null) {
-            var expectedOutput = JSON.stringify(testOutput).slice(1, testOutput.length - 1);
+            var expectedOutput = JSON.stringify(testOutput);
+            expectedOutput = expectedOutput.slice(1, expectedOutput.length - 1);
             expect(res.text).to.contain(expectedOutput);
         }
         if (assertions != null && typeof assertions === 'function')
@@ -66,7 +71,6 @@ function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, reqMock, dbInjec
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     if (!ignoreAdmin)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
-    inject.db = dbInjection || {};
     var app = server(inject);
     var st = null;
     if (verb == verbs.GET)
@@ -158,15 +162,20 @@ var RouteTestBase = function(controller, tests) {
         describe(test.verb + ' ' + test.route, function() {
             
             beforeEach(function() {
-                inject = server.GetDefaultInjection();
+                inject = server.GetDefaultInjection(true);
+                inject.config.DB_CONNECTION_STRING = testConnectionString;
             })
             
-            afterEach(function() {
+            afterEach(function(done) {
                 while(funcs.length > 0) {
                     var func = funcs.pop();
                     if (func.restore)
                         func.restore();
                 }
+                inject.db.connection.db.dropDatabase(function(err) {
+                    expect(err).to.not.be.ok;
+                    inject.db.connection.close(done);
+                });
             })
             
             it('should call correct method', function(done) {
