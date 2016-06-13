@@ -72,15 +72,26 @@ userSchema.methods.addSpot = function(spots, cb) {
     });
 }
 
-userSchema.methods.addBooking = function(booking, cb) {
-    if (typeof booking === 'object')
-        booking = booking.id;
-    if (!booking)
-        return cb('Failed to add booking. Booking id cannot be null.');
-    if (typeof booking !== 'string')
-        return cb('Failed to add booking. Booking id must be a valid id.');
-    this.bookingIds.push(booking);
-    this.save(cb);
+userSchema.methods.addBooking = function(bookings, cb) {
+    if (!(bookings instanceof Array))
+        bookings = [bookings];
+    var errs = [];
+    for (var i=0;i < bookings.length; i++) {
+        var booking = bookings[0] || {};
+        var id = booking.id || booking._id || booking;
+        if (!id || typeof id !== 'string') {
+            bookings.splice(i--, 1);
+            errs.push('Failed to add booking. Booking id must be a valid id.');
+        }
+            else bookings[i] = id;
+        
+    }
+    this.bookingIds = this.bookingIds.concat(bookings);;
+    this.save(function(err) {
+        if (err)
+            errs.push(err);
+        errs.length == 0 ? cb() : cb(errs);
+    });
 }
 
 userSchema.methods.updateProfile = function(profile, cb) {

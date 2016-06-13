@@ -157,15 +157,9 @@ controller.prototype = {
         }
         var done = function() {
             user.addBooking(bookings, function(err, count) {
-                var msg = count + ' booking' + (count != 1 ? 's' : '') + ' added to user';
-                if (err) {
-                    msg += '\nERRORS: \n'
-                    err.forEach(function (e) {
-                        msg += e + '\n';
-                    })
-                    return res.sendBad(msg);
-                }
-                res.sendGood(msg);
+                if (err)
+                    return res.sendBad(err);
+                res.sendGood();
             });
         }
         var user = null;
@@ -180,6 +174,9 @@ controller.prototype = {
         });
         if (typeof req.body.bookings == 'string')
             req.body.bookings = [req.body.bookings];
+        req.body.bookings = req.body.bookings.map(function(booking) {
+            return booking.id || booking._id || booking;
+        })
         this.app.db.bookings.find({_id: {$in: req.body.bookings}}, function(err, docs) {
             if (err)
                 return res.sendBad(err);

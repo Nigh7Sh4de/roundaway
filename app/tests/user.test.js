@@ -871,6 +871,35 @@ describe('userController', function() {
     })
     
     describe('AddBookingsToUser', function() {
+        it('should work when given booking objects', function() {
+            var count = 1;
+            var user = {
+                addBooking: sinon.spy(function(bookings, cb) {
+                    cb(null, count);
+                }),
+                id: '1z2x3c4v'
+            }
+            var bookings = [new Booking()]
+            app.db.users = {
+                findById: sinon.spy(function(id, cb) {
+                    expect(id).to.be.ok;
+                    return cb(null, user);
+                })
+            }
+            app.db.bookings = {
+                find: sinon.spy(function(x, cb) {
+                    expect(x).to.be.ok;
+                    return cb(null, x._id.$in);
+                })    
+            } 
+            req.body.bookings = bookings; 
+            app.userController.AddBookingsToUser(req, res);
+            expect(user.addBooking.calledOnce).to.be.true;
+            expect(user.addBooking.calledWith([bookings[0].id])).to.be.true;
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(200)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
         it('should properly call schema method and return status when no errors', function() {
             var count = 1;
             var user = {
@@ -879,9 +908,7 @@ describe('userController', function() {
                 }),
                 id: '1z2x3c4v'
             }
-            var bookings = [{
-                id: '123'
-            }]
+            var bookings = ['123'];
             app.db.users = {
                 findById: sinon.spy(function(id, cb) {
                     expect(id).to.be.ok;
