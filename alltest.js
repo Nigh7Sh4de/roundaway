@@ -1,6 +1,4 @@
-// var request = require('supertest');
-var routeTest = require('./app/tests/routeTestBase');
-var verbs = routeTest.verbs;
+var request = require('supertest');
 var sinon = require('sinon');
 var expect = require('chai').expect;
 var server = require('./server');
@@ -8,55 +6,183 @@ var testConnectionString = "mongodb://localhost/roundaway_test"
 var expressExtensions = require('./app/express');
 
 var User = require('./app/models/User');
+var Lot = require('./app/models/Lot');
+var Spot = require('./app/models/Spot');
+var Booking = require('./app/models/Booking');
 
 describe('the entire app should not explode', function() {
     var app,
         req,
         res;
 
-    // before(function() {
-    //     var inject = server.GetDefaultInjection(true);
-    //     inject.config.DB_CONNECTION_STRING = testConnectionString;
-    //     inject.helper.checkAuth = function(q,s,n) {n()}
-    //     inject.helper.checkAdmin = function(q,s,n) {n()}
-    //     app = server(inject);
-    // })
+    var userProfile = {
+        name: 'Nigh7'
+    }
+    var spot = new Spot(),
+        spot2 = new Spot();
+    var booking = new Booking(),
+        booking2 = new Booking();
+    var lot = new Lot(),
+        lot2 = new Lot();
+    var user = new User({
+        lotIds: [lot.id],
+        spotIds: [spot.id],
+        bookingIds: [booking.id],
+        profile: userProfile
+    });
 
-    // beforeEach(function() {
-    //     req = expressExtensions.mockRequest();
-    //     res = expressExtensions.mockResponse();
-    // })
+    var send200 = function(q, s) {
+        s.sendStatus(200);
+    }
 
-    // after(function(done) {
-    //     app.db.connection.db.dropDatabase(done);
-    // })
+    before(function(done) {
+        var inject = server.GetDefaultInjection(true);
+        inject.config.DB_CONNECTION_STRING = testConnectionString;
+        inject.helper.checkAuth = function(q,s,n) {n()}
+        inject.helper.checkAdmin = function(q,s,n) {n()}
+        app = server(inject);
+        var todo = 4;
+        var calls = 0;
+        app.db.connection.on('error', console.error.bind(console, 'connection error:'));
+        app.db.connection.once('open', function() {
+            var next = function(err ,res) {
+                expect(err).to.not.be.ok;
+                if (++calls >= todo)
+                    done();
+            }
+            app.db.users.collection.insert([user.toJSON()], next);
+            app.db.lots.collection.insert([lot.toJSON(), lot2.toJSON()], next);
+            app.db.spots.collection.insert([spot.toJSON(), spot2.toJSON()], next);
+            app.db.bookings.collection.insert([booking.toJSON(), booking2.toJSON()], next);
+        });
+    })
 
-    var user = new User();
+    after(function(done) {
+        app.db.connection.db.dropDatabase(done);
+    })
 
-    routeTest('userController', [
-        {
-            verb: verbs.GET,
-            route: '/api/users',
-            method: 'GetAllUsers',
-            dbInjection: {
-                users: [user.toJSON()]
-            },
-            sadDbInjection: {
-                users: {
-                    find: function(id,cb) {
-                        cb('some error');
-                    }
-                }
-            },
-            output: [user.toJSON()],
-            ignoreId: true
-        }
-        // , 
-        // {
+    describe('User Controller', function() {
+        describe('GET `/api/users`', function() {
+            it('should return users in db', function(done) {
+                request(app).get('/api/users').end(function(err, res) {
+                    expect(res.text).to.contain(user.id);
+                    expect(res.status).to.equal(200);
+                    done();
+                })
+            });
+        })
+        describe('GET /api/users/profile', function() {
+            it.skip('should return profile for session user', function(done) {
+
+            })
+        })
+        describe('GET /api/users/:id/lots', function() {
+            it('should return lots for the user', function(done) {
+                request(app).get('/api/users/' + user.id + '/lots').end(function(err, res) {
+                    expect(res.body.data).to.include(lot.id);
+                    expect(res.status).to.equal(200);
+                    done();
+                })
+            })
+        })
+        describe('PUT /api/users/:id/lots', function() {
+            it('should add a lot to the user', function(done) {
+                request(app).put('/api/users/' + user.id + '/lots')
+                    .send({lots: [lot2.toJSON()]})
+                    .end(function(err, res) {
+                    expect(res.status, res.body.errors).to.equal(200);
+                    app.db.users.findById(user.id, function(err, doc) {
+                        expect(doc.lotIds).to.include(lot2.id);
+                        done();
+                    });
+                })
+            })
+        })
+        describe('GET /api/users/:id/spots', function() {
+            it('should return spots for the user', function(done) {
+                request(app).get('/api/users/' + user.id + '/spots').end(function(err, res) {
+                    expect(res.body.data).to.include(spot.id);
+                    expect(res.status).to.equal(200);
+                    done();
+                })
+            })
+        })
+        describe('PUT /api/users/:id/spots', function() {
+            it('should add a spot to the user', function(done) {
+                request(app).put('/api/users/' + user.id + '/spots')
+                    .send({spots: [spot2.toJSON()]})
+                    .end(function(err, res) {
+                    expect(res.status, res.body.errors).to.equal(200);
+                    app.db.users.findById(user.id, function(err, doc) {
+                        expect(doc.spotIds).to.include(spot2.id);
+                        done();
+                    });
+                })
+            })
+        })
+        describe('GET /api/users/:id/bookings', function() {
+            it('should return bookings for the user', function(done) {
+                request(app).get('/api/users/' + user.id + '/bookings').end(function(err, res) {
+                    expect(res.body.data).to.include(booking.id);
+                    expect(res.status).to.equal(200);
+                    done();
+                })
+            })
+        })
+        describe('PUT /api/users/:id/bookings', function() {
+            it('should add a booking to the user', function(done) {
+                request(app).put('/api/users/' + user.id + '/bookings')
+                    .send({bookings: [booking2.toJSON()]})
+                    .end(function(err, res) {
+                    expect(res.status, res.body.errors).to.equal(200);
+                    app.db.users.findById(user.id, function(err, doc) {
+                        expect(doc.bookingIds).to.include(booking2.id);
+                        done();
+                    });
+                })
+            })
+        })
+        describe('GET /api/users/:id/profile', function() {
+            it('should return profile for the user', function(done) {
+                request(app).get('/api/users/' + user.id + '/profile').end(function(err, res) {
+                    expect(res.body.data).to.deep.equal(userProfile);
+                    expect(res.status).to.equal(200);
+                    done();
+                })
+            })
+        })
+        describe('PATCH /api/users/:id/profile', function() {
+            it('should return profile for the user', function(done) {
+                request(app).patch('/api/users/' + user.id + '/profile')
+                    .send({name: 'Sh4de'})
+                    .end(function(err, res) {
+                    expect(res.status, res.body.errors).to.equal(200);
+                    app.db.users.findById(user.id, function(err, doc) {
+                        expect(doc.profile.name).to.deep.equal('Sh4de');
+                        done();
+                    });
+                })
+            })
+        })
+    })
+
+    // routeTest('userController', [
+    //     {
+    //         verb: verbs.GET,
+    //         route: '/api/users',
+    //         method: 'GetAllUsers',
+    //         dbInjection: function () {
+    //             return {
+    //                 users: [user.toJSON()]
+    //             }
+    //         },
+    //         output: [user.toJSON()],
+    //         ignoreSadPath: true,
+    //         ignoreId: true
+    //     }, {
     //         verb: verbs.GET,
     //         route: '/api/users/profile',
     //         method: 'GetProfileForSessionUser',
-    //         dbInjection: {},
     //         req: {
     //             user: {
     //                 profile: {
@@ -94,7 +220,7 @@ describe('the entire app should not explode', function() {
     //                 }
     //             }
     //         },
-    //         dbInjection: {
+    //         dbInjection: function () {
     //             users: {
     //                 findById: function(id, cb) {
     //                     expect(id).to.equal(routeTest.id);
@@ -106,7 +232,8 @@ describe('the entire app should not explode', function() {
     //             }
     //         },
     //         output: ['123','456','789']
-    //     }, {
+    //     }
+    // //     }, {
     //         verb: verbs.PUT,
     //         route: '/api/users/:id/lots',
     //         method: 'AddLotsToUser',
@@ -986,7 +1113,7 @@ describe('the entire app should not explode', function() {
     //         ignoreHappyPath: true,
     //         ignoreSadPath: true
     //     }
-    ])
+    // ])
 
 
 })
