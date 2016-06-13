@@ -107,15 +107,9 @@ controller.prototype = {
         }
         var done = function() {
             user.addSpot(spots, function(err, count) {
-                var msg = count + ' spot' + (count != 1 ? 's' : '') + ' added to user';
-                if (err) {
-                    msg += '\nERRORS: \n'
-                    err.forEach(function (e) {
-                        msg += e + '\n';
-                    })
-                    return res.sendBad(msg);
-                }
-                res.sendGood(msg);
+                if (err)
+                    return res.sendBad(err);
+                res.sendGood();
             });
         }
         var user = null;
@@ -130,6 +124,9 @@ controller.prototype = {
         });
         if (typeof req.body.spots == 'string')
             req.body.spots = [req.body.spots];
+        req.body.spots = req.body.spots.map(function(spot) {
+            return spot.id || spot._id || spot;
+        })
         this.app.db.spots.find({_id: {$in: req.body.spots}}, function(err, docs) {
             if (err)
                 return res.sendBad(err);

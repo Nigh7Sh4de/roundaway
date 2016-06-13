@@ -50,15 +50,26 @@ userSchema.methods.addLot = function(lots, cb) {
     })
 }
 
-userSchema.methods.addSpot = function(spot, cb) {
-    if (typeof spot === 'object')
-        spot = spot.id;
-    if (!spot)
-        return cb('Failed to add spot. Spot id cannot be null.');
-    if (typeof spot !== 'string')
-        return cb('Failed to add spot. Spot id must be a valid id.');
-    this.spotIds.push(spot);
-    this.save(cb);
+userSchema.methods.addSpot = function(spots, cb) {
+    if (!(spots instanceof Array))
+        spots = [spots];
+    var errs = [];
+    for (var i=0;i < spots.length; i++) {
+        var spot = spots[0] || {};
+        var id = spot.id || spot._id || spot;
+        if (!id || typeof id !== 'string') {
+            spots.splice(i--, 1);
+            errs.push('Failed to add spot. Spot id must be a valid id.');
+        }
+            else spots[i] = id;
+        
+    }
+    this.spotIds = this.spotIds.concat(spots);;
+    this.save(function(err) {
+        if (err)
+            errs.push(err);
+        errs.length == 0 ? cb() : cb(errs);
+    });
 }
 
 userSchema.methods.addBooking = function(booking, cb) {

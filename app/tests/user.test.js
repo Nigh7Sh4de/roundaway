@@ -120,6 +120,17 @@ describe('User schema', function() {
     });
     
     describe('addSpot', function() {
+        it('should handle arrays', function(done) {
+            var spot = new Spot();
+            var user = new User();
+            expect(user.spotIds).to.be.empty;
+            
+            user.addSpot([spot], function(err) {
+                expect(err, err).to.not.be.ok;
+                expect(user.spotIds).to.have.length(1).and.to.contain(spot.id);
+                done();
+            });;
+        })
         it('should add the given spotId to the user', function(done) {
             var spot = new Spot();
             var user = new User();
@@ -735,6 +746,35 @@ describe('userController', function() {
     })
     
     describe('AddSpotsToUser', function() {
+        it('should work when given spot objects', function() {
+            var count = 1;
+            var user = {
+                addSpot: sinon.spy(function(spots, cb) {
+                    cb(null, count);
+                }),
+                id: '1z2x3c4v'
+            }
+            var spots = [new Spot()]
+            app.db.users = {
+                findById: sinon.spy(function(id, cb) {
+                    expect(id).to.be.ok;
+                    return cb(null, user);
+                })
+            }
+            app.db.spots = {
+                find: sinon.spy(function(x, cb) {
+                    expect(x).to.be.ok;
+                    return cb(null, x._id.$in);
+                })    
+            } 
+            req.body.spots = spots; 
+            app.userController.AddSpotsToUser(req, res);
+            expect(user.addSpot.calledOnce).to.be.true;
+            expect(user.addSpot.calledWith([spots[0].id])).to.be.true;
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(200)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
         it('should properly call schema method and return status when no errors', function() {
             var count = 1;
             var user = {
@@ -743,9 +783,7 @@ describe('userController', function() {
                 }),
                 id: '1z2x3c4v'
             }
-            var spots = [{
-                id: '123'
-            }]
+            var spots = ['123']
             app.db.users = {
                 findById: sinon.spy(function(id, cb) {
                     expect(id).to.be.ok;
