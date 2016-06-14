@@ -45,14 +45,14 @@ controller.prototype = {
             this.app.db.lots.collection.insert(arr, function(err, result) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Lots created', {result: result});
+                res.sendGood('Lots created', result);
             })
         }
         else {
             this.app.db.lots.create(newLot, function(err, result) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Lot created', {result: result});
+                res.sendGood('Lot created', result);
             })    
         }
         

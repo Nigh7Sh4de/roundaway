@@ -36,14 +36,14 @@ controller.prototype = {
             this.app.db.spots.collection.insert(arr, function(err, result) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Created spots', {result: result});
+                res.sendGood('Created spots', result);
             })
         }
         else {
             this.app.db.spots.create(newSpot, function(err, result) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Created spot', {result: result});
+                res.sendGood('Created spot', result);
             })    
         }
     },

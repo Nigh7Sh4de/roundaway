@@ -48,14 +48,14 @@ controller.prototype = {
             this.app.db.bookings.collection.insert(arr, function(err, result) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Created new bookings', {result: result});
+                res.sendGood('Created new bookings', result);
             })
         }
         else {
             this.app.db.bookings.create(newBooking, function(err, result) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Created new booking', {result: result});
+                res.sendGood('Created new booking', result);
             })    
         }
         
