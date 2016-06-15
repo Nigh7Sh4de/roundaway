@@ -813,7 +813,7 @@ describe('lotController', function() {
         
         it('should set location given coordinates as array', function(done) {
             req.body = {
-                coordinates: [coords.lat, coords.long]
+                coordinates: [coords.long, coords.lat]
             }
             res.sendStatus = function(status) {
                 expect(l.setLocation.calledOnce).to.be.true;
