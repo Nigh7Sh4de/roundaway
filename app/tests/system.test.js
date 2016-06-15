@@ -10,7 +10,7 @@ var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe.only('the entire app should not explode', function() {
+describe.skip('the entire app should not explode', function() {
     var app,
         req,
         res;
@@ -26,7 +26,12 @@ describe.only('the entire app should not explode', function() {
         end: new Date('2020/01/01')
     }),
         booking2 = new Booking();
-    var lot = new Lot(),
+    var lot = new Lot({
+        location: {
+            coordinates: [12, 34]
+        },
+        spots: [spot.id, spot2.id]
+    }),
         lot2 = new Lot();
     var user = new User({
         lotIds: [lot.id],
@@ -184,7 +189,7 @@ describe.only('the entire app should not explode', function() {
                     })
             })
         })
-        describe('GET /api/bookings/:d', function() {
+        describe('GET /api/bookings/:id', function() {
             it('should return specific booking', function(done) {
                 request(app).get('/api/bookings/' + booking.id)
                     .end(function(err, res) {
@@ -347,6 +352,121 @@ describe.only('the entire app should not explode', function() {
                             expect(doc.start).to.deep.equal(now);
                             expect(doc.end).to.deep.equal(later);
                             done();
+                        })
+                    })
+            })
+        })
+    })
+
+    describe('Lot Controller', function() {
+        describe('GET /api/lots', function() {
+            it('should return all lots', function(done) {
+                request(app).get('/api/lots')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain.all(lot.id, lot2.id);
+                        done();
+                    })
+            })
+        })
+        describe('GET /api/lots/:id', function() {
+            it('should return specific lot', function(done) {
+                request(app).get('/api/lots/' + lot.id)
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain(lot.id);
+                        done();
+                    })
+            })
+        })
+        describe('PUT /api/lots', function() {
+            it('should create a new lot', function(done) {
+                request(app).put('/api/lots')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.body.data).to.be.ok;
+                        app.db.lots.findById(res.body.data._id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc).to.be.ok;
+                            doc.remove(function(err, res) {
+                                expect(err).to.not.be.ok;
+                                done();
+                            })
+                        })
+                    })
+            })
+        })
+        describe('GET /api/lots/:id/location', function() {
+            it('should return location for the lot', function(done) {
+                request(app).get('/api/lots/' + lot.id + '/location')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain(lot.location.coordinates.toString());
+                        done();
+                    });
+            })
+        })
+        describe('PUT /api/lots/:id/location', function() {
+            it('should set coordinates', function(done) {
+                var coords = [12, 21];
+                request(app).put('/api/lots/' + lot2.id + '/location')
+                .send({coordinates: coords})
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        app.db.lots.findById(lot2.id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc.location.coordinates).to.deep.equal(coords);
+                            done();
+                        });
+                    });
+            })
+        })
+        describe('GET /api/lots/:id/spots', function() {
+            it('should return spot for the lot', function(done) {
+                request(app).get('/api/lots/' + lot.id + '/spots')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain.all(spot.id, spot2.id);
+                        done();
+                    });
+            })
+        })
+        describe('PUT /api/lots/:id/spots', function(done) {
+            it('should set the spot for the lot', function(done) {
+                request(app).put('/api/lots/' + lot2.id + '/spots')
+                    .send({spots: [spot.id, spot2.id]})
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        app.db.lots.findById(lot2.id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc.spots).to.deep.include.all(spot.id, spot2.id);
+                            done();
+                        })
+                    })
+            })
+        })
+        describe('PUT /api/lots/:id/spots/remove', function(done) {
+            it('shouldremove the spot from the lot', function(done) {
+                request(app).put('/api/lots/' + lot.id + '/spots/remove')
+                    .send({spots: [spot2.id]})
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        app.db.lots.findById(lot.id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc.spots).to.deep.include(spot.id);
+                            expect(doc.spots).to.not.deep.include(spot2.id);
+                            doc.addSpots(spot2, function(err) {
+                                expect(err).to.not.be.ok;
+                                done();
+                            })
                         })
                     })
             })
