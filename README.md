@@ -611,7 +611,7 @@ Returns the spots in the lot with the specified id.
 </table>
 Adds EITHER the specified spots to the lot or generates `count` number of new spots and adds them to the lot.
 
-#### DELETE `/api/lots/:id/spots`
+#### PUT `/api/lots/:id/spots/remove`
 <table>
   <tr>
     <td><i>Requires auth</i></td>
