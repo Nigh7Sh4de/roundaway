@@ -83,12 +83,14 @@ controller.prototype = {
             }
             else {
                 if (coords instanceof Array)
-                    coords = {lat:coords[0], lon:coords[1]};
+                    coords = {lon:coords[0], lat:coords[1]};
                 if (coords.lon == null)
                     coords.lon = coords.long;
                 if (coords.long !== undefined)
                     delete coords.long;
                 app.geocoder.reverse(coords, function(err, loc) {
+                    if (err)
+                        return res.sendBad(err);
                     loc = loc[0];
                     var c = 0,
                         total = 2;

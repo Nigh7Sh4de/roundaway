@@ -571,8 +571,8 @@ Returns the location of the lot with the specified id.
   <tr>
     <td>coordinates</td>
     <td>The coordinates of the location to set the lot to. 
-    Can either be a number array of <code>[latitude, longitude]</code> or
-    an object containing <code>lat</code> and <code>long</code> or <code>lon</code> properties</td>
+    Can either be a number array of <code>[longitude, latitude]</code> or
+    an object containing <code>long</code> and <code>lat</code> or <code>lon</code> properties</td>
   </tr>
 </table>
 Adds EITHER the specified spots to the lot or generates `count` number of new spots and adds them to the lot.
@@ -710,8 +710,8 @@ Returns the location of the spot with the specified id.
   <tr>
     <td>coordinates</td>
     <td>The coordinates of the location to set the spot to. 
-    Can either be a number array of <code>[latitude, longitude]</code> or
-    an object containing <code>lat</code> and <code>long</code> or <code>lon</code> properties</td>
+    Can either be a number array of <code>[longitude, latitude]</code> or
+    an object containing <code>long</code> and <code>lat</code> or <code>lon</code> properties</td>
   </tr>
 </table>
 Adds EITHER the specified spots to the spot or generates `count` number of new spots and adds them to the spot.
