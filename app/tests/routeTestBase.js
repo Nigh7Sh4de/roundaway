@@ -163,20 +163,15 @@ var RouteTestBase = function(controller, tests) {
             describe(test.verb + ' ' + test.route, function() {
                 
                 beforeEach(function() {
-                    inject = server.GetDefaultInjection(true);
-                    inject.config.DB_CONNECTION_STRING = testConnectionString;
+                    inject = server.GetDefaultInjection();
                 })
                 
-                afterEach(function(done) {
+                afterEach(function() {
                     while(funcs.length > 0) {
                         var func = funcs.pop();
                         if (func.restore)
                             func.restore();
                     }
-                    inject.db.connection.db.dropDatabase(function(err) {
-                        expect(err).to.not.be.ok;
-                        inject.db.connection.close(done);
-                    });
                 })
                 
                 it('should call correct method', function(done) {
