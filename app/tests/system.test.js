@@ -10,7 +10,7 @@ var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe.skip('the entire app should not explode', function() {
+describe.only('the entire app should not explode', function() {
     var app,
         req,
         res;
@@ -18,20 +18,40 @@ describe.skip('the entire app should not explode', function() {
     var userProfile = {
         name: 'Nigh7'
     }
-    var spot = new Spot(),
-        spot2 = new Spot();
+    var booking2 = new Booking({
+        start: new Date('2020/01/01'),
+        end: new Date('2020/01/02')
+    });
+    var _av = {
+        start: new Date('2010/01/01'),
+        end: new Date('2030/01/01')
+    }
+    var _bk = {
+        start: new Date('2070/01/01'),
+        end: new Date('2070/01/02')
+    }
+    var spot = new Spot({
+            location: {
+                coordinates: [12, 34]
+            },
+            bookings: [booking2.id]
+        }),
+        spot2 = new Spot(),
+        spot3 = new Spot();
+            spot3.available.addRange(_av.start, _av.end);
+            spot3.booked.addRange(_bk.start, _bk.end);
+            spot3.isNew = false;
     var booking = new Booking({
         spot: spot.id,
         start: new Date('2000/01/01'),
         end: new Date('2020/01/01')
-    }),
-        booking2 = new Booking();
+    });
     var lot = new Lot({
-        location: {
-            coordinates: [12, 34]
-        },
-        spots: [spot.id, spot2.id]
-    }),
+            location: {
+                coordinates: [12, 34]
+            },
+            spots: [spot.id, spot2.id]
+        }),
         lot2 = new Lot();
     var user = new User({
         lotIds: [lot.id],
@@ -63,7 +83,7 @@ describe.skip('the entire app should not explode', function() {
             }
             app.db.users.collection.insert([user.toJSON()], next);
             app.db.lots.collection.insert([lot.toJSON(), lot2.toJSON()], next);
-            app.db.spots.collection.insert([spot.toJSON(), spot2.toJSON()], next);
+            app.db.spots.collection.insert([spot.toJSON(), spot2.toJSON(), spot3.toJSON()], next);
             app.db.bookings.collection.insert([booking.toJSON(), booking2.toJSON()], next);
         });
     })
@@ -440,13 +460,13 @@ describe.skip('the entire app should not explode', function() {
         describe('PUT /api/lots/:id/spots', function(done) {
             it('should set the spot for the lot', function(done) {
                 request(app).put('/api/lots/' + lot2.id + '/spots')
-                    .send({spots: [spot.id, spot2.id]})
+                    .send({spots: [spot2.id]})
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
                         expect(res.status).to.equal(200);
                         app.db.lots.findById(lot2.id, function(err, doc) {
                             expect(err).to.not.be.ok;
-                            expect(doc.spots).to.deep.include.all(spot.id, spot2.id);
+                            expect(doc.spots).to.deep.include(spot2.id);
                             done();
                         })
                     })
@@ -470,6 +490,198 @@ describe.skip('the entire app should not explode', function() {
                         })
                     })
             })
+        })
+    })
+
+    describe('Spot Controller', function() {
+        describe('GET /api/spots', function() {
+            it('should return all spots', function(done) {
+                request(app).get('/api/spots')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain.all(spot.id, spot2.id, spot3.id);
+                        done();
+                    })
+            })
+        })
+        describe('GET /api/spots/:id', function() {
+            it('should return specific spot', function(done) {
+                request(app).get('/api/spots/' + spot.id)
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain(spot.id);
+                        done();
+                    })
+            })
+        })
+        describe('PUT /api/spots', function() {
+            it('should create a new spot', function(done) {
+                request(app).put('/api/spots')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.body.data).to.be.ok;
+                        app.db.spots.findById(res.body.data._id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc).to.be.ok;
+                            doc.remove(function(err, res) {
+                                expect(err).to.not.be.ok;
+                                done();
+                            })
+                        })
+                    })
+            })
+        })
+        describe('GET /api/spots/:id/location', function() {
+            it('should return location for the spot', function(done) {
+                request(app).get('/api/spots/' + spot.id + '/location')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain(spot.location.coordinates.toString());
+                        done();
+                    });
+            })
+        })
+        describe('PUT /api/spots/:id/location', function() {
+            it('should set coordinates', function(done) {
+                var coords = [12, 21];
+                request(app).post('/api/spots/' + spot2.id + '/location')
+                .send({coordinates: coords})
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        app.db.spots.findById(spot2.id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc.location.coordinates).to.deep.equal(coords);
+                            done();
+                        });
+                    });
+            })
+        })
+        describe('GET /api/spots/:id/bookings', function() {
+            it('should get bookings', function(done) {
+                request(app).get('/api/spots/' + spot.id + '/bookings')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain(booking2.id);
+                        done();
+                    })
+            })
+        })
+        describe('PUT /api/spots/:id/bookings', function() {
+            it('should add bookings', function(done) {
+                request(app).put('/api/spots/' + spot2.id + '/bookings')
+                .send({bookings: booking2.id})
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        app.db.spots.findById(spot2.id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc.bookings).to.include(booking2.id);
+                            done();
+                        })
+                    })
+            })
+        })
+        describe('PUT /api/spots/:id/bookings/remove', function() {
+            it('should remove bookings', function(done) {
+                spot3.addBookings(booking2, function(err) {
+                    expect(err, err).to.not.be.ok;
+                    request(app).put('/api/spots/' + spot3.id + '/bookings/remove')
+                    .send({bookings: booking2.id})
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            app.db.spots.findById(spot3.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.bookings).to.be.empty;
+                                done();
+                            })
+                        })
+                })
+            })
+        })
+        describe('GET /api/spots/:id/available', function() {
+            it('should get availability', function(done) {
+                request(app).get('/api/spots/' + spot3.id + '/available')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain.all(_av.start.toISOString(), 
+                                                        _av.end.toISOString());
+                        done();
+                    })
+            })
+        })
+        describe('PUT /api/spots/:id/available', function() {
+            it('should add availability', function(done) {
+                var avail = {
+                    start: new Date('2050/01/01'),
+                    end: new Date('2050/01/02')
+                };
+                request(app).put('/api/spots/' + spot3.id + '/available')
+                .send(avail)
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        app.db.spots.findById(spot3.id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc.available.checkRange(avail.start, avail.end)).to.be.true;
+                            done();
+                        })
+                    })
+            })
+        })
+        describe('PUT /api/spots/:id/available/remove', function() {
+            it('should remove availability', function(done) {
+                var avail = {
+                    start: new Date('2011/01/01'),
+                    end: new Date('2015/01/01')
+                };
+                request(app).put('/api/spots/' + spot3.id + '/available/remove')
+                .send(avail)
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        app.db.spots.findById(spot3.id, function(err, doc) {
+                            expect(err).to.not.be.ok;
+                            expect(doc.available.checkRange(avail.start, avail.end)).to.be.false;
+                            done();
+                        })
+                    })
+            })
+        })
+        describe('GET /api/spots/:id/booked', function() {
+            it('should get booked schedule', function(done) {
+                request(app).get('/api/spots/' + spot3.id + '/booked')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain.all(_bk.start.toISOString(), 
+                                                        _bk.end.toISOString());
+                        done();    
+                    })
+            });
+        })
+        describe('GET /api/spots/:id/schedule', function() {
+            it('should get booked and available schedule', function(done) {
+                request(app).get('/api/spots/' + spot3.id + '/schedule')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.body.data.booked).to.be.ok;
+                        expect(res.body.data.available).to.be.ok;
+                        expect(res.text).to.contain.all(_av.start.toISOString(), 
+                                                        _av.end.toISOString(),
+                                                        _bk.start.toISOString(), 
+                                                        _bk.end.toISOString());
+                        done();    
+                    })
+            });
         })
     })
 
