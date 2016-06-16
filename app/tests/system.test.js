@@ -18,6 +18,9 @@ describe('the entire app should not explode', function() {
     var userProfile = {
         name: 'Nigh7'
     }
+    var userAuth = {
+        facebook: 'facebook_auth'
+    }
     var booking2 = new Booking({
         start: new Date('2020/01/01'),
         end: new Date('2020/01/02')
@@ -57,7 +60,9 @@ describe('the entire app should not explode', function() {
         lotIds: [lot.id],
         spotIds: [spot.id],
         bookingIds: [booking.id],
-        profile: userProfile
+        profile: userProfile,
+        authid: userAuth,
+        admin: true
     });
 
     var send200 = function(q, s) {
@@ -67,8 +72,15 @@ describe('the entire app should not explode', function() {
     before(function(done) {
         var inject = server.GetDefaultInjection(true);
         inject.config.DB_CONNECTION_STRING = testConnectionString;
-        inject.helper.checkAuth = function(q,s,n) {n()}
-        inject.helper.checkAdmin = function(q,s,n) {n()}
+        inject.helper.middleware.push(function(q,s,n) {
+            q.user = user;
+            q.isAuthenticated = function() {
+                return true;
+            }
+            n();
+        });
+        // inject.helper.checkAuth = function(q,s,n) {n()}
+        // inject.helper.checkAdmin = function(q,s,n) {n()}
         app = server(inject);
         var todo = 4;
         var calls = 0;
@@ -103,17 +115,25 @@ describe('the entire app should not explode', function() {
             });
         })
         describe('GET /api/users/profile', function() {
-            it.skip('should return profile for session user', function(done) {
+            it('should return profile for session user', function(done) {
+                request(app).get('/api/users')
+                    .end(function(err, res) {
+                        expect(err).to.not.be.ok;
+                        expect(res.status).to.equal(200);
+                        expect(res.text).to.contain.all(userAuth.facebook, userProfile.name);
+                        done();
+                    })
 
             })
         })
         describe('GET /api/users/:id/lots', function() {
             it('should return lots for the user', function(done) {
-                request(app).get('/api/users/' + user.id + '/lots').end(function(err, res) {
-                    expect(res.body.data).to.include(lot.id);
-                    expect(res.status).to.equal(200);
-                    done();
-                })
+                request(app).get('/api/users/' + user.id + '/lots')
+                    .end(function(err, res) {
+                        expect(res.body.data).to.include(lot.id);
+                        expect(res.status).to.equal(200);
+                        done();
+                    })
             })
         })
         describe('PUT /api/users/:id/lots', function() {
