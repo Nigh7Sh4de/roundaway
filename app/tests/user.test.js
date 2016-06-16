@@ -590,6 +590,300 @@ describe('User schema', function() {
     })
 })
 
+routeTest('userController', [
+    {
+        verb: verbs.GET,
+        route: '/api/users',
+        method: 'GetAllUsers',
+        // dbInjection: function () {
+        //     return {
+        //         users: [user.toJSON()]
+        //     }
+        // },
+        // output: [user.toJSON()],
+        // ignoreSadPath: true,
+        ignoreId: true
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/profile',
+        method: 'GetProfileForSessionUser',
+        // req: {
+        //     user: {
+        //         profile: {
+        //             toJSON: function() {
+        //                 return {
+        //                     someProp: 'some value'
+        //                 }
+        //             }
+        //         },
+        //         authid: {
+        //             toJSON: function() {
+        //                 return {
+        //                     someOtherProp: 'some other value'
+        //                 }
+        //             }
+        //         }
+        //     }
+        // },
+        // output: {
+        //     someProp: 'some value',
+        //     authid: {
+        //         someOtherProp: 'some other value'
+        //     }
+        // },
+        ignoreId: true,
+        ignoreAdmin: true
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/:id/lots',
+        method: 'GetLotsForUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 id: routeTest.id,
+        //                 lotIds: ['123','456','789']
+        //             })
+        //         }
+        //     }
+        // },
+        // output: ['123','456','789']
+    }, {
+        verb: verbs.PUT,
+        route: '/api/users/:id/lots',
+        method: 'AddLotsToUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     },
+        //     lots: {
+        //         find: function(search,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 id: id,
+        //                 addLot: function(lots, cb) {
+        //                     expect(lots).to.have.length(1);
+        //                     expect(lots).to.deep.include({id:'123'});
+        //                     cb(null, 1);
+        //                 }
+        //             })
+        //         }
+        //     },
+        //     lots: {
+        //         find: function(search, cb) {
+        //             expect(search._id.$in).to.eql(['123']);
+        //             cb(null, [{
+        //                 id: '123'
+        //             }])
+        //         }
+        //     }
+        // },
+        // body: {
+        //     lots: ['123']
+        // }
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/:id/spots',
+        method: 'GetSpotsForUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 id: routeTest.id,
+        //                 spotIds: ['123','456','789']
+        //             })
+        //         }
+        //     }
+        // },
+        // output: ['123','456','789']
+    }, {
+        verb: verbs.PUT,
+        route: '/api/users/:id/spots',
+        method: 'AddSpotsToUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     },
+        //     spots: {
+        //         find: function(search,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 id: id,
+        //                 addSpot: function(spots, cb) {
+        //                     expect(spots).to.have.length(1);
+        //                     expect(spots).to.deep.include({id:'123'});
+        //                     cb(null, 1);
+        //                 }
+        //             })
+        //         }
+        //     },
+        //     spots: {
+        //         find: function(search, cb) {
+        //             expect(search._id.$in).to.eql(['123']);
+        //             cb(null, [{
+        //                 id: '123'
+        //             }])
+        //         }
+        //     }
+        // },
+        // body: {
+        //     spots: ['123']
+        // }
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/:id/bookings',
+        method: 'GetBookingsForUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 id: routeTest.id,
+        //                 bookingIds: ['123','456','789']
+        //             })
+        //         }
+        //     }
+        // },
+        // output: ['123','456','789']
+    }, {
+        verb: verbs.PUT,
+        route: '/api/users/:id/bookings',
+        method: 'AddBookingsToUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     },
+        //     bookings: {
+        //         find: function(search,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 id: id,
+        //                 addBooking: function(bookings, cb) {
+        //                     expect(bookings).to.have.length(1);
+        //                     expect(bookings).to.deep.include({id:'123'});
+        //                     cb(null, 1);
+        //                 }
+        //             })
+        //         }
+        //     },
+        //     bookings: {
+        //         find: function(search, cb) {
+        //             expect(search._id.$in).to.eql(['123']);
+        //             cb(null, [{
+        //                 id: '123'
+        //             }])
+        //         }
+        //     }
+        // },
+        // body: {
+        //     bookings: ['123']
+        // }
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/:id/profile',
+        method: 'GetProfileForUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 id: routeTest.id,
+        //                 profile: {
+        //                     someProp: 'some value'   
+        //                 }
+        //             })
+        //         }
+        //     }
+        // },
+        // output: {someProp: 'some value'}
+    }, {
+        verb: verbs.PATCH,
+        route: '/api/users/:id/profile',
+        method: 'UpdateProfileForfUser',
+        // sadDbInjection: {
+        //     users: {
+        //         findById: function(id,cb) {
+        //             cb('some error');
+        //         }
+        //     }
+        // },
+        // dbInjection: {
+        //     users: {
+        //         findById: function(id, cb) {
+        //             expect(id).to.equal(routeTest.id);
+        //             cb(null, {
+        //                 profile: {},
+        //                 updateProfile: function(obj, cb) {
+        //                     expect(obj).to.eql({someProp: 'some value'});
+        //                     cb(null);
+        //                 }
+        //             })
+        //         }
+        //     }
+        // },
+        // body: {
+        //     someProp: 'some value'
+        // }
+    }
+]);
+
 describe('userController', function() {
     
     var inject = server.GetDefaultInjection();

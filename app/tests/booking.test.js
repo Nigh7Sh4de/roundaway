@@ -289,6 +289,76 @@ describe('Booking schema', function() {
     })
 })
 
+routeTest('bookingController', [
+    {
+        verb: verbs.GET,
+        route: '/api/bookings',
+        method: 'GetAllBookings',
+        ignoreId: true
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id',
+        method: 'GetBooking'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/bookings',
+        method: 'CreateBooking',
+        ignoreId: true
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id/spot',
+        method: 'GetSpotForBooking'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/bookings/:id/spot',
+        method: 'SetSpotForBooking'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id/start',
+        method: 'GetStartOfBooking'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/bookings/:id/start',
+        method: 'SetStartOfBooking'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id/duration',
+        method: 'GetDurationForBooking'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/bookings/:id/duration',
+        method: 'SetDurationForBooking'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id/end',
+        method: 'GetEndOfBooking'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/bookings/:id/end',
+        method: 'SetEndOfBooking'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id/time',
+        method: 'GetTimeOfBooking'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/bookings/:id/time',
+        method: 'SetTimeOfBooking'
+    }
+])
+
 describe('bookingController', function() {
     var app;
     

@@ -814,6 +814,82 @@ describe('Spot schema', function() {
     })
 })
 
+routeTest('spotController', [
+        {
+            verb: verbs.GET,
+            route: '/api/spots',
+            method: 'GetAllSpots',
+            ignoreId: true
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots',
+            method: 'CreateSpot',
+            ignoreId: true
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/near',
+            method: 'GetNearestSpot',
+            ignoreId: true
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id',
+            method: 'GetSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/location',
+            method: 'GetLocationForSpot'
+        },
+        {
+            verb: verbs.POST,
+            route: '/api/spots/:id/location',
+            method: 'SetLocationForSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/bookings',
+            method: 'GetAllBookingsForSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/bookings',
+            method: 'AddBookingsToSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/bookings/remove',
+            method: 'RemoveBookingsFromSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/available',
+            method: 'GetAllAvailabilityForSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/available',
+            method: 'AddAvailabilityToSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/available/remove',
+            method: 'RemoveAvailabilityFromSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/booked',
+            method: 'GetAllBookedTimeForSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/schedule',
+            method: 'GetEntireScheduleForSpot'
+        }
+    ])
+
 describe('spotController', function() {
     var app,
         req = {},

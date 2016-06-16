@@ -6,6 +6,89 @@ var sinon = require('sinon');
 var server = require('./../../server');
 // var inject = server.GetDefaultInjection();
 
+routeTest('authController', [
+    {
+        verb: verbs.GET,
+        route: '/logout',
+        method: 'Logout',
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/login/google',
+        method: 'Login',
+        methodParams: ['google'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/login/google/return',
+        method: 'LoginReturn',
+        methodParams: ['google'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/login/facebook',
+        method: 'Login',
+        methodParams: ['facebook'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/login/facebook/return',
+        method: 'LoginReturn',
+        methodParams: ['facebook'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/connect/google',
+        method: 'Connect',
+        methodParams: ['google'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/connect/google/return',
+        method: 'ConnectReturn',
+        methodParams: ['google'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/connect/facebook',
+        method: 'Connect',
+        methodParams: ['facebook'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/connect/facebook/return',
+        method: 'ConnectReturn',
+        methodParams: ['facebook'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    }
+])
+
 describe('authController', function() {
     
     beforeEach(function () {

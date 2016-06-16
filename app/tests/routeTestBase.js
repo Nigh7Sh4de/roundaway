@@ -157,40 +157,42 @@ function RouteTest(ctrl, verb, route, ignoreId, ignoreAdmin, ignoreAuth, method,
 }
 
 var RouteTestBase = function(controller, tests) {
-    tests.forEach(function(test) {
-        var route = test.route.replace(':id', id);
-        describe(test.verb + ' ' + test.route, function() {
-            
-            beforeEach(function() {
-                inject = server.GetDefaultInjection(true);
-                inject.config.DB_CONNECTION_STRING = testConnectionString;
-            })
-            
-            afterEach(function(done) {
-                while(funcs.length > 0) {
-                    var func = funcs.pop();
-                    if (func.restore)
-                        func.restore();
-                }
-                inject.db.connection.db.dropDatabase(function(err) {
-                    expect(err).to.not.be.ok;
-                    inject.db.connection.close(done);
-                });
-            })
-            
-            it('should call correct method', function(done) {
-                RouteTest(controller, test.verb, route, test.ignoreId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
-            })
-            
-            if (!test.ignoreHappyPath)
-                it('should send success on happy path', function(done) {
-                    HappyPathRouteTest(controller, test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.method, test.req, test.body, test.dbInjection, test.output, test.assertions, done);
+    describe(controller + 'route', function() {
+        tests.forEach(function(test) {
+            var route = test.route.replace(':id', id);
+            describe(test.verb + ' ' + test.route, function() {
+                
+                beforeEach(function() {
+                    inject = server.GetDefaultInjection(true);
+                    inject.config.DB_CONNECTION_STRING = testConnectionString;
                 })
+                
+                afterEach(function(done) {
+                    while(funcs.length > 0) {
+                        var func = funcs.pop();
+                        if (func.restore)
+                            func.restore();
+                    }
+                    inject.db.connection.db.dropDatabase(function(err) {
+                        expect(err).to.not.be.ok;
+                        inject.db.connection.close(done);
+                    });
+                })
+                
+                it('should call correct method', function(done) {
+                    RouteTest(controller, test.verb, route, test.ignoreId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
+                })
+                
+                // if (!test.ignoreHappyPath)
+                //     it('should send success on happy path', function(done) {
+                //         HappyPathRouteTest(controller, test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.method, test.req, test.body, test.dbInjection, test.output, test.assertions, done);
+                //     })
 
-            if (!test.ignoreSadPath)
-                it('should send error on sad path', function(done) {
-                    SadPathRouteTest(test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.sadReq, test.sadDbInjection, done);
-                })
+                // if (!test.ignoreSadPath)
+                //     it('should send error on sad path', function(done) {
+                //         SadPathRouteTest(test.verb, route, test.ignoreAdmin, test.ignoreAuth, test.sadReq, test.sadDbInjection, done);
+                //     })
+            })
         })
     })
 } 

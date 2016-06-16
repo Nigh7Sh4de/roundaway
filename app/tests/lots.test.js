@@ -551,6 +551,51 @@ describe('Lot schema', function() {
     })
 })
 
+routeTest('lotController', [
+    {
+        verb: verbs.GET,
+        route: '/api/lots',
+        method: 'GetAllLots',
+        ignoreId: true
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id',
+        method: 'GetLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots',
+        method: 'CreateLot',
+        ignoreId: true
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id/location',
+        method: 'GetLocationOfLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/location',
+        method: 'SetLocationOfLot'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id/spots',
+        method: 'GetSpotsForLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/spots',
+        method: 'AddSpotsToLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/spots/remove',
+        method: 'RemoveSpotsFromLot'
+    }
+])
+
 describe('lotController', function() {
     var req = {},
         res = {};
