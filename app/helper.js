@@ -6,8 +6,15 @@ helper.prototype = {
         var x = {};
         Object.assign(x, proto, this);
         delete x.init;
+        var middleware = x.middleware;
+        delete x.middleware;
         Object.assign(obj, x);
+
+        if (middleware.length > 0)
+            obj.use.apply(obj, middleware);
     },
+
+    middleware: [],
 
     start: function(cb) {
         this.listen(this.config.PORT, cb || this.started);
