@@ -65,10 +65,6 @@ describe('the entire app should not explode', function() {
         admin: true
     });
 
-    var send200 = function(q, s) {
-        s.sendStatus(200);
-    }
-
     before(function(done) {
         var inject = server.GetDefaultInjection(true);
         inject.config.DB_CONNECTION_STRING = testConnectionString;
@@ -79,8 +75,6 @@ describe('the entire app should not explode', function() {
             }
             n();
         });
-        // inject.helper.checkAuth = function(q,s,n) {n()}
-        // inject.helper.checkAdmin = function(q,s,n) {n()}
         app = server(inject);
         var todo = 4;
         var calls = 0;
