@@ -1197,7 +1197,7 @@ describe('spotController', function() {
         
         it('should set location given coordinates as array', function(done) {
             req.body = {
-                coordinates: [coords.lat, coords.long]
+                coordinates: [coords.long, coords.lat]
             }
             res.sent = function(status) {
                 expect(s.setLocation.calledOnce).to.be.true;

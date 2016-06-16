@@ -697,7 +697,7 @@ Returns the spot with the specified id.
 </table>
 Returns the location of the spot with the specified id.
 
-#### PUT `/api/spots/:id/location`
+#### POST `/api/spots/:id/location`
 <table>
   <tr>
     <td><i>Requires auth</i></td>
