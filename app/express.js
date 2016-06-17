@@ -1,4 +1,15 @@
-var deepEqual = require('deep-equal');
+var _deepEqual = require('deep-equal');
+var deepEqual = function(a, b) {
+    if (a instanceof Array) {
+        if (a.length != b.length)
+            return false;
+        for (var i=0; i < a.length; i++)
+            if (!_deepEqual(a[i], b[i]))
+                return false;
+        return true;
+    }
+    else return _deepEqual(a, b);
+}
 var sinon = require('sinon');
 
 var exts = {
@@ -45,8 +56,7 @@ var exts = {
                     }
                     return true;
                 }
-                else
-                    return deepEqual(body.data, obj);
+                else return deepEqual(body.data, obj);
             },
             status: sinon.spy(function(s) {
                 return this;

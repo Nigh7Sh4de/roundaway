@@ -21,7 +21,7 @@ describe('Lot schema', function() {
             var l = new Lot();
             var spots = ['123','456']; 
             l.spots = spots;
-            expect(l.getSpots()).to.deep.equal(spots);
+            expect(l.getSpots()).to.deep.include.all.members(spots);
         });
         
         it('should return an empty array if no spots are added', function() {
@@ -918,7 +918,7 @@ describe('lotController', function() {
             }
             req.params.id = l.id;
             res.sent = function(body) {
-                expect(res.sentWith({spots: []})).to.be.true;
+                expect(res.sentWith([])).to.be.true;
                 done();
             }
             app.lotController.GetSpotsForLot(req, res);
@@ -1045,7 +1045,7 @@ describe('lotController', function() {
                 expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
                 l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
                     expect(newSpot.number).to.equal(i+1);
-                    expect(newSpot.location.coordinates).to.deep.equal(l.location.coordinates);
+                    expect(newSpot.location.coordinates).to.deep.include.all.members(l.location.coordinates);
                 })
                 expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
                 done();
@@ -1087,7 +1087,7 @@ describe('lotController', function() {
                 expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
                 l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
                     expect(newSpot.number).to.equal(i+1);
-                    expect(newSpot.location.coordinates).to.deep.equal(l.location.coordinates);
+                    expect(newSpot.location.coordinates).to.deep.include.all.members(l.location.coordinates);
                 })
                 expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
                 done();
@@ -1144,7 +1144,7 @@ describe('lotController', function() {
                 expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
                 l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
                     expect(newSpot.number).to.equal(i+1);
-                    expect(newSpot.location.coordinates).to.deep.equal(l.location.coordinates);
+                    expect(newSpot.location.coordinates).to.deep.include.all.members(l.location.coordinates);
                 })
                 expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
                 done();

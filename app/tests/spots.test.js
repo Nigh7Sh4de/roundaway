@@ -254,7 +254,7 @@ describe('Spot schema', function() {
             var s = new Spot();
             var bookings = ['123','456']; 
             s.bookings = bookings;
-            expect(s.getBookings()).to.deep.equal(bookings);
+            expect(s.getBookings()).to.deep.include.all.members(bookings);
         });
         
         it('should return an empty array if no bookings are added', function() {

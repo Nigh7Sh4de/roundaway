@@ -136,7 +136,7 @@ controller.prototype = {
                         })
                     });
                 else
-                    return res.sendGood('This lot has no spots', {spots: spots});
+                    return res.sendGood('This lot has no spots', spots);
             }
         })
     },

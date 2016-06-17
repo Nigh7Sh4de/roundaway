@@ -533,7 +533,7 @@ describe('the entire app should not explode', function() {
                             expect(res.status).to.equal(200);
                             app.db.lots.findById(lot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
-                                expect(doc.location.coordinates).to.deep.equal(coords);
+                                expect(doc.location.coordinates).to.deep.include.all.members(coords);
                                 done();
                             });
                         });
@@ -679,7 +679,7 @@ describe('the entire app should not explode', function() {
                             expect(res.status).to.equal(200);
                             app.db.spots.findById(spot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
-                                expect(doc.location.coordinates).to.deep.equal(coords);
+                                expect(doc.location.coordinates).to.deep.include.all.members(coords);
                                 done();
                             });
                         });
