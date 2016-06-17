@@ -10,10 +10,8 @@ var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe('the entire app should not explode', function() {
-    var app,
-        req,
-        res;
+describe.skip('the entire app should not explode', function() {
+    var app;
 
     var userProfile = {
         name: 'Nigh7'
@@ -21,50 +19,6 @@ describe('the entire app should not explode', function() {
     var userAuth = {
         facebook: 'facebook_auth'
     }
-    var booking2 = new Booking({
-        start: new Date('2020/01/01'),
-        end: new Date('2020/01/02')
-    });
-    var _av = {
-        start: new Date('2010/01/01'),
-        end: new Date('2030/01/01')
-    }
-    var _bk = {
-        start: new Date('2070/01/01'),
-        end: new Date('2070/01/02')
-    }
-    var spot = new Spot({
-            location: {
-                coordinates: [12, 34]
-            },
-            bookings: [booking2.id]
-        }),
-        spot2 = new Spot(),
-        spot3 = new Spot();
-            spot3.available.addRange(_av.start, _av.end);
-            spot3.booked.addRange(_bk.start, _bk.end);
-            spot3.isNew = false;
-    var booking = new Booking({
-        spot: spot.id,
-        start: new Date('2000/01/01'),
-        end: new Date('2020/01/01')
-    });
-    var lot = new Lot({
-            location: {
-                coordinates: [12, 34]
-            },
-            spots: [spot.id, spot2.id]
-        }),
-        lot2 = new Lot();
-    
-    // var user = new User({
-    //     lotIds: [lot.id],
-    //     spotIds: [spot.id],
-    //     bookingIds: [booking.id],
-    //     profile: userProfile,
-    //     authid: userAuth,
-    //     admin: true
-    // });
 
     before(function(done) {
         var sessionUser = new User({
@@ -87,18 +41,7 @@ describe('the entire app should not explode', function() {
         app.db.connection.on('error', function(err) {
             throw err;
         });
-        app.db.connection.once('open', function() {
-            return done();
-            var next = function(err ,res) {
-                expect(err).to.not.be.ok;
-                if (++calls >= todo)
-                    done();
-            }
-            app.db.users.collection.insert([user.toJSON()], next);
-            app.db.lots.collection.insert([lot.toJSON(), lot2.toJSON()], next);
-            app.db.spots.collection.insert([spot.toJSON(), spot2.toJSON(), spot3.toJSON()], next);
-            app.db.bookings.collection.insert([booking.toJSON(), booking2.toJSON()], next);
-        });
+        app.db.connection.once('open', done);
     })
 
     afterEach(function(done) {
@@ -120,7 +63,7 @@ describe('the entire app should not explode', function() {
         })
     }
 
-    describe.only('User Controller', function() {
+    describe('User Controller', function() {
         describe('GET `/api/users`', function() {
             it('should return users in db', function(done) {
                 var user = new User();
@@ -161,83 +104,119 @@ describe('the entire app should not explode', function() {
                 });
             })
         })
-        describe.skip('PUT /api/users/:id/lots', function() {
+        describe('PUT /api/users/:id/lots', function() {
             it('should add a lot to the user', function(done) {
-                request(app).put('/api/users/' + user.id + '/lots')
-                    .send({lots: [lot2.toJSON()]})
-                    .end(function(err, res) {
-                    expect(res.status, res.body.errors).to.equal(200);
-                    app.db.users.findById(user.id, function(err, doc) {
-                        expect(doc.lotIds).to.include(lot2.id);
-                        done();
-                    });
+                var user = new User();
+                var lot = new Lot();
+                insert(user, lot, function() {
+                    request(app).put('/api/users/' + user.id + '/lots')
+                        .send({lots: [lot.toJSON()]})
+                        .end(function(err, res) {
+                        expect(res.status, res.body.errors).to.equal(200);
+                        app.db.users.findById(user.id, function(err, doc) {
+                            expect(doc.lotIds).to.include(lot.id);
+                            done();
+                        });
+                    })
                 })
             })
         })
-        describe.skip('GET /api/users/:id/spots', function() {
+        describe('GET /api/users/:id/spots', function() {
             it('should return spots for the user', function(done) {
-                request(app).get('/api/users/' + user.id + '/spots').end(function(err, res) {
-                    expect(res.body.data).to.include(spot.id);
-                    expect(res.status).to.equal(200);
-                    done();
-                })
+                var spot = new Spot();
+                var user = new User({
+                    spotIds: [spot.id]
+                });
+                insert(user, spot, function() {
+                    request(app).get('/api/users/' + user.id + '/spots')
+                        .end(function(err, res) {
+                            expect(res.body.data).to.include(spot.id);
+                            expect(res.status).to.equal(200);
+                            done();
+                        })
+                });
             })
         })
-        describe.skip('PUT /api/users/:id/spots', function() {
+        describe('PUT /api/users/:id/spots', function() {
             it('should add a spot to the user', function(done) {
-                request(app).put('/api/users/' + user.id + '/spots')
-                    .send({spots: [spot2.toJSON()]})
-                    .end(function(err, res) {
-                    expect(res.status, res.body.errors).to.equal(200);
-                    app.db.users.findById(user.id, function(err, doc) {
-                        expect(doc.spotIds).to.include(spot2.id);
-                        done();
+                var user = new User();
+                var spot = new Spot();
+                insert(user, spot, function() {
+                    request(app).put('/api/users/' + user.id + '/spots')
+                        .send({spots: [spot.toJSON()]})
+                        .end(function(err, res) {
+                        expect(res.status, res.body.errors).to.equal(200);
+                        app.db.users.findById(user.id, function(err, doc) {
+                            expect(doc.spotIds).to.include(spot.id);
+                            done();
+                        });
                     });
-                })
+                });
             })
         })
-        describe.skip('GET /api/users/:id/bookings', function() {
+        describe('GET /api/users/:id/bookings', function() {
             it('should return bookings for the user', function(done) {
-                request(app).get('/api/users/' + user.id + '/bookings').end(function(err, res) {
-                    expect(res.body.data).to.include(booking.id);
-                    expect(res.status).to.equal(200);
-                    done();
+                var booking = new Booking();
+                var user = new User({
+                    bookingIds: [booking.id]
+                })
+                insert(booking, user, function() {
+                    request(app).get('/api/users/' + user.id + '/bookings')
+                        .end(function(err, res) {
+                            expect(res.body.data).to.include(booking.id);
+                            expect(res.status).to.equal(200);
+                            done();
+                        })
                 })
             })
         })
-        describe.skip('PUT /api/users/:id/bookings', function() {
+        describe('PUT /api/users/:id/bookings', function() {
             it('should add a booking to the user', function(done) {
-                request(app).put('/api/users/' + user.id + '/bookings')
-                    .send({bookings: [booking2.toJSON()]})
-                    .end(function(err, res) {
-                    expect(res.status, res.body.errors).to.equal(200);
-                    app.db.users.findById(user.id, function(err, doc) {
-                        expect(doc.bookingIds).to.include(booking2.id);
-                        done();
+                var booking = new Booking();
+                var user = new User();
+                insert(user, booking, function() {
+                    request(app).put('/api/users/' + user.id + '/bookings')
+                        .send({bookings: [booking.toJSON()]})
+                        .end(function(err, res) {
+                        expect(res.status, res.body.errors).to.equal(200);
+                        app.db.users.findById(user.id, function(err, doc) {
+                            expect(doc.bookingIds).to.include(booking.id);
+                            done();
+                        });
                     });
-                })
+                });
             })
         })
-        describe.skip('GET /api/users/:id/profile', function() {
+        describe('GET /api/users/:id/profile', function() {
             it('should return profile for the user', function(done) {
-                request(app).get('/api/users/' + user.id + '/profile').end(function(err, res) {
-                    expect(res.body.data).to.deep.equal(userProfile);
-                    expect(res.status).to.equal(200);
-                    done();
-                })
-            })
-        })
-        describe.skip('PATCH /api/users/:id/profile', function() {
-            it('should return profile for the user', function(done) {
-                request(app).patch('/api/users/' + user.id + '/profile')
-                    .send({name: 'Sh4de'})
-                    .end(function(err, res) {
-                    expect(res.status, res.body.errors).to.equal(200);
-                    app.db.users.findById(user.id, function(err, doc) {
-                        expect(doc.profile.name).to.deep.equal('Sh4de');
+                var user = new User({
+                    profile: userProfile
+                });
+                insert(user, function() {
+                    request(app).get('/api/users/' + user.id + '/profile').end(function(err, res) {
+                        expect(res.body.data).to.deep.equal(userProfile);
+                        expect(res.status).to.equal(200);
                         done();
                     });
+                });
+            })
+        })
+        describe('PATCH /api/users/:id/profile', function() {
+            it('should return profile for the user', function(done) {
+                var user = new User({
+                    profile: userProfile
                 })
+                insert(user, function() {
+                    request(app).patch('/api/users/' + user.id + '/profile')
+                        .send({name: 'Sh4de'})
+                        .end(function(err, res) {
+                        expect(res.status, res.body.errors).to.equal(200);
+                        app.db.users.findById(user.id, function(err, doc) {
+                            expect(doc.profile.name).to.deep.equal('Sh4de');
+                            done();
+                        });
+                    });
+                });
             })
         })
     })
@@ -245,24 +224,31 @@ describe('the entire app should not explode', function() {
     describe('Booking controller', function() {
         describe('GET /api/bookings', function() {
             it('should return all bookings', function(done) {
-                request(app).get('/api/bookings')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain.all(booking.id, booking2.id);
-                        done();
-                    })
+                var booking = new Booking(),
+                    booking2 = new Booking();
+                insert(booking, booking, function() {
+                    request(app).get('/api/bookings')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain.all(booking.id, booking2.id);
+                            done();
+                        })
+                })
             })
         })
         describe('GET /api/bookings/:id', function() {
             it('should return specific booking', function(done) {
-                request(app).get('/api/bookings/' + booking.id)
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain(booking.id);
-                        done();
-                    })
+                var booking = new Booking();
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain(booking.id);
+                            done();
+                        })
+                })
             })
         })
         describe('PUT /api/bookings', function() {
@@ -285,140 +271,189 @@ describe('the entire app should not explode', function() {
         })
         describe('GET /api/bookings/:id/spot', function() {
             it('should return spot for the booking', function(done) {
-                request(app).get('/api/bookings/' + booking.id + '/spot')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain(spot.id);
-                        done();
-                    });
+                var spot = new Spot();
+                var booking = new Booking({
+                    spot: spot.id
+                });
+                insert(spot, booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/spot')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain(spot.id);
+                            done();
+                        });
+                })
             })
         })
         describe('PUT /api/bookings/:id/spot', function(done) {
             it('should set the spot for the booking', function(done) {
-                request(app).put('/api/bookings/' + booking2.id + '/spot')
-                    .send({id: spot2.id})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.bookings.findById(booking2.id, function(err, doc) {
+                var spot = new Spot();
+                var booking = new Booking();
+                insert(spot, booking, function() {
+                    request(app).put('/api/bookings/' + booking.id + '/spot')
+                        .send({id: spot.id})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.spot).to.deep.equal(spot2.id);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.bookings.findById(booking.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.spot).to.deep.equal(spot.id);
+                                done();
+                            })
                         })
-                    })
+                });
             })
         })
         describe('GET /api/bookings/:id/start', function() {
             it('should get the start of the booking', function(done) {
-                request(app).get('/api/bookings/' + booking.id + '/start')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.body.data).to.deep.equal(booking.start.toISOString());
-                        done();
-                    })
+                var start = new Date();
+                var booking = new Booking({
+                    start: start
+                })
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/start')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data).to.deep.equal(booking.start.toISOString());
+                            done();
+                        })
+                });
             })
         })
         describe('PUT /api/bookings/:id/start', function() {
             it('should set the start of the booking', function(done) {
                 var now = new Date();
-                request(app).put('/api/bookings/' + booking2.id + '/start')
-                    .send({start: now})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.bookings.findById(booking2.id, function(err, doc) {
+                var booking = new Booking();
+                insert(booking, function() {
+
+                    request(app).put('/api/bookings/' + booking.id + '/start')
+                        .send({start: now})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.start).to.deep.equal(now);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.bookings.findById(booking.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.start).to.deep.equal(now);
+                                done();
+                            })
                         })
-                    })
+                })
             })
         })
         describe('GET /api/bookings/:id/end', function() {
             it('should get the end of the booking', function(done) {
-                request(app).get('/api/bookings/' + booking.id + '/end')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.body.data).to.deep.equal(booking.end.toISOString());
-                        done();
-                    })
+                var booking = new Booking({
+                    end: new Date()
+                });
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/end')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data).to.deep.equal(booking.end.toISOString());
+                            done();
+                        })
+                })
             })
         })
         describe('PUT /api/bookings/:id/end', function() {
             it('should set the end of the booking', function(done) {
                 var later = new Date(new Date() + 12345678);
-                request(app).put('/api/bookings/' + booking2.id + '/end')
-                    .send({end: later})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.bookings.findById(booking2.id, function(err, doc) {
+                var booking = new Booking();
+                insert(booking, function() {
+                    request(app).put('/api/bookings/' + booking.id + '/end')
+                        .send({end: later})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.end).to.deep.equal(later);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.bookings.findById(booking.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.end).to.deep.equal(later);
+                                done();
+                            })
                         })
-                    })
+                })
             })
         })
         describe('GET /api/bookings/:id/duration', function() {
             it('should get the duration of the booking', function(done) {
-                request(app).get('/api/bookings/' + booking.id + '/duration')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.body.data).to.deep.equal(booking.getDuration());
-                        done();
-                    })
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01')
+                })
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/duration')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data).to.deep.equal(booking.getDuration());
+                            done();
+                        })
+                })
             })
         })
         describe('PUT /api/bookings/:id/duration', function() {
             it('should set the duration of the booking', function(done) {
                 var oneday = 1000*60*60*24;
-                request(app).put('/api/bookings/' + booking2.id + '/duration')
-                    .send({duration: oneday})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.bookings.findById(booking2.id, function(err, doc) {
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01')
+                })
+                insert(booking, function() {
+                    request(app).put('/api/bookings/' + booking.id + '/duration')
+                        .send({duration: oneday})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.getDuration()).to.deep.equal(oneday);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.bookings.findById(booking.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.getDuration()).to.deep.equal(oneday);
+                                done();
+                            })
                         })
-                    })
+                });
             })
         })
         describe('GET /api/bookings/:id/time', function() {
             it('should get the time of the booking', function(done) {
-                request(app).get('/api/bookings/' + booking.id + '/time')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.body.data).to.be.ok;
-                        expect(res.body.data.start).to.deep.equal(booking.start.toISOString());
-                        expect(res.body.data.end).to.deep.equal(booking.end.toISOString());
-                        done();
-                    })
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01')
+                })
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/time')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data).to.be.ok;
+                            expect(res.body.data.start).to.deep.equal(booking.start.toISOString());
+                            expect(res.body.data.end).to.deep.equal(booking.end.toISOString());
+                            done();
+                        })
+                });
             })
         })
         describe('PUT /api/bookings/:id/time', function() {
             it('should set the time of the booking', function(done) {
                 var now = new Date();
                 var later = new Date(now + 12345678);
-                request(app).put('/api/bookings/' + booking2.id + '/time')
-                    .send({start: now, end: later})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.bookings.findById(booking2.id, function(err, doc) {
+                var booking = new Booking();
+                insert(booking, function() {
+                    request(app).put('/api/bookings/' + booking.id + '/time')
+                        .send({start: now, end: later})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.start).to.deep.equal(now);
-                            expect(doc.end).to.deep.equal(later);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.bookings.findById(booking.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.start).to.deep.equal(now);
+                                expect(doc.end).to.deep.equal(later);
+                                done();
+                            })
                         })
-                    })
+                })
             })
         })
     })
@@ -426,24 +461,31 @@ describe('the entire app should not explode', function() {
     describe('Lot Controller', function() {
         describe('GET /api/lots', function() {
             it('should return all lots', function(done) {
-                request(app).get('/api/lots')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain.all(lot.id, lot2.id);
-                        done();
-                    })
+                var lot = new Lot(),
+                    lot2 = new Lot();
+                insert(lot, lot2, function() {
+                    request(app).get('/api/lots')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain.all(lot.id, lot2.id);
+                            done();
+                        })
+                })
             })
         })
         describe('GET /api/lots/:id', function() {
             it('should return specific lot', function(done) {
-                request(app).get('/api/lots/' + lot.id)
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain(lot.id);
-                        done();
-                    })
+                var lot = new Lot();
+                insert(lot, function() {
+                    request(app).get('/api/lots/' + lot.id)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain(lot.id);
+                            done();
+                        })
+                })
             })
         })
         describe('PUT /api/lots', function() {
@@ -466,74 +508,98 @@ describe('the entire app should not explode', function() {
         })
         describe('GET /api/lots/:id/location', function() {
             it('should return location for the lot', function(done) {
-                request(app).get('/api/lots/' + lot.id + '/location')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain(lot.location.coordinates.toString());
-                        done();
-                    });
+                var lot = new Lot();
+                lot.location.coordinates = [12, 34];
+                insert(lot, function() {
+                    request(app).get('/api/lots/' + lot.id + '/location')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain(lot.location.coordinates.toString());
+                            done();
+                        });
+                })
             })
         })
         describe('PUT /api/lots/:id/location', function() {
             it('should set coordinates', function(done) {
                 var coords = [12, 21];
-                request(app).put('/api/lots/' + lot2.id + '/location')
-                .send({coordinates: coords})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.lots.findById(lot2.id, function(err, doc) {
+                var lot = new Lot();
+                insert(lot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/location')
+                    .send({coordinates: coords})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.location.coordinates).to.deep.equal(coords);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.lots.findById(lot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.location.coordinates).to.deep.equal(coords);
+                                done();
+                            });
                         });
-                    });
+                })
             })
         })
         describe('GET /api/lots/:id/spots', function() {
             it('should return spot for the lot', function(done) {
-                request(app).get('/api/lots/' + lot.id + '/spots')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain.all(spot.id, spot2.id);
-                        done();
-                    });
+                var spot = new Spot();
+                var lot = new Lot({
+                    spots: [spot.id]
+                })
+                insert(spot, lot, function() {
+                    request(app).get('/api/lots/' + lot.id + '/spots')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain.all(spot.id, spot.id);
+                            done();
+                        });
+                })
             })
         })
         describe('PUT /api/lots/:id/spots', function(done) {
             it('should set the spot for the lot', function(done) {
-                request(app).put('/api/lots/' + lot2.id + '/spots')
-                    .send({spots: [spot2.id]})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.lots.findById(lot2.id, function(err, doc) {
+                var spot = new Spot();
+                var lot = new Lot();
+                insert(spot, lot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/spots')
+                        .send({spots: [spot.id]})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.spots).to.deep.include(spot2.id);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.lots.findById(lot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.spots).to.deep.include(spot.id);
+                                done();
+                            })
                         })
-                    })
+                })
             })
         })
         describe('PUT /api/lots/:id/spots/remove', function(done) {
             it('shouldremove the spot from the lot', function(done) {
-                request(app).put('/api/lots/' + lot.id + '/spots/remove')
-                    .send({spots: [spot2.id]})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.lots.findById(lot.id, function(err, doc) {
+                var spot = new Spot();
+                var spot2 = new Spot();
+                var lot = new Lot({
+                    spots: [spot.id, spot2.id]
+                })
+                insert(lot, spot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/spots/remove')
+                        .send({spots: [spot.id]})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.spots).to.deep.include(spot.id);
-                            expect(doc.spots).to.not.deep.include(spot2.id);
-                            doc.addSpots(spot2, function(err) {
+                            expect(res.status).to.equal(200);
+                            app.db.lots.findById(lot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
-                                done();
+                                expect(doc.spots).to.deep.include(spot2.id);
+                                expect(doc.spots).to.not.deep.include(spot.id);
+                                doc.addSpots(spot, function(err) {
+                                    expect(err).to.not.be.ok;
+                                    done();
+                                })
                             })
                         })
-                    })
+                })
             })
         })
     })
@@ -541,24 +607,31 @@ describe('the entire app should not explode', function() {
     describe('Spot Controller', function() {
         describe('GET /api/spots', function() {
             it('should return all spots', function(done) {
-                request(app).get('/api/spots')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain.all(spot.id, spot2.id, spot3.id);
-                        done();
-                    })
+                var spot = new Spot(),
+                    spot2 = new Spot();
+                insert(spot, spot2, function() {
+                    request(app).get('/api/spots')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain.all(spot.id, spot2.id);
+                            done();
+                        })
+                })
             })
         })
         describe('GET /api/spots/:id', function() {
             it('should return specific spot', function(done) {
-                request(app).get('/api/spots/' + spot.id)
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain(spot.id);
-                        done();
-                    })
+                var spot = new Spot();
+                insert(spot, function() {
+                    request(app).get('/api/spots/' + spot.id)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain(spot.id);
+                            done();
+                        })
+                })
             })
         })
         describe('PUT /api/spots', function() {
@@ -581,67 +654,94 @@ describe('the entire app should not explode', function() {
         })
         describe('GET /api/spots/:id/location', function() {
             it('should return location for the spot', function(done) {
-                request(app).get('/api/spots/' + spot.id + '/location')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain(spot.location.coordinates.toString());
-                        done();
-                    });
+                var spot = new Spot();
+                spot.location.coordinates = [12, 34];
+                insert(spot, function() {
+                    request(app).get('/api/spots/' + spot.id + '/location')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain(spot.location.coordinates.toString());
+                            done();
+                        });
+                })
             })
         })
         describe('PUT /api/spots/:id/location', function() {
             it('should set coordinates', function(done) {
                 var coords = [12, 21];
-                request(app).post('/api/spots/' + spot2.id + '/location')
-                .send({coordinates: coords})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.spots.findById(spot2.id, function(err, doc) {
+                var spot = new Spot();
+                insert(spot, function() {
+                    request(app).post('/api/spots/' + spot.id + '/location')
+                    .send({coordinates: coords})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.location.coordinates).to.deep.equal(coords);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.spots.findById(spot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.location.coordinates).to.deep.equal(coords);
+                                done();
+                            });
                         });
-                    });
+                })
             })
         })
         describe('GET /api/spots/:id/bookings', function() {
             it('should get bookings', function(done) {
-                request(app).get('/api/spots/' + spot.id + '/bookings')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain(booking2.id);
-                        done();
-                    })
+                var booking = new Booking();
+                var spot = new Spot({
+                    bookings: [booking.id]
+                });
+                insert(booking, spot, function() {
+                    request(app).get('/api/spots/' + spot.id + '/bookings')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain(booking.id);
+                            done();
+                        })
+                })
             })
         })
         describe('PUT /api/spots/:id/bookings', function() {
             it('should add bookings', function(done) {
-                request(app).put('/api/spots/' + spot2.id + '/bookings')
-                .send({bookings: booking2.id})
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.spots.findById(spot2.id, function(err, doc) {
+                var spot = new Spot();
+                spot.available.addRange(
+                    new Date('2000/01/01'),
+                    new Date('2100/01/01')
+                );
+                var booking = new Booking({
+                    start: new Date('2040/01/01'),
+                    end: new Date('2050/01/01')
+                });
+                insert(spot, booking, function() {
+                    request(app).put('/api/spots/' + spot.id + '/bookings')
+                    .send({bookings: booking.id})
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.bookings).to.include(booking2.id);
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.spots.findById(spot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.bookings).to.include(booking.id);
+                                done();
+                            })
                         })
-                    })
+                })
             })
         })
         describe('PUT /api/spots/:id/bookings/remove', function() {
             it('should remove bookings', function(done) {
-                spot3.addBookings(booking2, function(err) {
-                    expect(err, err).to.not.be.ok;
-                    request(app).put('/api/spots/' + spot3.id + '/bookings/remove')
-                    .send({bookings: booking2.id})
+                var booking = new Booking();
+                var spot = new Spot({
+                    bookings: [booking.id]
+                });
+                insert(booking, spot, function() {
+                    request(app).put('/api/spots/' + spot.id + '/bookings/remove')
+                    .send({bookings: booking.id})
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
-                            app.db.spots.findById(spot3.id, function(err, doc) {
+                            app.db.spots.findById(spot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
                                 expect(doc.bookings).to.be.empty;
                                 done();
@@ -652,82 +752,122 @@ describe('the entire app should not explode', function() {
         })
         describe('GET /api/spots/:id/available', function() {
             it('should get availability', function(done) {
-                request(app).get('/api/spots/' + spot3.id + '/available')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain.all(_av.start.toISOString(), 
-                                                        _av.end.toISOString());
-                        done();
-                    })
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2030/01/01')
+                }
+                var spot = new Spot({
+                    available: [_av]
+                });
+                insert(spot, function() {
+                    request(app).get('/api/spots/' + spot.id + '/available')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain.all(_av.start.toISOString(), 
+                                                            _av.end.toISOString());
+                            done();
+                        })
+                })
             })
         })
         describe('PUT /api/spots/:id/available', function() {
             it('should add availability', function(done) {
-                var avail = {
-                    start: new Date('2050/01/01'),
-                    end: new Date('2050/01/02')
-                };
-                request(app).put('/api/spots/' + spot3.id + '/available')
-                .send(avail)
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.spots.findById(spot3.id, function(err, doc) {
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2030/01/01')
+                }
+                var spot = new Spot();
+                insert(spot, function() {
+                    request(app).put('/api/spots/' + spot.id + '/available')
+                        .send(_av)
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.available.checkRange(avail.start, avail.end)).to.be.true;
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.spots.findById(spot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.available.checkRange(_av.start, _av.end)).to.be.true;
+                                done();
+                            })
                         })
-                    })
+                })
             })
         })
         describe('PUT /api/spots/:id/available/remove', function() {
             it('should remove availability', function(done) {
-                var avail = {
-                    start: new Date('2011/01/01'),
-                    end: new Date('2015/01/01')
-                };
-                request(app).put('/api/spots/' + spot3.id + '/available/remove')
-                .send(avail)
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        app.db.spots.findById(spot3.id, function(err, doc) {
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2030/01/01')
+                }
+                var spot = new Spot({
+                    available: [_av]
+                });
+                insert(spot, function() {
+                    request(app).put('/api/spots/' + spot.id + '/available/remove')
+                    .send(_av)
+                        .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(doc.available.checkRange(avail.start, avail.end)).to.be.false;
-                            done();
+                            expect(res.status).to.equal(200);
+                            app.db.spots.findById(spot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.available.checkRange(_av.start, _av.end)).to.be.false;
+                                done();
+                            })
                         })
-                    })
+                })
             })
         })
         describe('GET /api/spots/:id/booked', function() {
             it('should get booked schedule', function(done) {
-                request(app).get('/api/spots/' + spot3.id + '/booked')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.text).to.contain.all(
-                            _bk.start.toISOString(), 
-                            _bk.end.toISOString());
-                        done();    
-                    })
+                var _bk = {
+                    start: new Date('2070/01/01'),
+                    end: new Date('2070/01/02')
+                }
+                var spot = new Spot({
+                    booked: [_bk]
+                });
+                insert(spot, function() {
+                    request(app).get('/api/spots/' + spot.id + '/booked')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.text).to.contain.all(
+                                _bk.start.toISOString(), 
+                                _bk.end.toISOString());
+                            done();    
+                        })
+                })
             });
         })
         describe('GET /api/spots/:id/schedule', function() {
             it('should get booked and available schedule', function(done) {
-                request(app).get('/api/spots/' + spot3.id + '/schedule')
-                    .end(function(err, res) {
-                        expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
-                        expect(res.body.data.booked).to.be.ok;
-                        expect(res.body.data.available).to.be.ok;
-                        expect(res.text).to.contain.all(
-                            _av.start.toISOString(), 
-                            _av.end.toISOString(),
-                            _bk.start.toISOString(), 
-                            _bk.end.toISOString());
-                        done();    
-                    })
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2030/01/01')
+                }
+                var _bk = {
+                    start: new Date('2070/01/01'),
+                    end: new Date('2070/01/02')
+                }
+                var spot = new Spot({
+                    available: [_av],
+                    booked: [_bk]
+                });
+                insert(spot, function() {
+                    request(app).get('/api/spots/' + spot.id + '/schedule')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data.booked).to.be.ok;
+                            expect(res.body.data.available).to.be.ok;
+                            expect(res.text).to.contain.all(
+                                _av.start.toISOString(), 
+                                _av.end.toISOString(),
+                                _bk.start.toISOString(), 
+                                _bk.end.toISOString());
+                            done();    
+                        })
+                })
             });
         })
     })
