@@ -10,13 +10,13 @@
 var config = function () {}
 
 config.prototype = {
-    FACEBOOK_CLIENT_ID      :   "546364295540860",
-    FACEBOOK_CLIENT_SECRET  :   "0ee45064c6677199badc21c95f46948f",
-    GOOGLE_CLIENT_ID        :   "75788119754-35prom18iupfppskq6965qsg5sq5bp8q.apps.googleusercontent.com",
-    GOOGLE_CLIENT_SECRET    :   "4lf9EBwc8L9yxAzwPEp1pxJ9",
-    GOOGLE_API_KEY          :   "AIzaSyDzO69_6QM_qkhczIvkFrmWtjXkg3CTFIE",
+    FACEBOOK_CLIENT_ID      :   "1047538728658257",
+    FACEBOOK_CLIENT_SECRET  :   "27f4b5170ad4cff5e389f0ce60e7decd",
+    GOOGLE_CLIENT_ID        :   "569132181251-9an908bh0b1ta0fb5vrsc66roh5lnkq7.apps.googleusercontent.com",
+    GOOGLE_CLIENT_SECRET    :   "dM31Hu2O07Pxl1YHBXvhBC8Z",
+    GOOGLE_API_KEY          :   "AIzaSyDVtIdTJrYyfr30Hj9OyioWMaG_HxhHU2E",
     PORT                    :   8081,
-    DB_CONNECTION_STRING    :   "mongodb://localhost/roundaway"
+    DB_CONNECTION_STRING    :   "mongodb://localhost/dev_roundaway"
 }
 
 module.exports = config;
