@@ -25,7 +25,7 @@ Roundaway
    <td>dev</td>
    <td>8081</td>
    <td>http://dev.roundaway.com (DNE yet)</th>
-   <td>0.0.5</td>
+   <td>0.0.6</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
@@ -58,6 +58,17 @@ Roundaway
   * PORT
 3. Ensure MongoDB server is running on localhost
 4. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
+
+## Tests
+
+There are two types of tests in the backend: **unit** tests and **integration** tests.
+The unit tests are organized by controller. All the integration tests are nested under a single describe
+```
+describe('the entire app should not explode', function() {
+```
+in the `system.test.js` file. This describe is `.skip()`ed on `dev` but allowed to run on `master` because it takes a *very* long time for the integration tests to complete. This is due to the fact that the **integration** tests interact with a live db so when running integration tests keep in mind that you will need to have a `mongod` instance running.
+All the test files are named `*.test.js` and are in the `/app/tests/` directory.
+Commits with breaking tests are allowed in topic branches and thus when merged into `dev` or `master` some commits will have failing changes, but **ENSURE THAT WHEN YOU MERGE BRANCHES THE `HEAD` IS PASSING ALL TESTS (INCLUDING INTEGRATION TESTS)**.
 
 ## API
 
