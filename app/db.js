@@ -1,6 +1,14 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Scema;
 
+/**
+ * Stupid hack because mongoose doesn't know 
+ * how to properly deprecate functionality that 
+ * if gone should just default to native on it's own 
+ */
+mongoose.Promise = Promise;
+
+
 var User = require('./models/User')
 var Booking = require('./models/Booking');
 var Spot = require('./models/Spot')
