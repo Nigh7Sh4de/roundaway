@@ -51,7 +51,7 @@ var loginCtrl = function($scope) {
 var profileCtrl = function($scope, $http) {
     $http.get('/api/users/profile').then(function(res) {
         console.log(res);
-        var profile = res.data;
+        var profile = res.data.data;
         if (typeof profile == 'string')
             window.location = '/login';
 
