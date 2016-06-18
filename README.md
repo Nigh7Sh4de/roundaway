@@ -16,7 +16,7 @@ Roundaway
  <tbody>
   <tr>
    <td>master</td>
-   <td>80</td>
+   <td>8080</td>
    <td>http://roundaway.com</td>
    <td>0.1</td>
    <td>production</td>
@@ -24,7 +24,7 @@ Roundaway
   <tr>
    <td>dev</td>
    <td>8081</td>
-   <td>http://dev.roundaway.com (DNE yet)</th>
+   <td>http://roundaway.com:8081</th>
    <td>0.1.0</td>
    <td>staging (completed items)</td>
   </tr>
