@@ -45,7 +45,23 @@ describe.skip('the entire app should not explode', function() {
     })
 
     afterEach(function(done) {
-        app.db.connection.db.dropDatabase(done);
+        app.db.connection.db.listCollections().toArray(function(err, names) {
+            expect(err).to.not.be.ok;
+            var total = names.length,
+                i = 0; 
+            var next = function(err) {
+                if (err)
+                    throw err;
+                if (++i >= total)
+                    done();
+            }
+            names.forEach(function(collection_name) {
+                collection_name = collection_name.name;
+                if (collection_name.indexOf("system.") == -1) 
+                    app.db.connection.db.collection(collection_name).drop(next);
+                else next();
+            })
+        });
     })
 
     var insert = function() {
