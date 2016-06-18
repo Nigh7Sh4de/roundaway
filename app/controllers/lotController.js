@@ -1,4 +1,3 @@
-// var request = require('request');
 var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
 
@@ -91,20 +90,11 @@ controller.prototype = {
                 app.geocoder.reverse(coords, function(err, loc) {
                     if (err)
                         return res.sendBad(err);
-                    loc = loc[0];
-                    var c = 0,
-                        total = 2;
-                    var next = function(err) {
+                    lot.setLocation(coords, loc[0].formattedAddress, function(err) {
                         if (err)
                             return res.sendBad(err);
-                        if(++c >= total)
-                            done();
-                    }
-                    var done = function() {
-                        res.sendStatus(200);
-                    }
-                    lot.setAddress(loc.formattedAddress, next);
-                    lot.setLocation(coords, next);
+                        else res.sendStatus(200);
+                    });
                 })    
             }
         });

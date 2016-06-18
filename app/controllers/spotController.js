@@ -117,20 +117,11 @@ controller.prototype = {
                 if (coords.long !== undefined)
                     delete coords.long;
                 app.geocoder.reverse(coords, function(err, loc) {
-                    loc = loc[0];
-                    var c = 0,
-                        total = 2;
-                    var next = function(err) {
+                    spot.setLocation(coords, loc[0].formattedAddress, function(err) {
                         if (err)
                             return res.sendBad(err);
-                        if(++c >= total)
-                            done();
-                    }
-                    var done = function() {
-                        res.sendGood('Location set for spot');
-                    }
-                    spot.setAddress(loc.formattedAddress, next);
-                    spot.setLocation(coords, next);
+                        else res.sendGood('Location set for spot');
+                    });
                 })    
             }
         });

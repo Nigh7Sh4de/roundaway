@@ -46,50 +46,37 @@ describe('Spot schema', function() {
         })
     })
     
-    describe('setAddress', function() {
-        it('should set address given good input', function(done) {
+    describe('setLocation', function() {
+        it('should fail if no address is specified', function(done) {
             var s = new Spot();
-            var a = '123 some st';
+            var coords = [123, 456];
+            var address = '';
             expect(s.address).to.not.be.ok;
-            s.setAddress(a, function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.address).to.equal(a);
+            s.setLocation(coords, address, function(err) {
+                expect(err).to.be.ok;
+                expect(s.address).to.not.be.ok;
+                expect(s.location.address).to.not.be.ok;
                 done();
             })
         })
-        
-        it('should fail if given bad input', function(done) {
+
+        it('should set the address', function(done) {
             var s = new Spot();
+            var coords = [123, 456];
+            var address = 'some address';
             expect(s.address).to.not.be.ok;
-            [
-                null,
-                undefined,
-                123,
-                function(){expect.fail()},
-                {},
-                {id:123},
-                {id:null},
-                {id:function(){expect.fail()}},
-                ''
-            ].forEach(function(input, i, arr) {
-                s.setAddress(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(s.address).to.not.be.ok;
-                    if (i+1 >= arr.length)
-                        done();
-                })
+            s.setLocation(coords, address, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.address).to.deep.equal(address);
+                done();
             })
-            
         })
-        
-    });
-    
-    describe('setLocation', function() {
+
         it('should set the location given an array', function(done) {
             var s = new Spot();
             var coords = [123, 456];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, function(err) {
+            s.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members(coords);
                 done();
@@ -100,7 +87,7 @@ describe('Spot schema', function() {
             var s = new Spot();
             var coords = [123];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, function(err) {
+            s.setLocation(coords, 'some address', function(err) {
                 expect(err).to.be.ok;
                 expect(s.location.coordinates).to.not.be.ok;
                 done();
@@ -111,7 +98,7 @@ describe('Spot schema', function() {
             var s = new Spot();
             var coords = [123,456,789];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, function(err) {
+            s.setLocation(coords, 'some address', function(err) {
                 expect(err).to.be.ok;
                 expect(s.location.coordinates).to.not.be.ok;
                 done();
@@ -131,7 +118,7 @@ describe('Spot schema', function() {
                 {id:function(){expect.fail()}},
                 ''
             ].forEach(function(input, i, arr) {
-                s.setLocation([input,input], function(err) {
+                s.setLocation([input,input], 'some addres', function(err) {
                     expect(err).to.be.ok;
                     expect(s.location.coordinates).to.not.be.ok;
                     if (i+1 >= arr.length)
@@ -146,7 +133,7 @@ describe('Spot schema', function() {
             var coords_t = '456';
             var coords = [coords_g, coords_t];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, function(err) {
+            s.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([
                     parseFloat(coords_g),
@@ -165,7 +152,7 @@ describe('Spot schema', function() {
                 lat: coords_t
             };
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, function(err) {
+            s.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
                 done();
@@ -185,7 +172,7 @@ describe('Spot schema', function() {
                 {id:null},
                 {id:function(){expect.fail()}}
             ].forEach(function(input, i, arr) {
-                s.setLocation(input, function(err) {
+                s.setLocation(input, 'some addres', function(err) {
                     expect(err).to.be.ok;
                     expect(s.location.coordinates).to.not.be.ok;
                     if (i+1 >= arr.length)
@@ -207,7 +194,7 @@ describe('Spot schema', function() {
                 {id:function(){expect.fail()}},
                 ''
             ].forEach(function(input, i, arr) {
-                s.setLocation({long:input,lat:input}, function(err) {
+                s.setLocation({long:input,lat:input}, 'some addres', function(err) {
                     expect(err).to.be.ok;
                     expect(s.location.coordinates).to.not.be.ok;
                     if (i+1 >= arr.length)
@@ -225,7 +212,7 @@ describe('Spot schema', function() {
                 lat: coords_t
             };
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, function(err) {
+            s.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
                 done();
@@ -241,7 +228,7 @@ describe('Spot schema', function() {
                 lat: coords_t
             };
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, function(err) {
+            s.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
                 done();
@@ -1251,12 +1238,12 @@ describe('spotController', function() {
         
         beforeEach(function() {
             s = new Spot();
-            sinon.stub(s, 'setLocation', function(l,cb) {
+            sinon.stub(s, 'setLocation', function(l,a,cb) {
                 cb();
             })
-            sinon.stub(s, 'setAddress', function(l,cb) {
-                cb();
-            })
+            // sinon.stub(s, 'setAddress', function(l,cb) {
+            //     cb();
+            // })
             sinon.stub(app.geocoder, 'reverse', function(opt, cb) {
                 expect(opt.lat).to.equal(coords.lat);
                 expect(opt.lon).to.equal(coords.long);
@@ -1277,9 +1264,7 @@ describe('spotController', function() {
             }
             res.sent = function(status) {
                 expect(s.setLocation.calledOnce).to.be.true;
-                expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
-                expect(s.setAddress.calledOnce).to.be.true;
-                expect(s.setAddress.calledWith(address)).to.be.true;
+                expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
                 done();
             }
             app.spotController.SetLocationForSpot(req, res);
@@ -1294,9 +1279,7 @@ describe('spotController', function() {
             }
             res.sent = function() {
                 expect(s.setLocation.calledOnce).to.be.true;
-                expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
-                expect(s.setAddress.calledOnce).to.be.true;
-                expect(s.setAddress.calledWith(address)).to.be.true;
+                expect(s.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
                 done();
             }
             app.spotController.SetLocationForSpot(req, res);

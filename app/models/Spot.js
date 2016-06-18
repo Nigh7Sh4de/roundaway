@@ -47,13 +47,6 @@ spotSchema.methods.getAddress = function() {
     return this.address;
 }
 
-spotSchema.methods.setAddress = function(address, cb) {
-    if (typeof address !== 'string' || address == '')
-        return cb('Cannot set address. Provided address is invlaid.');
-    this.address = address;
-    this.save(cb);
-}
-
 spotSchema.methods.getLocation = function() {
     return Object.assign([], this.location.coordinates, {
         long: this.location.coordinates[0],
@@ -61,7 +54,9 @@ spotSchema.methods.getLocation = function() {
     });
 }
 
-spotSchema.methods.setLocation = function(location, cb) {
+spotSchema.methods.setLocation = function(location, address, cb) {
+    if (typeof address !== 'string' || address == '')
+        return cb('Cannot set address. Provided address is invlaid.');
     if (location instanceof Array) {
         if (location.length != 2)
             return cb('Cannot set location. Specified coordinates are invalid.');
@@ -70,7 +65,7 @@ spotSchema.methods.setLocation = function(location, cb) {
         if (isNaN(long) ||
             isNaN(lat))
             return cb('Cannot set location. Specified coordinates are invalid.');
-        this.location.coordinates = [long, lat];
+        location = [long, lat];
     }
     else {
         if (typeof location !== 'object' || location == null)
@@ -83,8 +78,10 @@ spotSchema.methods.setLocation = function(location, cb) {
         if (isNaN(location.long) ||
             isNaN(location.lat))
             return cb('Cannot set location. Specified coordinates are invalid.');
-        this.location.coordinates = [location.long, location.lat];
+        location = [location.long, location.lat];
     }
+    this.location.coordinates = location;
+    this.address = address;
     this.save(cb);
 }
 

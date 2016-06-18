@@ -229,49 +229,36 @@ describe('Lot schema', function() {
         })
     })
     
-    describe('setAddress', function() {
-        it('should set address given good input', function(done) {
+    describe('setLocation', function() {
+        it('should fail if no address is specified', function(done) {
             var l = new Lot();
-            var a = '123 some st';
+            var coords = [123, 456];
+            var address = '';
             expect(l.address).to.not.be.ok;
-            l.setAddress(a, function(err) {
+            l.setLocation(coords, address, function(err) {
+                expect(err).to.be.ok;
+                expect(l.address).to.not.be.ok;
+                expect(l.location.address).to.not.be.ok;
+                done();
+            })
+        })
+
+        it('should set the address', function(done) {
+            var l = new Lot();
+            var coords = [123, 456];
+            var address = 'some address';
+            expect(l.address).to.not.be.ok;
+            l.setLocation(coords, address, function(err) {
                 expect(err).to.not.be.ok;
-                expect(l.address).to.equal(a);
+                expect(l.address).to.deep.equal(address);
                 done();
             })
         })
         
-        it('should fail if given bad input', function(done) {
-            var l = new Lot();
-            expect(l.address).to.not.be.ok;
-            [
-                null,
-                undefined,
-                123,
-                function(){expect.fail()},
-                {},
-                {id:123},
-                {id:null},
-                {id:function(){expect.fail()}},
-                ''
-            ].forEach(function(input, i, arr) {
-                l.setAddress(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(l.address).to.not.be.ok;
-                    if (i+1 >= arr.length)
-                        done();
-                })
-            })
-            
-        })
-        
-    });
-    
-    describe('setLocation', function() {
         it('should set the location given an array', function(done) {
             var l = new Lot();
             var coords = [123, 456];
-            l.setLocation(coords, function(err) {
+            l.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(l.location.coordinates).to.include.all.members(coords);
                 done();
@@ -282,7 +269,7 @@ describe('Lot schema', function() {
             var l = new Lot();
             var coords = [123];
             expect(l.location.coordinates).to.have.length(0);
-            l.setLocation(coords, function(err) {
+            l.setLocation(coords, 'some address', function(err) {
                 expect(err).to.be.ok;
                 expect(l.location.coordinates).to.have.length(0);
                 done();
@@ -293,7 +280,7 @@ describe('Lot schema', function() {
             var l = new Lot();
             var coords = [123,456,789];
             expect(l.location.coordinates).to.have.length(0);
-            l.setLocation(coords, function(err) {
+            l.setLocation(coords, 'some address', function(err) {
                 expect(err).to.be.ok;
                 expect(l.location.coordinates).to.have.length(0);
                 done();
@@ -313,7 +300,7 @@ describe('Lot schema', function() {
                 {id:function(){expect.fail()}},
                 ''
             ].forEach(function(input, i, arr) {
-                l.setLocation([input,input], function(err) {
+                l.setLocation([input,input], 'some address', function(err) {
                     expect(err).to.be.ok;
                     expect(l.location.coordinates).have.length(0);
                     if (i+1 >= arr.length)
@@ -327,7 +314,7 @@ describe('Lot schema', function() {
             var coords_g = '123';
             var coords_t = '456';
             var coords = [coords_g, coords_t];
-            l.setLocation(coords, function(err) {
+            l.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(l.location.coordinates).to.include.all.members([
                     parseFloat(coords_g),
@@ -345,7 +332,7 @@ describe('Lot schema', function() {
                 long: coords_g,
                 lat: coords_t
         };
-            l.setLocation(coords, function(err) {
+            l.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(l.location.coordinates).to.include.all.members([coords_g,coords_t]);
                 done();
@@ -365,7 +352,7 @@ describe('Lot schema', function() {
                 {id:null},
                 {id:function(){expect.fail()}}
             ].forEach(function(input, i, arr) {
-                l.setLocation(input, function(err) {
+                l.setLocation(input, 'some address', function(err) {
                     expect(err).to.be.ok;
                     expect(l.location.coordinates).have.length(0);
                     if (i+1 >= arr.length)
@@ -387,7 +374,7 @@ describe('Lot schema', function() {
                 {id:function(){expect.fail()}},
                 ''
             ].forEach(function(input, i, arr) {
-                l.setLocation({long:input,lat:input}, function(err) {
+                l.setLocation({long:input,lat:input}, 'some address', function(err) {
                     expect(err).to.be.ok;
                     expect(l.location.coordinates).have.length(0);
                     if (i+1 >= arr.length)
@@ -404,7 +391,7 @@ describe('Lot schema', function() {
                 lon: coords_g,
                 lat: coords_t
         };
-            l.setLocation(coords, function(err) {
+            l.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(l.location.coordinates).to.include.all.members([coords_g,coords_t]);
                 done();
@@ -419,7 +406,7 @@ describe('Lot schema', function() {
                 long: coords_g,
                 lat: coords_t
         };
-            l.setLocation(coords, function(err) {
+            l.setLocation(coords, 'some address', function(err) {
                 expect(err).to.not.be.ok;
                 expect(l.location.coordinates).to.include.all.members([coords_g,coords_t]);
                 done();
@@ -836,10 +823,7 @@ describe('lotController', function() {
         
         beforeEach(function() {
             l = new Lot();
-            sinon.stub(l, 'setLocation', function(l,cb) {
-                cb();
-            })
-            sinon.stub(l, 'setAddress', function(l,cb) {
+            sinon.stub(l, 'setLocation', function(l,a,cb) {
                 cb();
             })
             sinon.stub(app.geocoder, 'reverse', function(opt, cb) {
@@ -862,9 +846,7 @@ describe('lotController', function() {
             }
             res.sendStatus = function(status) {
                 expect(l.setLocation.calledOnce).to.be.true;
-                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
-                expect(l.setAddress.calledOnce).to.be.true;
-                expect(l.setAddress.calledWith(address)).to.be.true;
+                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
                 expect(status).to.equal(200);
                 done();
             }
@@ -880,9 +862,7 @@ describe('lotController', function() {
             }
             res.sendStatus = function(status) {
                 expect(l.setLocation.calledOnce).to.be.true;
-                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
-                expect(l.setAddress.calledOnce).to.be.true;
-                expect(l.setAddress.calledWith(address)).to.be.true;
+                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
                 expect(status).to.equal(200);
                 done();
             }
@@ -898,9 +878,7 @@ describe('lotController', function() {
             }
             res.sendStatus = function(status) {
                 expect(l.setLocation.calledOnce).to.be.true;
-                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long})).to.be.true;
-                expect(l.setAddress.calledOnce).to.be.true;
-                expect(l.setAddress.calledWith(address)).to.be.true;
+                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
                 expect(status).to.equal(200);
                 done();
             }
