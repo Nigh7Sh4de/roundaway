@@ -10,7 +10,7 @@ var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe.skip('the entire app should not explode', function() {
+describe('the entire app should not explode', function() {
     var app;
 
     var userProfile = {

@@ -3,4 +3,4 @@
 # Invoke the Forever module (to START our Node.js server).
 mkdir ~/.forever/logs
 mkdir logs
-forever start --id dev -al logs/forever.log -ao logs/out.log -ae logs/err.log server.js
+forever start --id $1 -al logs/forever.log -ao logs/out.log -ae logs/err.log server.js
