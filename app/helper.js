@@ -1,13 +1,29 @@
-// var helper = function(obj) {
-//     Object.assign(obj, exts);
-// }
+var helper = function() {}
 
-var exts = {
+helper.prototype = {
     init: function(obj) {
-        var x = Object.assign({}, this);
+        var proto = Object.getPrototypeOf(this);
+        var x = {};
+        Object.assign(x, proto, this);
         delete x.init;
+        var middleware = x.middleware;
+        delete x.middleware;
         Object.assign(obj, x);
+
+        if (middleware.length > 0)
+            obj.use.apply(obj, middleware);
     },
+
+    middleware: [],
+
+    start: function(cb) {
+        this.listen(this.config.PORT, cb || this.started);
+    },
+
+    started: function() {
+        console.log('Roundaway started on port ' + this.address().port);
+    },
+
     allowGet: function(file) {
         this.get(file, function(req, res) {
             return res.sendFile(file, { root: __dirname + '/..' });
@@ -31,5 +47,4 @@ var exts = {
     }
 }
 
-module.exports = exts;
-// module.exports = Object.assign(helper, exts);
+module.exports = helper;

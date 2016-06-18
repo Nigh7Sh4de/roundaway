@@ -1,6 +1,14 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Scema;
 
+/**
+ * Stupid hack because mongoose doesn't know 
+ * how to properly deprecate functionality that 
+ * if gone should just default to native on it's own 
+ */
+mongoose.Promise = Promise;
+
+
 var User = require('./models/User')
 var Booking = require('./models/Booking');
 var Spot = require('./models/Spot')
@@ -35,7 +43,7 @@ var _db = {
         search[searchProp] = profile.id;
 
         collections.prototype.users.findOne(search, function(err, doc) {
-            if (err != null)
+            if (err)
                 throw err;
             if (doc)
                 return cb(null, doc);
@@ -61,7 +69,7 @@ var _db = {
                 user.addAuth(strat, profile.id, cb);
             else
                 doc.remove(function(err) {
-                    if (err != null)
+                    if (err)
                         return cb(err);
                     else
                         user.addAuth(strat, profile.id, cb);
@@ -81,9 +89,10 @@ var _db = {
 var collections = function() {}
 
 collections.prototype = {
-    
-    connect: function() {
-        mongoose.connect('mongodb://localhost/roundaway');
+    connect: function(connString) {
+        if (!connString)
+            throw new Error('Must supply a connection string for the db');
+        this.connection = mongoose.connect(connString).connection;
     },
     users: User,
     bookings: Booking,

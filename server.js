@@ -1,17 +1,31 @@
 var app = function(inject) {
     var express = require('express');
     var app = express();
-    app.db = new inject.db();
+    
+    [
+        "FACEBOOK_CLIENT_ID",
+        "FACEBOOK_CLIENT_SECRET",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_API_KEY",
+        "PORT",
+        "DB_CONNECTION_STRING"
+    ].forEach(function(configKey) {
+        if (!inject.config[configKey])
+            throw new Error('Must define config: ' + configKey);
+    })
+    app.config = inject.config;
+    
+    app.db = inject.db;
     if (app.db.connect != null && typeof app.db.connect === 'function')
-        app.db.connect();
-    app.passport = inject.passport(app.db);
+        app.db.connect(app.config.DB_CONNECTION_STRING);
+    app.passport = inject.passport(app.db, app.config);
     app.geocoder = require('node-geocoder')('google','https',{
-        apiKey: process.env.GOOGLE_API_KEY
+        apiKey: app.config.GOOGLE_API_KEY
     });
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
-    // inject.helper(app);
-
+    inject.expressExtensions.init(express);
 
     app.use(require('cookie-parser')());
     app.use(app.bodyParser.urlencoded({ extended: true }));
@@ -23,10 +37,8 @@ var app = function(inject) {
     app.userController = new inject.userController(app);
     app.bookingController = new inject.bookingController(app);
     app.lotController = new inject.lotController(app);
-    app.spotController = inject.spotController;
+    app.spotController = new inject.spotController(app);
     app.authController = new inject.authController(app);
-    app.spotController.init(app);
-    // app.authController.init(app);
 
     app.get('/', app.checkAuth, app.sendIndex);
     app.get('/home', app.checkAuth, app.sendIndex);
@@ -48,9 +60,13 @@ var app = function(inject) {
 
 app.GetDefaultInjection = function(allowConnect) {
     var inject = {
-        db: require('./app/db'),
+        config: new (require('./config'))(),
+        db: new (require('./app/db'))(),
+        helper: new (require('./app/helper'))(),
+
+        expressExtensions: require('./app/express'),
         passport: require('./app/passport'),
-        helper: require('./app/helper'),
+
         userController: require('./app/controllers/userController'),
         bookingController: require('./app/controllers/bookingController'),
         spotController: require('./app/controllers/spotController'),
@@ -58,13 +74,11 @@ app.GetDefaultInjection = function(allowConnect) {
         lotController: require('./app/controllers/lotController')
     }
     if (!allowConnect)
-        inject.db.prototype.connect = null;
+        inject.db.connect = null;
     return inject;
 }
 
 if (require.main == module)
-    app(app.GetDefaultInjection(true)).listen(8080, function() {
-        console.log('App started. Listening on port 8080!');
-    });
+    app(app.GetDefaultInjection(true)).start();
 else
     module.exports = app;

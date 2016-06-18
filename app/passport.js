@@ -1,10 +1,10 @@
-module.exports = function(db) {
+module.exports = function(db, config) {
     var passport = require('passport');
     var FacebookStrategy = require('passport-facebook').Strategy;
     var GoogleStrategy = require('passport-google-oauth20').Strategy;
     passport.use(new GoogleStrategy({
-            clientID: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            clientID: config.GOOGLE_CLIENT_ID,
+            clientSecret: config.GOOGLE_CLIENT_SECRET,
             callbackURL: '/login/google/return',
             passReqToCallback: true
         },
@@ -13,8 +13,8 @@ module.exports = function(db) {
         }
     ));
     passport.use(new FacebookStrategy({
-            clientID: process.env.FACEBOOK_CLIENT_ID,
-            clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+            clientID: config.FACEBOOK_CLIENT_ID,
+            clientSecret: config.FACEBOOK_CLIENT_SECRET,
             callbackURL: '/login/facebook/return',
             profileFields: ['id', 'displayName'],
             passReqToCallback: true

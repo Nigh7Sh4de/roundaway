@@ -1,36 +1,35 @@
 {
   "name": "roundaway",
-  "version": "0.0.0",
+  "version": "0.0.6",
   "dependencies": {
     "angular": "^1.5.0",
     "angular-route": "^1.5.0",
-    "async": "^1.5.2",
+    "bluebird": "^3.4.0",
     "body-parser": "^1.15.0",
     "bootstrap": "^3.3.6",
     "chai": "^3.5.0",
     "cookie-parser": "^1.4.1",
+    "deep-equal": "^1.0.1",
     "express": "^4.13.4",
     "express-session": "^1.13.0",
-    "later": "^1.2.0",
     "mocha": "^2.4.5",
     "mongoose": "^4.4.6",
     "node-geocoder": "^3.9.1",
     "passport": "^0.3.2",
     "passport-facebook": "^2.1.0",
     "passport-google-oauth20": "^1.0.0",
+    "rangerjs": "~0.1.0",
     "sinon": "^1.17.3",
     "supertest": "^1.2.0"
   },
   "scripts": {
     "test": "mocha app/tests",
     "test-debug": "mocha --debug-brk app/tests",
+    "test-all": "mocha alltest.js",
     "start": "node server.js"
   },
   "description": "Roundaway",
   "main": "server.js",
-  "devDependencies": {
-    "mocha": "^2.4.5"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nigh7sh4de/roundaway.git"
