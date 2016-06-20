@@ -20,6 +20,7 @@
     "passport-google-oauth20": "^1.0.0",
     "rangerjs": "~0.1.0",
     "sinon": "^1.17.3",
+    "stripe": "^4.7.0",
     "supertest": "^1.2.0"
   },
   "scripts": {
