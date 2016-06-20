@@ -24,6 +24,7 @@ var app = function(inject) {
     app.geocoder = require('node-geocoder')('google','https',{
         apiKey: app.config.GOOGLE_API_KEY
     });
+    app.stripe = require('stripe')(app.config.STRIPE_SECRET_KEY);
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
     inject.expressExtensions.init(express);
