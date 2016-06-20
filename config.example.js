@@ -15,6 +15,7 @@ config.prototype = {
     GOOGLE_CLIENT_ID        :   "569132181251-9an908bh0b1ta0fb5vrsc66roh5lnkq7.apps.googleusercontent.com",
     GOOGLE_CLIENT_SECRET    :   "dM31Hu2O07Pxl1YHBXvhBC8Z",
     GOOGLE_API_KEY          :   "AIzaSyDVtIdTJrYyfr30Hj9OyioWMaG_HxhHU2E",
+    STRIPE_SECRET_KEY       :   "sk_test_y9Ge30ZIbVe98pA4As87q4ob",
     PORT                    :   8081,
     DB_CONNECTION_STRING    :   "mongodb://localhost/dev_roundaway"
 }

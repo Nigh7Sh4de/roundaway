@@ -51,16 +51,18 @@ Roundaway
 3. Create and/or find keys for *Facebook* and *Google* web applications (for authentication)
 4. Create and/or find the *Google* API key and ensure that the following API's are enabled for it:
   - Geocoding API
-5. Create a **config.js** file that exports an object with the following config keys (see **config.example.js** for more info and defaults):
+5. Create and/or find the *Stripe* secret key
+6. Create a **config.js** file that exports an object with the following config keys (see **config.example.js** for more info and defaults):
   * FACEBOOK_CLIENT_ID
   * FACEBOOK_CLIENT_SECRET
   * GOOGLE_CLIENT_ID
   * GOOGLE_CLIENT_SECRET
   * GOOGLE_API_KEY
+  * STRIPE_SECRET_KEY
   * PORT
   * DB_CONNECTION_STRING
-6. Ensure MongoDB server is running on localhost
-7. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
+7. Ensure MongoDB server is running on localhost
+8. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
 
 *(Note: For deployment to `master`, since `config.js` is `.gitignore`d the file that is already deployed should be left with the keys it has and updated as necessary)*
 
