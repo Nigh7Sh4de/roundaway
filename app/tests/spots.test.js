@@ -800,7 +800,7 @@ describe('Spot schema', function() {
         })
     })
 
-    describe.only('getPrice', function() {
+    describe('getPrice', function() {
         it('should return the price', function() {
             var price = 123.45;
             var s = new Spot();

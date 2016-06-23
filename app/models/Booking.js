@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Price = require('./Price');
 
 var bookingSchema = new Schema({
     archived: {
@@ -8,6 +9,9 @@ var bookingSchema = new Schema({
     },
     spot: {
         type: String,
+    },
+    price: {
+        type: Price
     },
     start: {
         type: Date

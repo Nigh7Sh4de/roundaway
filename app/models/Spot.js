@@ -1,11 +1,13 @@
 var ranger = require('rangerjs');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-var PriceBreakdown = require('./PriceBreakdown');
+var Price = require('./Price');
 
 var spotSchema = new Schema({
     address: String,
-    price: PriceBreakdown,
+    price: {
+        perHour: Price
+    },
     location: {
         coordinates: {
             type: [Number],
