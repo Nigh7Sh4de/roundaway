@@ -799,6 +799,21 @@ describe('Spot schema', function() {
             })
         })
     })
+
+    describe.only('getPrice', function() {
+        it('should return the price', function() {
+            var price = 123.45;
+            var s = new Spot();
+            s.price.perHour = price;
+            expect(s.getPrice().perHour).to.equal(price);
+        })
+
+        it('should return null if price is not set', function() {
+            var s = new Spot();
+            expect(s.getPrice()).to.be.ok;
+            expect(s.getPrice().perHour).to.not.be.ok;
+        })
+    })
 })
 
 routeTest('spotController', [

@@ -1,9 +1,11 @@
 var ranger = require('rangerjs');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var PriceBreakdown = require('./PriceBreakdown');
 
 var spotSchema = new Schema({
     address: String,
+    price: PriceBreakdown,
     location: {
         coordinates: {
             type: [Number],
@@ -42,6 +44,18 @@ var spotSchema = new Schema({
     lot: String,
     number: Number
 });
+
+spotSchema.methods.getPrice = function() {
+    return this.price;
+}
+
+spotSchema.methods.setPricePerHour = function(price, cb) {
+    price = parseFloat(price);
+    if (isNaN(price))
+        return cb('Cannot set price as the supplied price is not a valid number: ' + price);
+    this.price.perHour = price;
+    this.save(cb);
+}
 
 spotSchema.methods.getAddress = function() {
     return this.address;
