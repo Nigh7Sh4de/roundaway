@@ -24,7 +24,7 @@ var app = function(inject) {
     app.geocoder = require('node-geocoder')('google','https',{
         apiKey: app.config.GOOGLE_API_KEY
     });
-    app.stripe = require('stripe')(app.config.STRIPE_SECRET_KEY);
+    app.stripe = new inject.stripe(app.config.STRIPE_SECRET_KEY);
     app.bodyParser = require('body-parser');
     inject.helper.init(app);
     inject.expressExtensions.init(express);
@@ -69,6 +69,7 @@ app.GetDefaultInjection = function(allowConnect) {
 
         expressExtensions: require('./app/express'),
         passport: require('./app/passport'),
+        stripe: require('./app/stripe'),
 
         userController: require('./app/controllers/userController'),
         bookingController: require('./app/controllers/bookingController'),
