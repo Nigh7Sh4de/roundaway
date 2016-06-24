@@ -203,7 +203,8 @@ controller.prototype = {
                         }
                     })
                 }
-                var addBookings = function() {
+                var addBookings = function(books) {
+                    bookings = books;
                     doc.addBookings(bookings, function(err) {
                         if (err)
                             return res.sendBad(err);
@@ -218,8 +219,7 @@ controller.prototype = {
                     app.db.bookings.find({_id: {$in: req.body.bookings}}, function(err, docs) {
                         if (err)
                             return res.sendBad(err);
-                        bookings = docs;
-                        addBookings();
+                        addBookings(docs);
                     })
                 else
                     addBookings(req.body.bookings);
