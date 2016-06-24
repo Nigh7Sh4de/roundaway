@@ -9,6 +9,7 @@ var app = function(inject) {
         "GOOGLE_CLIENT_SECRET",
         "GOOGLE_API_KEY",
         "STRIPE_SECRET_KEY",
+        "STRIPE_PUBLISH_KEY",
         "PORT",
         "DB_CONNECTION_STRING"
     ].forEach(function(configKey) {
