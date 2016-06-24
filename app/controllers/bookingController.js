@@ -261,7 +261,11 @@ controller.prototype = {
             app.stripe.charge(req.body.token, booking.getPrice(), function(err, charge) {
                 if (err)
                     return res.sendBad(err);
-                res.sendGood('Charge successful', charge);
+                booking.pay(function(err) {
+                    if (err)
+                        return res.sendBad(err);
+                    res.sendGood('Charge successful', charge);
+                });
             });
         });
     }

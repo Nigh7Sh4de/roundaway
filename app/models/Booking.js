@@ -1,11 +1,15 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var Price = require('./Price');
+var Enum = require('./Enum');
+
+var statusEnum = new Enum(['unpaid', 'paid', 'archived']);
 
 var bookingSchema = new Schema({
-    archived: {
-        type: Boolean,
-        default: false
+    status: {
+        type: 'string',
+        enum: Object.keys(statusEnum),
+        default: Object.keys(statusEnum)[0]
     },
     spot: String,
     price: Price,
@@ -79,9 +83,16 @@ bookingSchema.methods.getPrice = function() {
 }
 
 bookingSchema.methods.archive = function(cb) {
-    this.archived = true;
+    this.status = statusEnum.archived;
     this.save(cb);
 }
+
+bookingSchema.methods.pay = function(cb) {
+    this.status = statusEnum.paid;
+    this.save(cb);
+}
+
+bookingSchema.statics.status = statusEnum;
 
 var Booking = mongoose.model('Booking', bookingSchema);
 

@@ -18,16 +18,28 @@ describe('Booking schema', function() {
     
     describe('sets default values correctly', function() {
         var b = new Booking();
-        expect(b.archived).to.be.false;
+        expect(b.status).to.equal('unpaid');
     })
     
     describe('archive', function() {
-        it('should set archived to true', function(done) {
+        it('should set status to archived', function(done) {
             var b = new Booking();
-            expect(b.archived).to.be.false;
+            expect(b.status).to.not.equal(Booking.status.archived);
             b.archive(function(err) {
                 expect(err).to.not.be.ok;
-                expect(b.archived).to.be.true;
+                expect(b.status).to.equal(Booking.status.archived);
+                done();
+            })
+        })
+    })
+
+    describe('pay', function() {
+        it('should set status to paid', function(done) {
+            var b = new Booking();
+            expect(b.status).to.not.equal(Booking.status.paid);
+            b.pay(function(err) {
+                expect(err).to.not.be.ok;
+                expect(b.status).to.equal(Booking.status.paid);
                 done();
             })
         })
@@ -1171,9 +1183,12 @@ describe('bookingController', function() {
             app = server(inject);
         })
 
-        it('should attempt to make a charge', function() {
+        it('should mark booking as paid if charge is successful', function() {
             var b = new Booking();
             b.price = 123.45;
+            b.pay = sinon.spy(function(cb) {
+                cb();
+            });
             app.db.bookings = {
                 findById: function(id, cb) {
                     expect(id).to.equal(b.id);
@@ -1183,8 +1198,26 @@ describe('bookingController', function() {
             req.params.id = b.id;
             req.body.token = 'sometoken';
             app.bookingController.PayForBooking(req, res);
-            expect(res.sendBad.callCount).to.equal(0);
+            expect(res.sendGood.calledOnce).to.be.true;
             expect(charge.calledOnce).to.be.true;
+            expect(b.pay.calledOnce).to.be.true;
+        })
+
+        it('should attempt to make a charge', function() {
+            var b = new Booking();
+            b.price = 123.45;
+            b.pay = function(cb) { cb() };
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(b.id);
+                    cb(null, b);
+                }
+            }
+            req.params.id = b.id;
+            req.body.token = 'sometoken';
+            app.bookingController.PayForBooking(req, res);
+            expect(charge.calledOnce).to.be.true;
+            expect(res.sendGood.calledOnce).to.be.true;
         })
 
         it('should fail if booking does not have a price set', function() {
