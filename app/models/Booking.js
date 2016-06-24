@@ -7,18 +7,10 @@ var bookingSchema = new Schema({
         type: Boolean,
         default: false
     },
-    spot: {
-        type: String,
-    },
-    price: {
-        type: Price
-    },
-    start: {
-        type: Date
-    },
-    end: {
-        type: Date
-    }
+    spot: String,
+    price: Price,
+    start: Date,
+    end: Date,
 });
 
 bookingSchema.methods.setEnd = function(time, cb) {
@@ -65,17 +57,25 @@ bookingSchema.methods.getStart = function() {
     return this.start;
 }
 
-bookingSchema.methods.setSpot = function(id, cb) {
-    if (typeof id === 'object' && id != null)
-        id = id.id;
-    if (typeof id !== 'string' || id == '')
-        return cb('Cannot set spot for this booking. Provided ID is invalid.');
-    this.spot = id;
+bookingSchema.methods.setSpot = function(spot, cb) {
+    if (typeof spot !== 'object' || !spot)
+        return cb('Cannot set spot for this booking because the spot provided is not a valid object');
+    if (!spot.id)
+        return cb('Cannot set spot for this booking because the spot provided does not have a valid id');
+    if (!spot.getPrice().perHour)
+        return cb('Cannot set spot for this booking because the spot provided does not have a set price');
+    this.spot = spot.id;
+    this.price = spot.getPrice().perHour;
     this.save(cb);
 }
 
 bookingSchema.methods.getSpot = function() {
     return this.spot || null;
+}
+
+bookingSchema.methods.getPrice = function() {
+    return this.price || null;
+        
 }
 
 bookingSchema.methods.archive = function(cb) {

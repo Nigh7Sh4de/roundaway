@@ -49,36 +49,28 @@ describe('Booking schema', function() {
     })
     
     describe('setSpot', function() {
-        it('should set spot id', function(done) {
-            var b = new Booking();
-            var spotId = '1z2x3c4v';
-            expect(b.spot).to.not.be.ok;
-            b.setSpot(spotId, function(err) {
-                expect(err).to.not.be.ok;
-                expect(b.spot).to.equal(spotId);
-                done();
-            });
-        })
-        
         it('should accept spot objects', function(done) {
             var b = new Booking();
             var s = new Spot();
+            s.price.perHour = 123.45;
             expect(b.spot).to.not.be.ok;
             b.setSpot(s, function(err) {
-                expect(err).to.not.be.ok;
+                expect(err, err).to.not.be.ok;
                 expect(b.spot).to.equal(s.id);
                 done();
             })
         })
         
-        it('should error if invalid spot id', function(done) {
+        it('should error if invalid spot', function(done) {
             var b = new Booking();
             [
                 null,
                 undefined,
                 123,
                 true,
-                ''
+                '',
+                {},
+                {someBadProp: 'some unimportant value'}
             ].forEach(function (input, i, arr) {
                 expect(b.setSpot(input, function(err) {
                     expect(err).to.be.ok;
@@ -356,17 +348,29 @@ routeTest('bookingController', [
         verb: verbs.PUT,
         route: '/api/bookings/:id/time',
         method: 'SetTimeOfBooking'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id/price',
+        method: 'GetPriceOfBooking'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/bookings/:id/pay',
+        method: 'PayForBooking'
     }
 ])
 
 describe('bookingController', function() {
-    var app;
+    var app,
+        inject;
     
     var req = {},
         res = {};
     
     beforeEach(function() {
-        app = server(server.GetDefaultInjection());
+        inject = server.GetDefaultInjection();
+        app = server(inject);
         req = expressExtensions.mockRequest();
         res = expressExtensions.mockResponse();
     })
@@ -379,9 +383,12 @@ describe('bookingController', function() {
                     cb(null, bookings);
                 }
             }
+            var simpleBookings = bookings.map(function(b) {
+                return b.toJSON({getters: true});
+            });
             app.bookingController.GetAllBookings(null, res);
             expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(bookings)).to.be.true;
+            expect(res.sentWith(simpleBookings)).to.be.true;
         })
     })
     
@@ -394,10 +401,11 @@ describe('bookingController', function() {
                     cb(null, booking);
                 }
             }
+            var simpleBooking = booking.toJSON({getters: true});
             req.params.id = booking.id;
             app.bookingController.GetBooking(req, res);
             expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(booking)).to.be.true;
+            expect(res.sentWith(simpleBooking)).to.be.true;
         })
         
         it('should error if db encountered error', function() {
@@ -560,7 +568,7 @@ describe('bookingController', function() {
         it('should return the spot associated with the booking', function() {
             var spot = new Spot();
             var booking = new Booking();
-            booking.setSpot(spot);
+            booking.spot = spot.id;
             app.db.bookings = {
                 findById: function(id, cb) {
                     expect(id).to.equal(booking.id);
@@ -1105,5 +1113,134 @@ describe('bookingController', function() {
             expect(res.status.calledWith(500)).to.be.true;
             expect(res.send.calledOnce).to.be.true;
         })            
+    })
+
+    describe('GetPriceOfBooking', function() {
+        it('should return the price of the booking', function() {
+            var b = new Booking();
+            var price = 123.45;
+            b.price = price;
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(b.id);
+                    cb(null, b);
+                }
+            }
+            req.params.id = b.id;
+            app.bookingController.GetPriceOfBooking(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith(price)).to.be.true;
+        });
+        
+        it('should error if db encountered error', function() {
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    cb('some error', null);
+                }
+            }
+            app.bookingController.GetPriceOfBooking(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if booking found is null', function() {
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.bookingController.GetPriceOfBooking(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+
+    describe('PayForBooking', function() {
+        var stripeResponse,
+            charge;
+
+        beforeEach(function() {
+            stripeResponse = {someProp: 'some value'};
+            inject.stripe = function(){
+                this.charge = charge = sinon.spy(function(t,a,cb) {
+                    cb(null, charge);
+                })
+            }
+            app = server(inject);
+        })
+
+        it('should attempt to make a charge', function() {
+            var b = new Booking();
+            b.price = 123.45;
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(b.id);
+                    cb(null, b);
+                }
+            }
+            req.params.id = b.id;
+            req.body.token = 'sometoken';
+            app.bookingController.PayForBooking(req, res);
+            expect(res.sendBad.callCount).to.equal(0);
+            expect(charge.calledOnce).to.be.true;
+        })
+
+        it('should fail if booking does not have a price set', function() {
+            var b = new Booking();
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(b.id);
+                    cb(null, b);
+                }
+            }
+            req.params.id = b.id;
+            req.body.token = 'sometoken';
+            app.bookingController.PayForBooking(req, res);
+            expect(res.sendBad.calledOnce).to.be.true;
+            expect(charge.callCount).to.equal(0);
+        })
+
+        it('should fail if not passed proper token', function() {
+            var b = new Booking();
+            b.price = 123.45;
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(b.id);
+                    cb(null, b);
+                }
+            }
+            req.params.id = b.id;
+            app.bookingController.PayForBooking(req, res);
+            expect(res.sendBad.calledOnce).to.be.true;
+            expect(charge.callCount).to.equal(0);
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    cb('some error', null);
+                }
+            }
+            app.bookingController.PayForBooking(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+            expect(charge.callCount).to.equal(0);
+        })
+        
+        it('should return error if booking found is null', function() {
+            app.db.bookings = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.bookingController.PayForBooking(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+            expect(charge.callCount).to.equal(0);
+        })
     })
 })

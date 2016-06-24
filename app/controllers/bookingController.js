@@ -15,6 +15,8 @@ var controller = function(app) {
     app.put('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetEndOfBooking.bind(this));
     app.get('/api/bookings/:id/time', app.checkAuth, app.checkAdmin, this.GetTimeOfBooking.bind(this));
     app.put('/api/bookings/:id/time', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetTimeOfBooking.bind(this));
+    app.get('/api/bookings/:id/price', app.checkAuth, app.checkAdmin, this.GetPriceOfBooking.bind(this));
+    app.put('/api/bookings/:id/pay', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.PayForBooking.bind(this));
 }
 
 controller.prototype = {
@@ -23,7 +25,7 @@ controller.prototype = {
             if (err)
                 return res.sendBad(err);
             else
-                return res.sendGood('Found bookings', docs);
+                return res.sendGood('Found bookings', docs.map(function(doc) { return doc.toJSON({getters: true}) }));
         });
     },
     GetBooking: function(req, res) {
@@ -33,7 +35,7 @@ controller.prototype = {
             else if (!doc)
                 return res.sendBad('Booking not found');
             else
-                return res.sendGood('Found booking', doc);
+                return res.sendGood('Found booking', doc.toJSON({getters: true}));
         })
     },
     CreateBooking: function(req, res) {
@@ -230,6 +232,37 @@ controller.prototype = {
                     doc.setEnd(req.body.end, next);
                 else count++;
             }
+        });
+    },
+    GetPriceOfBooking: function(req, res) {
+        this.app.db.bookings.findById(req.params.id, function(err, doc) {
+            if (err)
+                return res.sendBad(err);
+            else if (!doc)
+                return res.sendBad('Booking not found');
+            var price = doc.getPrice();
+            if (!price)
+                return res.sendBad('Could not set price for this booking', doc);
+            else
+                return res.sendGood('Found start datetime', price);
+        });
+    },
+    PayForBooking: function(req, res) {
+        var app = this.app;
+        app.db.bookings.findById(req.params.id, function(err, booking) {
+            if (err)
+                return res.sendBad(err);
+            if (!booking)
+                return res.sendBad('Booking not found');
+            if (!req.body.token)
+                return res.sendBad('Could not create a charge because no source token was provided');
+            if (!booking.getPrice())
+                return res.sendBad('Could not create a charge because this booking does not have a price set');
+            app.stripe.charge(req.body.token, booking.getPrice(), function(err, charge) {
+                if (err)
+                    return res.sendBad(err);
+                res.sendGood('Charge successful', charge);
+            });
         });
     }
 }
