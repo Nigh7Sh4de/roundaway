@@ -97,7 +97,7 @@ controller.prototype = {
         var done = function() {
             booking.setSpot(spot, function(err) {
                 if (err)
-                    res.sendBad(err);    
+                    return res.sendBad(err);    
                 res.sendGood();                
             });
         }

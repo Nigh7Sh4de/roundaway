@@ -184,6 +184,7 @@ controller.prototype = {
             else if (doc == null)
                 return res.sendBad('Spot not found');
             else {
+                var bookings = [];
                 var updatedBookings = 0;
                 var errs = [];
                 var updateBooking = function(booking, total) {
@@ -202,7 +203,7 @@ controller.prototype = {
                         }
                     })
                 }
-                var addBookings = function(bookings) {
+                var addBookings = function() {
                     doc.addBookings(bookings, function(err) {
                         if (err)
                             return res.sendBad(err);
@@ -214,10 +215,11 @@ controller.prototype = {
                     })
                 }
                 if (typeof req.body.bookings[0] === 'string')
-                    app.db.bookings.find({_id: {$in: req.body.bookings}}, function(err, bookings) {
+                    app.db.bookings.find({_id: {$in: req.body.bookings}}, function(err, docs) {
                         if (err)
                             return res.sendBad(err);
-                        addBookings(bookings);
+                        bookings = docs;
+                        addBookings();
                     })
                 else
                     addBookings(req.body.bookings);

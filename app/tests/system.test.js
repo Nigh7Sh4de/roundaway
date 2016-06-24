@@ -47,6 +47,8 @@ describe.skip('the entire app should not explode', function() {
     afterEach(function(done) {
         app.db.connection.db.listCollections().toArray(function(err, names) {
             expect(err).to.not.be.ok;
+            if (names.length == 0)
+                return done();
             var total = names.length,
                 i = 0; 
             var next = function(err) {
@@ -305,6 +307,7 @@ describe.skip('the entire app should not explode', function() {
         describe('PUT /api/bookings/:id/spot', function(done) {
             it('should set the spot for the booking', function(done) {
                 var spot = new Spot();
+                spot.price.perHour = 123.45;
                 var booking = new Booking();
                 insert(spot, booking, function() {
                     request(app).put('/api/bookings/' + booking.id + '/spot')
@@ -726,6 +729,7 @@ describe.skip('the entire app should not explode', function() {
                     new Date('2000/01/01'),
                     new Date('2100/01/01')
                 );
+                spot.price.perHour = 123.45;
                 var booking = new Booking({
                     start: new Date('2040/01/01'),
                     end: new Date('2050/01/01')
