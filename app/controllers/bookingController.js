@@ -244,7 +244,7 @@ controller.prototype = {
             if (!price)
                 return res.sendBad('Could not set price for this booking', doc);
             else
-                return res.sendGood('Found start datetime', price);
+                return res.sendGood('Found price', price);
         });
     },
     PayForBooking: function(req, res) {

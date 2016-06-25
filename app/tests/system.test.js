@@ -10,7 +10,7 @@ var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe.skip('the entire app should not explode', function() {
+describe('the entire app should not explode', function() {
     var app;
 
     var userProfile = {
@@ -36,6 +36,9 @@ describe.skip('the entire app should not explode', function() {
             n();
         });
         app = server(inject);
+        app.stripe.charge = function(t,a,cb) {
+            cb(null, {});
+        }
         var todo = 4;
         var calls = 0;
         app.db.connection.on('error', function(err) {
@@ -475,6 +478,45 @@ describe.skip('the entire app should not explode', function() {
                 })
             })
         })
+        describe('GET /api/bookings/:id/price', function() {
+            it('should get the price of the booking', function(done) {
+                var price = 123.45;
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01'),
+                    price: price
+                })
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/price')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data).to.equal(price);
+                            done();
+                        })
+                });
+            })
+        })
+        describe('PUT /api/bookings/:id/price', function() {
+            it('should get the price of the booking', function(done) {
+                var price = 123.45;
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01'),
+                    price: price
+                })
+                request('')
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/price')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data).to.equal(price);
+                            done();
+                        })
+                });
+            })
+        })
     })
 
     describe('Lot Controller', function() {
@@ -889,6 +931,50 @@ describe.skip('the entire app should not explode', function() {
                         })
                 })
             });
+        })
+
+        describe('GET /api/spots/:id/price', function() {
+            it('should get the spot price', function(done) {
+                var pricePerHour = 123.45;
+                var spot = new Spot();
+                spot.price.perHour = pricePerHour;
+                insert(spot, function() {
+                    request(app).get('/api/spots/' + spot.id + '/price')
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            expect(res.body.data).to.deep.equal({
+                                perHour: pricePerHour
+                            });
+                            done();
+                        })
+                })
+            })
+        })
+
+        describe('PUT /api/spots/:id/price', function() {
+            it('should get the spot price', function(done) {
+                var pricePerHour = 123.45;
+                var spot = new Spot();
+                insert(spot, function() {
+                    request(app).put('/api/spots/' + spot.id + '/price')
+                        .send({
+                            perHour: pricePerHour
+                        })
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status).to.equal(200);
+                            app.db.spots.findById(spot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc).to.be.ok;
+                                expect(doc.getPrice()).to.deep.equal({
+                                    perHour: pricePerHour
+                                });
+                                done();
+                            })
+                        })
+                })
+            })
         })
     })
 })

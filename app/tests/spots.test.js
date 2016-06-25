@@ -801,17 +801,33 @@ describe('Spot schema', function() {
     })
 
     describe('getPrice', function() {
-        it('should return the price', function() {
-            var price = 123.45;
+        it('should return null if no price is set', function() {
             var s = new Spot();
-            s.price.perHour = price;
-            expect(s.getPrice().perHour).to.equal(price);
+            var price = s.getPrice();
+            expect(price).to.be.null;
         })
 
-        it('should return null if price is not set', function() {
+        it('should return the price', function() {
+            var pricePerHour = 123.45;
             var s = new Spot();
-            expect(s.getPrice()).to.be.ok;
-            expect(s.getPrice().perHour).to.not.be.ok;
+            s.price.perHour = pricePerHour;
+            expect(s.getPrice()).to.deep.equal({
+                perHour: pricePerHour
+            });
+        })
+    })
+
+    describe('setPrice', function() {
+        it('should set the price', function(done) {
+            var pricePerHour = 123.45;
+            var s = new Spot();
+            s.setPrice({
+                perHour: pricePerHour
+            }, function(err) {
+                expect(err).to.not.be.ok;
+                expect(s.price.perHour).to.equal(pricePerHour);
+                done();
+            })
         })
     })
 })
@@ -889,6 +905,16 @@ routeTest('spotController', [
             verb: verbs.GET,
             route: '/api/spots/:id/schedule',
             method: 'GetEntireScheduleForSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/price',
+            method: 'GetPriceForSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/price',
+            method: 'SetPriceForSpot'
         }
     ])
 
@@ -918,6 +944,7 @@ describe('spotController', function() {
     describe('GetAllSpots', function() {
         it('should return all spots', function() {
             var spots = [new Spot(), new Spot()];
+            var simpleSpots = spots.map(function(s) { return s.toJSON({getters: true}) });
             app.db.spots = {
                 find: function(obj, cb) {
                     cb(null, spots);
@@ -925,13 +952,14 @@ describe('spotController', function() {
             }
             app.spotController.GetAllSpots(null, res);
             expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith({spots: spots})).to.be.true;
+            expect(res.sentWith(simpleSpots)).to.be.true;
         })
     })
     
     describe('GetSpot', function() {
         it('should get spot with specified id', function() {
             var spot = new Spot();
+            var simpleSpot = spot.toJSON({getters: true});
             app.db.spots = {
                 findById: function(id, cb) {
                     expect(id).to.equal(spot.id);
@@ -941,7 +969,7 @@ describe('spotController', function() {
             req.params.id = spot.id;
             app.spotController.GetSpot(req, res);
             expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith({spot: spot})).to.be.true;
+            expect(res.sentWith(simpleSpot)).to.be.true;
         })
         
         it('should error if db encountered error', function() {
@@ -1927,6 +1955,109 @@ describe('spotController', function() {
                     booked: s.booked.ranges,
                     available: s.available.ranges
                 })).to.be.true;
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.GetEntireScheduleForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.GetEntireScheduleForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('GetPriceForSpot', function() {
+        it('should error if price is not set', function() {
+            var s = new Spot();
+            var price = 123.45;
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            app.spotController.GetPriceForSpot(req, res);
+            expect(res.sendBad.calledOnce).to.be.true;
+        })
+
+        it('should return the price of the spot', function() {
+            var s = new Spot();
+            var price = 123.45;
+            s.price.perHour = price;
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            app.spotController.GetPriceForSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(res.sentWith({
+                perHour: price
+            })).to.be.true;
+        })
+        
+        it('should error if db encountered error', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb('some error');
+                }
+            }
+            app.spotController.GetEntireScheduleForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if spot found is null', function() {
+            app.db.spots = {
+                findById: function(id, cb) {
+                    cb(null, null);
+                }
+            }
+            app.spotController.GetEntireScheduleForSpot(req, res);
+            expect(res.status.calledOnce).to.be.true;
+            expect(res.status.calledWith(500)).to.be.true;
+            expect(res.send.calledOnce).to.be.true;
+        })
+    })
+    
+    describe('SetPriceForSpot', function() {
+        it('should set the price of the spot', function() {
+            var s = new Spot();
+            var pricePerHour = 123.45;
+            sinon.stub(s, 'setPrice', function(price, cb) {
+                expect(price.perHour).to.equal(pricePerHour);
+                cb(null, this);
+            })
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(s.id);
+                    cb(null, s);
+                }
+            }
+            req.params.id = s.id;
+            req.body.perHour = pricePerHour;
+            app.spotController.SetPriceForSpot(req, res);
+            expect(s.setPrice.calledOnce).to.be.true;
         })
         
         it('should error if db encountered error', function() {

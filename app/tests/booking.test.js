@@ -61,6 +61,23 @@ describe('Booking schema', function() {
     })
     
     describe('setSpot', function() {
+        it('should set the price', function(done) {
+            var b = new Booking();
+            var price = 123.45;
+            var durationInHours = 2;
+            b.start = new Date('2016/01/01 0:00');
+            b.end = new Date('2016/01/01 2:00');
+            var s = new Spot();
+            s.price.perHour = price;
+            expect(b.spot).to.not.be.ok;
+            expect(b.price).to.not.be.ok;
+            b.setSpot(s, function(err) {
+                expect(err, err).to.not.be.ok;
+                expect(b.price).to.equal(price * durationInHours);
+                done();
+            });
+        })
+
         it('should accept spot objects', function(done) {
             var b = new Booking();
             var s = new Spot();

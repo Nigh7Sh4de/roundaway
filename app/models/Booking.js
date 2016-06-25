@@ -69,7 +69,8 @@ bookingSchema.methods.setSpot = function(spot, cb) {
     if (!spot.getPrice().perHour)
         return cb('Cannot set spot for this booking because the spot provided does not have a set price');
     this.spot = spot.id;
-    this.price = spot.getPrice().perHour;
+    var onehour = 1000*60*60;
+    this.price = spot.getPrice().perHour * this.getDuration() / onehour;
     this.save(cb);
 }
 

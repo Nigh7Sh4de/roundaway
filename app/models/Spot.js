@@ -48,7 +48,26 @@ var spotSchema = new Schema({
 });
 
 spotSchema.methods.getPrice = function() {
-    return this.price;
+    var price = {},
+        _price = this.price.toJSON();
+    if (Object.keys(_price).length == 0)
+        return null;
+    for (var type in _price)
+        price[type] = this.price[type];
+    return price;
+}
+
+spotSchema.methods.setPrice = function(price, cb) {
+    if (typeof price !== 'object' || !price)
+        return cb('Could not set price because this price object is invalid')
+    for (var type in price) {
+        var p = parseFloat(price[type]);
+        if (isNaN(p))
+            cb('Cannot set price as the supplied price is not a valid number: ' + p);
+        else
+            this.price[type] = p;
+    }
+    this.save(cb);
 }
 
 spotSchema.methods.setPricePerHour = function(price, cb) {

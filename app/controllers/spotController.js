@@ -16,12 +16,16 @@ var controller = function(app) {
     app.put('/api/spots/:id/available/remove', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.RemoveAvailabilityFromSpot.bind(this));
     app.get('/api/spots/:id/booked', app.checkAuth, app.checkAdmin, this.GetAllBookedTimeForSpot.bind(this));
     app.get('/api/spots/:id/schedule', app.checkAuth, app.checkAdmin, this.GetEntireScheduleForSpot.bind(this));
+    app.get('/api/spots/:id/price', app.checkAuth, app.checkAdmin, this.GetPriceForSpot.bind(this));
+    app.put('/api/spots/:id/price', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetPriceForSpot.bind(this));
 }
 
 controller.prototype = {
     GetAllSpots: function(req, res) {
         this.app.db.spots.find({}, function(err, docs) {
-            return res.sendGood('Found spots', {spots: docs});
+            return res.sendGood('Found spots', docs.map(function(d) {
+                return d.toJSON({getters: true});
+            }));
         });
     },
     CreateSpot: function(req, res) {
@@ -80,7 +84,7 @@ controller.prototype = {
             else if (doc == null)
                 return res.sendBad('Spot not found');
             else
-                return res.sendGood('Found spot', {spot: doc});
+                return res.sendGood('Found spot', doc.toJSON({getters: true}));
         })
     },
     GetLocationForSpot: function(req, res) {
@@ -334,6 +338,40 @@ controller.prototype = {
                         available: doc.available.ranges,
                         booked: doc.booked.ranges
                     });
+            }
+        });
+    },
+    GetPriceForSpot: function(req, res) {
+        var app = this.app;
+        app.db.spots.findById(req.params.id, function(err, doc) {
+            if (err)
+                return res.sendBad(err);
+            else if (doc == null)
+                return res.sendBad('Spot not found');
+            else {
+                var price = doc.getPrice();
+                if (!price)
+                    res.sendBad('Price is not set for this spot');
+                else
+                    res.sendGood('Found price for spot', price);
+            }
+        });
+    },
+    SetPriceForSpot: function(req, res) {
+        var app = this.app;
+        app.db.spots.findById(req.params.id, function(err, doc) {
+            if (err)
+                return res.sendBad(err);
+            else if (doc == null)
+                return res.sendBad('Spot not found');
+            else {
+                doc.setPrice(req.body, function(err, spot) {
+                    if (err)
+                        return res.sendBad(err);
+                    else
+                        return res.sendGood('Price changed', spot.getPrice());
+                });
+                // return res.sendGood('Found price for spot', doc.getPrice());
             }
         });
     }
