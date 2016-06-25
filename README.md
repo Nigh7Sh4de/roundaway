@@ -454,6 +454,36 @@ Returns the time `{start: Date, end: Date}` of the specified booking.
 </table>
 Sets the time (start and end dates) of the booking.
 
+#### GET `/api/bookings/:id/price`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns the price of the booking of the specified booking.
+
+#### PUT `/api/bookings/:id/pay`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>token</td>
+    <td>The card token to use as the source of payment</td>
+  </tr>
+</table>
+Pay for a booking.
+
 #### GET `/api/spots`
 <table>
   <tr>
@@ -893,3 +923,33 @@ Returns the ranges during which this spot is booked in an array where each pair 
   </tr>
 </table>
 Returns an object which contains 2 propertes: `booked` and `available` each of which are arrays where each pair of indices is a start and end time.
+
+#### GET `/api/spots/:id/price`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+</table>
+Returns an object which which contains details for each price type (such as per hour, etc).
+
+#### GET `/api/spots/:id/price`
+<table>
+  <tr>
+    <td><i>Requires auth</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td>perHour</td>
+    <td>The price per hour for this spot</td>
+  </tr>
+</table>
+Set the price of a spot.
