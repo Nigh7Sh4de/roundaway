@@ -66,7 +66,8 @@ var exts = {
             }),
             sendStatus: sinon.spy(),
             sendGood: sinon.spy(this.sendGood),
-            sendBad: sinon.spy(this.sendBad)
+            sendBad: sinon.spy(this.sendBad),
+            redirect: sinon.spy()
         }
     },
 
@@ -76,7 +77,8 @@ var exts = {
             query: {},
             params: {
                 id: 'user.id'
-            }
+            },
+            logout: sinon.spy()
         }
     }
 }
