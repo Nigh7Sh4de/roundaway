@@ -4,11 +4,13 @@ var authController = function(app) {
 
         app.get('/login/google', this.Login('google'));
         app.get('/login/google/return', this.LoginReturn('google'));
+        app.get('/auth/google', this.LoginReturn('google-token'));
         app.get('/connect/google', this.Connect('google'));
         app.get('/connect/google/return', this.ConnectReturn('google'));
 
         app.get('/login/facebook', this.Login('facebook'));
         app.get('/login/facebook/return', this.LoginReturn('facebook'));
+        app.get('/auth/facebook', this.LoginReturn('facebook-token'));
         app.get('/connect/facebook', this.Connect('facebook'));
         app.get('/connect/facebook/return', this.ConnectReturn('facebook'));
     }

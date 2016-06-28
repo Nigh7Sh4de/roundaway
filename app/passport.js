@@ -2,6 +2,20 @@ module.exports = function(db, config) {
     var passport = require('passport');
     var FacebookStrategy = require('passport-facebook').Strategy;
     var GoogleStrategy = require('passport-google-oauth20').Strategy;
+    var FacebookTokenStrategy = require('passport-facebook-token');
+    var GoogleTokenStrategy = require('passport-google-token').Strategy;
+    passport.use(new GoogleTokenStrategy({
+        clientID: config.GOOGLE_CLIENT_ID,
+        clientSecret: config.GOOGLE_CLIENT_SECRET
+    }, function(accessToken, refreshToken, profile, cb) {
+            GenericStrategy(null, accessToken, refreshToken, profile, cb, 'google');
+    }))
+    passport.use(new FacebookTokenStrategy({
+        clientID: config.FACEBOOK_CLIENT_ID,
+        clientSecret: config.FACEBOOK_CLIENT_SECRET
+    }, function(accessToken, refreshToken, profile, cb) {
+            GenericStrategy(null, accessToken, refreshToken, profile, cb, 'facebook');
+    }))
     passport.use(new GoogleStrategy({
             clientID: config.GOOGLE_CLIENT_ID,
             clientSecret: config.GOOGLE_CLIENT_SECRET,
@@ -24,7 +38,7 @@ module.exports = function(db, config) {
         }
     ));
     var GenericStrategy = function(req, accessToken, refreshToken, profile, cb, strat) {
-        if (req.user == null)
+        if (!req || !req.user)
             db.checkUser(strat, profile, function(err, res) {
                 if (err)
                     throw err;

@@ -35,6 +35,15 @@ routeTest('authController', [
     },
     {
         verb: verbs.GET,
+        route: '/auth/google',
+        method: 'LoginReturn',
+        methodParams: ['google'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
         route: '/login/facebook',
         method: 'Login',
         methodParams: ['facebook'],
@@ -45,6 +54,15 @@ routeTest('authController', [
     {
         verb: verbs.GET,
         route: '/login/facebook/return',
+        method: 'LoginReturn',
+        methodParams: ['facebook'],
+        ignoreAdmin: true,
+        ignoreAuth: true,
+        ignoreId: true,
+    },
+    {
+        verb: verbs.GET,
+        route: '/auth/facebook',
         method: 'LoginReturn',
         methodParams: ['facebook'],
         ignoreAdmin: true,
