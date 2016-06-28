@@ -46,15 +46,18 @@ authController.prototype = {
     },
     LoginReturn: function(req, res, next) {
         this.app.passport.authenticate(
-            req.params.strat,  
-            GenerateCallback(req.query.noredirect === undefined, req, res)
+            req.params.strat,
+            {
+                failureRedirect: '/login',
+                successRedirect: '/profile'
+            }
         )(req, res, next);
     },
     LoggedIn: function(req, res, next) {
-        this.app.passport.authenticate(req.params.strat + '-token', {
-            failureRedirect: '/login',
-            successRedirect: '/home'
-        })(req, res, next);
+        this.app.passport.authenticate(
+            req.params.strat + '-token',  
+            GenerateCallback(req.query.noredirect === undefined, req, res)
+        )(req, res, next);
     },
     Connect: function(req, res, next) {
         var strat = req.params.strat;
