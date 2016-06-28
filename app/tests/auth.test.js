@@ -165,6 +165,25 @@ describe('authController', function() {
             expect(passport.authenticate.callCount).to.equal(strats.length);
         });
     });
+
+    describe('LoggedIn', function() {
+        it('should authenticate with the given strat token', function() {
+            var ctrl = app.authController;
+            var strats = [ 'google', 'facebook' ];
+            var passport = {
+                authenticate: sinon.spy(function() { return function(){} })
+            }
+            ctrl.app = {
+                passport: passport
+            }
+            strats.forEach(function (s) {
+                req.params.strat = s;
+                ctrl.LoggedIn(req, res);
+                expect(passport.authenticate.calledWith(s + '-token')).to.be.true;
+            })
+            expect(passport.authenticate.callCount).to.equal(strats.length);
+        })
+    })
     
     describe('Connect', function() {
         it ('should authorize with given strat', function() {

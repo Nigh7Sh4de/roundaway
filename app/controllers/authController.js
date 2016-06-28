@@ -51,7 +51,7 @@ authController.prototype = {
         )(req, res, next);
     },
     LoggedIn: function(req, res, next) {
-        this.app.passport.authenticate(req.params.strat, {
+        this.app.passport.authenticate(req.params.strat + '-token', {
             failureRedirect: '/login',
             successRedirect: '/home'
         })(req, res, next);
