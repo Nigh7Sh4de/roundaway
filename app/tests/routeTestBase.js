@@ -156,8 +156,13 @@ function RouteTest(ctrl, verb, route, ignoreId, ignoreAdmin, ignoreAuth, method,
     })
 }
 
-var RouteTestBase = function(controller, tests) {
-    describe(controller + 'route', function() {
+var RouteTestBase = function(controller, tests, only, skip) {
+    var _describe = describe;
+    if (only)
+        _describe = describe.only;
+    if (skip)
+        _describe = describe.skip;
+    _describe(controller + 'route', function() {
         tests.forEach(function(test) {
             var route = test.route.replace(':id', id);
             describe(test.verb + ' ' + test.route, function() {
@@ -191,6 +196,14 @@ var RouteTestBase = function(controller, tests) {
         })
     })
 } 
+
+RouteTestBase.only = function(c, t) {
+    RouteTestBase(c, t, true);
+}
+
+RouteTestBase.skip = function(c, t) {
+    RouteTestBase(c, t, false, true);
+}
 
 RouteTestBase.verbs = verbs;
 RouteTestBase.RouteTest = RouteTest;
