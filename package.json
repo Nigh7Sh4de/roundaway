@@ -17,6 +17,7 @@
     "node-geocoder": "3.9.1",
     "passport": "0.3.2",
     "passport-facebook": "2.1.0",
+    "passport-facebook-token": "3.3.0",
     "passport-google-oauth20": "1.0.0",
     "rangerjs": "~0.1.0",
     "sinon": "1.17.3",
