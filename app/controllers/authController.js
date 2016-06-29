@@ -19,7 +19,7 @@ var GenerateCallback = function(redirect, req, res) {
         if (err)
             return res.sendBad(err);
         if (!user)
-            return res.sendBad('User could not be authenticated');
+            return res.sendBad(['User could not be authenticated', info]);
         req.login(user, function(err) {
             if (err)
                 return res.sendBad(err);
