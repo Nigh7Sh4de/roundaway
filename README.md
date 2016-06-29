@@ -112,8 +112,13 @@ Commits with breaking tests are allowed in topic branches and thus when merged i
     location: {
         coordinates: [Number]
     },
-    available: Ranger,
-    booked: Ranger,
+    available: {
+        ranges: [Range(Date)],
+        next: Range(Date)
+    },
+    booked: {
+        ranges: [Range(Date)],
+    },
     bookings: [String],
     lot: String,
     number: Number
