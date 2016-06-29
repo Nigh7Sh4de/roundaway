@@ -2,6 +2,7 @@ var ranger = require('rangerjs');
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var Price = require('./Price');
+var Range = require('./Range');
 
 var spotSchema = new Schema({
     address: String,
@@ -14,38 +15,23 @@ var spotSchema = new Schema({
             index: '2dsphere'
         }
     },
-    available: {
-        type: [ranger.Range(Date)],
-        get: function(data) {
-            try {
-                return new ranger(data);
-            } catch(e) {
-                console.error(e);
-                return data;
-            }
-        },
-        set: function(data) {
-            return data.ranges || data;
-        }
-    },
-    booked: {
-        type: [ranger.Range(Date)],
-        get: function(data) {
-            try {
-                return new ranger(data);
-            } catch(e) {
-                console.error(e);
-                return data;
-            }
-        },
-        set: function(data) {
-            return data.ranges || data;
-        }
-    },
+    available: Range(Date),
+    booked: Range(Date),
     bookings: [String],
     lot: String,
     number: Number
+}, {
+    toJSON: {
+        virtuals: true
+    },
+    toObject: {
+        virtuals: true
+    }
 });
+
+spotSchema.virtual('available.next').get(function() {
+    return this.available.nextRange(new Date());
+})
 
 spotSchema.methods.getPrice = function() {
     var price = {},

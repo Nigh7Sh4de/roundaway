@@ -957,6 +957,29 @@ describe('spotController', function() {
     })
     
     describe('GetSpot', function() {
+        it('should return the next available range of the spot', function() {
+            var spot = new Spot();
+            var oneday = 1000*60*60*24;
+            var now = new Date();
+            var start = new Date(now.valueOf() - oneday);
+            var end = new Date(now.valueOf() + oneday);
+            var range = { start: start, end: end };
+            spot.available.addRange(start, end);
+            var simpleSpot = spot.toJSON({getters: true});
+            app.db.spots = {
+                findById: function(id, cb) {
+                    expect(id).to.equal(spot.id);
+                    cb(null, spot);
+                }
+            }
+            req.params.id = spot.id;
+            app.spotController.GetSpot(req, res);
+            expect(res.send.calledOnce).to.be.true;
+            expect(simpleSpot).to.have.deep.property('available.next');
+            expect(simpleSpot.available.next).to.deep.equal(range);
+            expect(res.sentWith(simpleSpot)).to.be.true;
+        })
+
         it('should get spot with specified id', function() {
             var spot = new Spot();
             var simpleSpot = spot.toJSON({getters: true});
@@ -1002,6 +1025,7 @@ describe('spotController', function() {
         
         before(function() {
             emptySpot = new Spot().toJSON();
+            delete emptySpot.id;
             delete emptySpot._id;    
         })
         
@@ -1049,14 +1073,21 @@ describe('spotController', function() {
             var count = 5;
             var spot = Object.assign({}, emptySpot);
             var arr = [];
-            for (var i=0;i<count;i++)
+            for (var i=0;i<count;i++) {
+                delete spot.id;
+                delete spot._id;
                 arr.push(spot);
+            }
             spot.address = '123 fake st';
             app.db.spots = {
                 collection: {
                     insert: function(obj, cb) {
                         expect(obj).to.have.length(count);
                         expect(obj[0]).to.have.property('address');
+                        obj.forEach(function(o) {
+                            delete o.id;
+                            delete o._id;
+                        })
                         expect(obj).to.deep.include.all.members(arr);
                         cb(null, obj);
                     }
@@ -1087,6 +1118,8 @@ describe('spotController', function() {
         it('should create a blank spot given no params', function() {
             app.db.spots = {
                 create: function(obj, cb) {
+                    delete obj.id;
+                    delete obj._id;
                     expect(obj).to.deep.equal(emptySpot);
                     cb(null, obj);
                 }
@@ -1099,12 +1132,19 @@ describe('spotController', function() {
         it('should create n blank spots given a count n', function() {
             var count = 5;
             var arr = [];
-            for (var i=0;i<count;i++)
+            for (var i=0;i<count;i++) {
+                delete emptySpot.id;
+                delete emptySpot._id;
                 arr.push(emptySpot);
+            }
             app.db.spots = {
                 collection: {
                     insert: sinon.spy(function(obj, cb) {
                         expect(obj).to.have.length(count);
+                        obj.forEach(function(o) {
+                            delete o.id;
+                            delete o._id;
+                        })
                         expect(obj).to.deep.include.all.members(arr);
                         cb(null, obj);
                     })
