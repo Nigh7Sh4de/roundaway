@@ -25,7 +25,7 @@ Roundaway
    <td>dev</td>
    <td>8081</td>
    <td>http://roundaway.com:8081</th>
-   <td>0.1.4</td>
+   <td>0.1.5</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
