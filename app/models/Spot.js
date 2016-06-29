@@ -226,14 +226,14 @@ spotSchema.methods.addAvailability = function(sched, cb) {
     }
     var errs = [];
     for (var i=0; i < sched.length; i++) {
-        var start = new Date(sched[i].start),
-            end = new Date(sched[i].end);
-        if (isNaN(start.valueOf()) || isNaN(end.valueOf()))
-            errs.push('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
-        else if (sched[i].interval && (sched[i].count || sched[i].finish))
-            this.available.addRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
-        else
-            this.available.addRange(start, end);
+            var start = new Date(sched[i].start),
+                end = new Date(sched[i].end);
+            if (isNaN(start.valueOf()) || isNaN(end.valueOf()) || start >= end)
+                errs.push('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
+            else if (sched[i].interval && (sched[i].count || sched[i].finish))
+                this.available.addRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
+            else
+                this.available.addRange(start, end);
     }
     this.markModified('available');
     this.save(function(err) {
