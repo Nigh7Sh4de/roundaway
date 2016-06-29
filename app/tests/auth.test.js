@@ -33,7 +33,7 @@ routeTest('authController', [
         ignoreId: true,
     },
     {
-        verb: verbs.GET,
+        verb: verbs.POST,
         route: '/auth/google',
         method: 'LoggedIn',
         ignoreAdmin: true,
@@ -57,7 +57,7 @@ routeTest('authController', [
         ignoreId: true,
     },
     {
-        verb: verbs.GET,
+        verb: verbs.POST,
         route: '/auth/facebook',
         method: 'LoggedIn',
         ignoreAdmin: true,

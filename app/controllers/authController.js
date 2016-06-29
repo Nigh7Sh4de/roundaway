@@ -4,7 +4,7 @@ var authController = function(app) {
 
         app.get('/login/:strat', this.Login.bind(this));
         app.get('/login/:strat/return', this.LoginReturn.bind(this));
-        app.get('/auth/:strat', this.LoggedIn.bind(this));
+        app.post('/auth/:strat', app.bodyParser.json(), this.LoggedIn.bind(this));
         app.get('/connect/:strat', this.Connect.bind(this));
         app.get('/connect/:strat/return', this.ConnectReturn.bind(this));
 
@@ -56,7 +56,7 @@ authController.prototype = {
     LoggedIn: function(req, res, next) {
         this.app.passport.authenticate(
             req.params.strat + '-token',  
-            GenerateCallback(req.query.noredirect === undefined, req, res)
+            GenerateCallback(!req.body.noredirect, req, res)
         )(req, res, next);
     },
     Connect: function(req, res, next) {
