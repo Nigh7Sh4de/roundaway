@@ -41,7 +41,7 @@ module.exports = function(db, config) {
         if (!req || !req.user)
             db.checkUser(strat, profile, function(err, res) {
                 if (err)
-                    throw err;
+                    cb(err);
                 else {
                     return cb(null, res);
                 }
@@ -49,7 +49,7 @@ module.exports = function(db, config) {
         else
             db.connectUser(req.user, strat, profile, function(err, res) {
                 if (err)
-                    throw err;
+                    cb(err);
                 else {
                     return cb(null, res);
                 }

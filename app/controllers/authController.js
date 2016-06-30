@@ -12,8 +12,8 @@ var authController = function(app) {
 
 var GenerateCallback = function(redirect, req, res) {
     return redirect ? {
-        failureRedirect: '/login',
-        successRedirect: '/home'
+        failureRedirect: '/#/login',
+        successRedirect: '/#/home'
     } : 
     function(err, user, info) {
         if (err)
@@ -48,8 +48,8 @@ authController.prototype = {
         this.app.passport.authenticate(
             req.params.strat,
             {
-                failureRedirect: '/login',
-                successRedirect: '/profile'
+                failureRedirect: '/#/login',
+                successRedirect: '/#/profile'
             }
         )(req, res, next);
     },
@@ -65,8 +65,8 @@ authController.prototype = {
     },
     ConnectReturn: function(req, res, next) {
         this.app.passport.authorize(req.params.strat, {
-            failureRedirect: '/login',
-            successRedirect: '/profile'
+            failureRedirect: '/#/login',
+            successRedirect: '/#/profile'
         })(req, res, next);
     }
     // init: function(app) {

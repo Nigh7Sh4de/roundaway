@@ -37,13 +37,13 @@ helper.prototype = {
     checkAuth: function(req, res, next) {
         if (req.isAuthenticated())
             return next();
-        res.redirect('/login');
+        res.redirect('/#/login');
     },
 
     checkAdmin: function(req, res, next) {
         if (req.user.admin)
             return next();
-        res.redirect('/home');
+        res.redirect('/#/home');
     }
 }
 

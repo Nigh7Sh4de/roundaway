@@ -45,19 +45,6 @@ var app = function(inject) {
     app.payController = new inject.payController(app);
 
     app.get('/', app.checkAuth, app.sendIndex);
-    app.get('/home', app.checkAuth, app.sendIndex);
-    app.get('/login', app.sendIndex);
-    app.get('/profile', app.checkAuth, app.sendIndex);
-    app.get('/404', function(req, res) {
-        return res.send('404');
-    });
-
-    [
-        '/node_modules/angular/angular.js',
-        '/node_modules/angular-route/angular-route.js'
-    ].forEach(function (asset) {
-        app.allowGet(asset);
-    });
     
     return app;    
 }
