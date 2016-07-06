@@ -17,8 +17,10 @@ config.prototype = {
     GOOGLE_API_KEY          :   "AIzaSyDVtIdTJrYyfr30Hj9OyioWMaG_HxhHU2E",
     STRIPE_SECRET_KEY       :   "sk_test_y9Ge30ZIbVe98pA4As87q4ob",
     STRIPE_PUBLISH_KEY      :   "pk_test_WwMFp1CE94C8P8QLtPrzW5Lq",
+    JWT_SECRET_KEY          :   "14g2-Ed34n6ea7r63:M-(12F63wC~<",
     PORT                    :   8081,
-    DB_CONNECTION_STRING    :   "mongodb://localhost/dev_roundaway"
+    DB_CONNECTION_STRING    :   "mongodb://localhost/dev_roundaway",
+    RUN_ALL_TESTS           :   true
 }
 
 module.exports = config;
