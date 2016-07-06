@@ -44,8 +44,9 @@ var app = function(inject) {
     app.authController = new inject.authController(app);
     app.payController = new inject.payController(app);
 
-    app.get('/', app.checkAuth, app.sendIndex);
+    app.get('/', app.sendIndex);
     
+    global.app = app;
     return app;    
 }
 
