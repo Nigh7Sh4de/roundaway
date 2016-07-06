@@ -43,7 +43,7 @@ helper.prototype = {
     checkAdmin: function(req, res, next) {
         if (req.user.admin)
             return next();
-        res.status(401).send('You do not have the required privelages to access this resource');
+        res.sendBad('You do not have the required privelages to access this resource', null, {status: 401});
     }
 }
 
