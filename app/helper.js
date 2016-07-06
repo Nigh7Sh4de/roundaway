@@ -34,16 +34,16 @@ helper.prototype = {
         return res.sendFile('/public/index.html', { root: __dirname + '/..' });
     },
 
-    checkAuth: function(req, res, next) {
-        if (req.isAuthenticated())
-            return next();
-        res.redirect('/#/login');
-    },
+    checkAuth: function() {
+        return function(req, res, next) {
+            this.app.passport.authenticate('jwt', {session: false})(req, res, next);
+        }.bind(this)
+    }(),
 
     checkAdmin: function(req, res, next) {
         if (req.user.admin)
             return next();
-        res.redirect('/#/home');
+        res.status(401).send('You do not have the required privelages to access this resource');
     }
 }
 

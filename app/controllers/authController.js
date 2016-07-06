@@ -1,9 +1,11 @@
+var jwt = require('jsonwebtoken');
+
 var authController = function(app) {
         this.app = app;
         app.get('/logout', this.Logout);
 
         app.get('/login/:strat', this.Login.bind(this));
-        app.get('/login/:strat/return', this.LoginReturn.bind(this));
+        app.get('/login/:strat/return', this.LoginReturn.bind(this), this.GenerateToken.bind(this));
         app.post('/auth/:strat', app.bodyParser.json(), this.LoggedIn.bind(this));
         app.get('/connect/:strat', this.Connect.bind(this));
         app.get('/connect/:strat/return', this.ConnectReturn.bind(this));
@@ -11,6 +13,7 @@ var authController = function(app) {
     }
 
 var GenerateCallback = function(redirect, req, res) {
+    var config = this.app.config;
     return redirect ? {
         failureRedirect: '/#/login',
         successRedirect: '/#/home'
@@ -20,12 +23,9 @@ var GenerateCallback = function(redirect, req, res) {
             return res.sendBad(err);
         if (!user)
             return res.sendBad(['User could not be authenticated', info]);
-        req.login(user, function(err) {
-            if (err)
-                return res.sendBad(err);
-            res.sendGood('User authenticated successfuly', user);
-        })
-    }
+        var token = jwt.sign({id: user.id, profile: user.profile}, config.JWT_SECRET_KEY);
+        res.sendGood('User authenticated successfuly', token);
+    };
 }
 
 authController.prototype = {
@@ -35,6 +35,9 @@ authController.prototype = {
             authProps: { scope: ['profile'] }
         },
         facebook: {}
+    },
+    GenerateToken: function(req, res) {
+        console.log(req);
     },
     Logout: function(req, res) {
         req.logout();

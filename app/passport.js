@@ -4,6 +4,15 @@ module.exports = function(db, config) {
     var GoogleStrategy = require('passport-google-oauth20').Strategy;
     var FacebookTokenStrategy = require('passport-facebook-token');
     var GoogleTokenStrategy = require('passport-google-token').Strategy;
+    var JwtStrategy = require('passport-jwt').Strategy;
+    var ExtractJwt = require('passport-jwt').ExtractJwt;
+    passport.use(new JwtStrategy({
+        jwtFromRequest: ExtractJwt.fromAuthHeader(),
+        secretOrKey: config.JWT_SECRET_KEY,
+        algorithms: ['HS256']
+    }, function(payload, done) {
+        GenericStrategy(null, null, null, payload, done, 'jwt')
+    }))
     passport.use(new GoogleTokenStrategy({
         clientID: config.GOOGLE_CLIENT_ID,
         clientSecret: config.GOOGLE_CLIENT_SECRET
@@ -38,7 +47,10 @@ module.exports = function(db, config) {
         }
     ));
     var GenericStrategy = function(req, accessToken, refreshToken, profile, cb, strat) {
-        if (!req || !req.user)
+        if (strat === 'jwt') {
+            db.checkUser('jwt', profile, cb);
+        }
+        else if (!req || !req.user)
             db.checkUser(strat, profile, function(err, res) {
                 if (err)
                     cb(err);
