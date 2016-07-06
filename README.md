@@ -25,7 +25,7 @@ Roundaway
    <td>dev</td>
    <td>8081</td>
    <td>http://roundaway.com:8081</th>
-   <td>0.1.7</td>
+   <td>0.1.8</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
@@ -776,11 +776,11 @@ Returns the entire spots collection.
 <table>
   <tr>
     <td><i>Requires auth</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td>long</td>
