@@ -38,15 +38,22 @@ var _db = {
         });
     },
     checkUser: function(strategy, profile, cb) {
-        var searchProp = 'authid.' + strategy;
-        var search = {};
-        search[searchProp] = profile.id;
+        var searchProp = 'authid.',
+            search = {};
+        if (strategy === 'jwt')
+            searchProp = '_id';
+        else
+            searchProp += strategy;
 
+        search[searchProp] = profile.id;
         collections.prototype.users.findOne(search, function(err, doc) {
             if (err)
-                throw err;
+                return cb(err);
             if (doc)
                 return cb(null, doc);
+            else if (strategy === 'jwt') {
+                return cb('User not found in db');
+            }
             else {
                 search.profile = {
                     name: profile.displayName
