@@ -52,17 +52,21 @@ Roundaway
 4. Create and/or find the *Google* API key and ensure that the following API's are enabled for it:
   - Geocoding API
 5. Create and/or find the *Stripe* secret key
-6. Create a **config.js** file that exports an object with the following config keys (see **config.example.js** for more info and defaults):
+6. Create and/or find the application secret key for *JWT* authentication
+7. Create a **config.js** file that exports an object with the following config keys (see **config.example.js** for more info and defaults):
   * FACEBOOK_CLIENT_ID
   * FACEBOOK_CLIENT_SECRET
   * GOOGLE_CLIENT_ID
   * GOOGLE_CLIENT_SECRET
   * GOOGLE_API_KEY
   * STRIPE_SECRET_KEY
+  * STRIPE_PUBLISH_KEY
+  * JWT_SECRET_KEY
   * PORT
   * DB_CONNECTION_STRING
-7. Ensure MongoDB server is running on localhost
-8. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
+  * RUN_ALL_TESTS
+8. Ensure MongoDB server is running on localhost
+9. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
 
 *(Note: For deployment to `master`, since `config.js` is `.gitignore`d the file that is already deployed should be left with the keys it has and updated as necessary)*
 
@@ -133,6 +137,18 @@ Commits with breaking tests are allowed in topic branches and thus when merged i
     end: Date,
 
 
+## Authentication
+
+Certain API routes requre the user to be authenticated (have a JWT) and/or have certain privelages. The specific requirements for each route are listed below.
+In order to make API calls that are auth protected use the following flow:
+1. Hit `POST /auth/:strat` with an **access_token** as supplied by the social network you are authenticating with.
+2. You will receieve a **JWT** in the response if authentication was successful
+  - A user was found in db
+  - A new user was created
+3. Set an `Authorizaton` header with the `JWT` scheme (as in: `Authorization: JWT JWT_STRING...`) in all subsequent requests
+4. If a certain user requires elevated privelages (such as *admin*) the db admin must set the appropriate flag in the user collection manually (*note*: changing privelages does not require generating a new JWT, so changing privelages can be done on the fly)
+
+
 ## API
 
 *All api calls are on the `/api` route*
@@ -197,7 +213,7 @@ A redirect callback that the social network will hit after authentication (succe
     <td>access_token</td>
     <td>The access token as provided by the social network</td>
 </table>
-If you have authenticated the user elsewhere (client-side or on another server), send the `access_token` here in order to authenticate with this server and register a session user
+If you have authenticated the user elsewhere (client-side or on another server), send the `access_token` here in order to authenticate with this server. Sends back a JWT for subsequent API requests.
 
 ##### GET `/connect/:strat`
 <table>
