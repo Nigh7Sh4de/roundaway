@@ -4,7 +4,7 @@ var controller = function(app) {
     this.app = app;
     app.get('/api/spots', app.checkAuth, app.checkAdmin, this.GetAllSpots.bind(this));
     app.put('/api/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateSpot.bind(this));
-    app.get('/api/spots/near', app.checkAuth, app.checkAdmin, this.GetNearestSpot.bind(this));
+    app.get('/api/spots/near', this.GetNearestSpot.bind(this));
     app.get('/api/spots/:id', app.checkAuth, app.checkAdmin, this.GetSpot.bind(this));
     app.get('/api/spots/:id/location', app.checkAuth, app.checkAdmin, this.GetLocationForSpot.bind(this));
     app.post('/api/spots/:id/location', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetLocationForSpot.bind(this));

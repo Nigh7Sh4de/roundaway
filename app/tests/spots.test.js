@@ -849,7 +849,9 @@ routeTest('spotController', [
             verb: verbs.GET,
             route: '/api/spots/near',
             method: 'GetNearestSpot',
-            ignoreId: true
+            ignoreId: true,
+            ignoreAuth: true,
+            ignoreAdmin: true
         },
         {
             verb: verbs.GET,
