@@ -3,6 +3,7 @@ var request = require('supertest');
 var sinon = require('sinon');
 var expect = require('chai').expect;
 var server = require('./../../server');
+var inject = server.GetDefaultInjection(true);
 var testConnectionString = "mongodb://localhost/roundaway_test"
 var expressExtensions = require('./../express');
 
@@ -11,7 +12,11 @@ var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe.only('the entire app should not explode', function() {
+var _d = describe;
+if (!inject.config.RUN_ALL_TESTS)
+    _d = _d.skip;
+
+_d('the entire app should not explode', function() {
     var app;
 
     var userProfile = {
@@ -29,7 +34,6 @@ describe.only('the entire app should not explode', function() {
             profile: userProfile,
             authid: userAuth
         });
-        var inject = server.GetDefaultInjection(true);
         inject.config.DB_CONNECTION_STRING = testConnectionString;
         token = jwt.sign({id:sessionUser.id}, inject.config.JWT_SECRET_KEY);
         app = server(inject);
