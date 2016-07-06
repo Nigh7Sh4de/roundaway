@@ -1,3 +1,4 @@
+var jwt = require('jsonwebtoken');
 var request = require('supertest');
 var sinon = require('sinon');
 var expect = require('chai').expect;
@@ -10,7 +11,7 @@ var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
-describe.skip('the entire app should not explode', function() {
+describe.only('the entire app should not explode', function() {
     var app;
 
     var userProfile = {
@@ -19,22 +20,18 @@ describe.skip('the entire app should not explode', function() {
     var userAuth = {
         facebook: 'facebook_auth'
     }
+    var sessionUser;
+    var token = 'aaa.bbb.ccc';
 
     before(function(done) {
-        var sessionUser = new User({
+        sessionUser = new User({
             admin: true,
             profile: userProfile,
             authid: userAuth
         });
         var inject = server.GetDefaultInjection(true);
         inject.config.DB_CONNECTION_STRING = testConnectionString;
-        inject.helper.middleware.push(function(q,s,n) {
-            q.user = sessionUser;
-            q.isAuthenticated = function() {
-                return true;
-            }
-            n();
-        });
+        token = jwt.sign({id:sessionUser.id}, inject.config.JWT_SECRET_KEY);
         app = server(inject);
         app.stripe.charge = function(t,a,cb) {
             cb(null, {});
@@ -45,6 +42,13 @@ describe.skip('the entire app should not explode', function() {
             throw err;
         });
         app.db.connection.once('open', done);
+    })
+
+    beforeEach(function(done) {
+        sessionUser.isNew = true;
+        sessionUser.save(function(err, user) {
+            done();
+        });
     })
 
     afterEach(function(done) {
@@ -89,7 +93,9 @@ describe.skip('the entire app should not explode', function() {
             it('should return users in db', function(done) {
                 var user = new User();
                 insert(user, function() {
-                    request(app).get('/api/users').end(function(err, res) {
+                    request(app).get('/api/users')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
                         expect(res.text).to.contain(user.id);
                         expect(res.status).to.equal(200);
                         done();
@@ -100,6 +106,7 @@ describe.skip('the entire app should not explode', function() {
         describe('GET /api/users/profile', function() {
             it('should return profile for session user', function(done) {
                 request(app).get('/api/users/profile')
+                    .set('Authorization', 'JWT ' + token)
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
                         expect(res.status).to.equal(200);
@@ -117,6 +124,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(lot, user, function() {
                     request(app).get('/api/users/' + user.id + '/lots')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.body.data).to.include(lot.id);
                             expect(res.status).to.equal(200);
@@ -132,6 +140,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(user, lot, function() {
                     request(app).put('/api/users/' + user.id + '/lots')
                         .send({lots: [lot.toJSON()]})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                         expect(res.status, res.body.errors).to.equal(200);
                         app.db.users.findById(user.id, function(err, doc) {
@@ -150,6 +159,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(user, spot, function() {
                     request(app).get('/api/users/' + user.id + '/spots')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.body.data).to.include(spot.id);
                             expect(res.status).to.equal(200);
@@ -165,6 +175,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(user, spot, function() {
                     request(app).put('/api/users/' + user.id + '/spots')
                         .send({spots: [spot.toJSON()]})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                         expect(res.status, res.body.errors).to.equal(200);
                         app.db.users.findById(user.id, function(err, doc) {
@@ -183,6 +194,7 @@ describe.skip('the entire app should not explode', function() {
                 })
                 insert(booking, user, function() {
                     request(app).get('/api/users/' + user.id + '/bookings')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.body.data).to.include(booking.id);
                             expect(res.status).to.equal(200);
@@ -198,6 +210,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(user, booking, function() {
                     request(app).put('/api/users/' + user.id + '/bookings')
                         .send({bookings: [booking.toJSON()]})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                         expect(res.status, res.body.errors).to.equal(200);
                         app.db.users.findById(user.id, function(err, doc) {
@@ -214,11 +227,13 @@ describe.skip('the entire app should not explode', function() {
                     profile: userProfile
                 });
                 insert(user, function() {
-                    request(app).get('/api/users/' + user.id + '/profile').end(function(err, res) {
-                        expect(res.body.data).to.deep.equal(userProfile);
-                        expect(res.status).to.equal(200);
-                        done();
-                    });
+                    request(app).get('/api/users/' + user.id + '/profile')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(res.body.data).to.deep.equal(userProfile);
+                            expect(res.status).to.equal(200);
+                            done();
+                        });
                 });
             })
         })
@@ -230,12 +245,13 @@ describe.skip('the entire app should not explode', function() {
                 insert(user, function() {
                     request(app).patch('/api/users/' + user.id + '/profile')
                         .send({name: 'Sh4de'})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
-                        expect(res.status, res.body.errors).to.equal(200);
-                        app.db.users.findById(user.id, function(err, doc) {
-                            expect(doc.profile.name).to.deep.equal('Sh4de');
-                            done();
-                        });
+                            expect(res.status, res.body.errors).to.equal(200);
+                            app.db.users.findById(user.id, function(err, doc) {
+                                expect(doc.profile.name).to.deep.equal('Sh4de');
+                                done();
+                            });
                     });
                 });
             })
@@ -249,6 +265,7 @@ describe.skip('the entire app should not explode', function() {
                     booking2 = new Booking();
                 insert(booking, booking, function() {
                     request(app).get('/api/bookings')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -263,6 +280,7 @@ describe.skip('the entire app should not explode', function() {
                 var booking = new Booking();
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -275,6 +293,7 @@ describe.skip('the entire app should not explode', function() {
         describe('PUT /api/bookings', function() {
             it('should create a new booking', function(done) {
                 request(app).put('/api/bookings')
+                    .set('Authorization', 'JWT ' + token)
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
                         expect(res.status).to.equal(200);
@@ -298,6 +317,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(spot, booking, function() {
                     request(app).get('/api/bookings/' + booking.id + '/spot')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -315,6 +335,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(spot, booking, function() {
                     request(app).put('/api/bookings/' + booking.id + '/spot')
                         .send({id: spot.id})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -335,6 +356,7 @@ describe.skip('the entire app should not explode', function() {
                 })
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id + '/start')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -352,6 +374,7 @@ describe.skip('the entire app should not explode', function() {
 
                     request(app).put('/api/bookings/' + booking.id + '/start')
                         .send({start: now})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -371,6 +394,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id + '/end')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -387,6 +411,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(booking, function() {
                     request(app).put('/api/bookings/' + booking.id + '/end')
                         .send({end: later})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -407,6 +432,7 @@ describe.skip('the entire app should not explode', function() {
                 })
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id + '/duration')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -426,6 +452,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(booking, function() {
                     request(app).put('/api/bookings/' + booking.id + '/duration')
                         .send({duration: oneday})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -446,6 +473,7 @@ describe.skip('the entire app should not explode', function() {
                 })
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id + '/time')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -465,6 +493,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(booking, function() {
                     request(app).put('/api/bookings/' + booking.id + '/time')
                         .send({start: now, end: later})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -488,6 +517,7 @@ describe.skip('the entire app should not explode', function() {
                 })
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id + '/price')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -508,6 +538,7 @@ describe.skip('the entire app should not explode', function() {
                 request('')
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id + '/price')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -526,6 +557,7 @@ describe.skip('the entire app should not explode', function() {
                     lot2 = new Lot();
                 insert(lot, lot2, function() {
                     request(app).get('/api/lots')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -540,6 +572,7 @@ describe.skip('the entire app should not explode', function() {
                 var lot = new Lot();
                 insert(lot, function() {
                     request(app).get('/api/lots/' + lot.id)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -552,6 +585,7 @@ describe.skip('the entire app should not explode', function() {
         describe('PUT /api/lots', function() {
             it('should create a new lot', function(done) {
                 request(app).put('/api/lots')
+                    .set('Authorization', 'JWT ' + token)
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
                         expect(res.status).to.equal(200);
@@ -573,6 +607,7 @@ describe.skip('the entire app should not explode', function() {
                 lot.location.coordinates = [12, 34];
                 insert(lot, function() {
                     request(app).get('/api/lots/' + lot.id + '/location')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -589,6 +624,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(lot, function() {
                     request(app).put('/api/lots/' + lot.id + '/location')
                     .send({coordinates: coords})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -609,6 +645,7 @@ describe.skip('the entire app should not explode', function() {
                 })
                 insert(spot, lot, function() {
                     request(app).get('/api/lots/' + lot.id + '/spots')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -625,6 +662,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(spot, lot, function() {
                     request(app).put('/api/lots/' + lot.id + '/spots')
                         .send({spots: [spot.id]})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -647,6 +685,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(lot, spot, function() {
                     request(app).put('/api/lots/' + lot.id + '/spots/remove')
                         .send({spots: [spot.id]})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -672,6 +711,7 @@ describe.skip('the entire app should not explode', function() {
                     spot2 = new Spot();
                 insert(spot, spot2, function() {
                     request(app).get('/api/spots')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -686,6 +726,7 @@ describe.skip('the entire app should not explode', function() {
                 var spot = new Spot();
                 insert(spot, function() {
                     request(app).get('/api/spots/' + spot.id)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -698,6 +739,7 @@ describe.skip('the entire app should not explode', function() {
         describe('PUT /api/spots', function() {
             it('should create a new spot', function(done) {
                 request(app).put('/api/spots')
+                    .set('Authorization', 'JWT ' + token)
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
                         expect(res.status).to.equal(200);
@@ -719,6 +761,7 @@ describe.skip('the entire app should not explode', function() {
                 spot.location.coordinates = [12, 34];
                 insert(spot, function() {
                     request(app).get('/api/spots/' + spot.id + '/location')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -735,6 +778,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(spot, function() {
                     request(app).post('/api/spots/' + spot.id + '/location')
                     .send({coordinates: coords})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -755,6 +799,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(booking, spot, function() {
                     request(app).get('/api/spots/' + spot.id + '/bookings')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -779,6 +824,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(spot, booking, function() {
                     request(app).put('/api/spots/' + spot.id + '/bookings')
                     .send({bookings: booking.id})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -800,6 +846,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(booking, spot, function() {
                     request(app).put('/api/spots/' + spot.id + '/bookings/remove')
                     .send({bookings: booking.id})
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -823,6 +870,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(spot, function() {
                     request(app).get('/api/spots/' + spot.id + '/available')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -843,6 +891,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(spot, function() {
                     request(app).put('/api/spots/' + spot.id + '/available')
                         .send(_av)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -867,6 +916,7 @@ describe.skip('the entire app should not explode', function() {
                 insert(spot, function() {
                     request(app).put('/api/spots/' + spot.id + '/available/remove')
                     .send(_av)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -890,6 +940,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(spot, function() {
                     request(app).get('/api/spots/' + spot.id + '/booked')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -917,6 +968,7 @@ describe.skip('the entire app should not explode', function() {
                 });
                 insert(spot, function() {
                     request(app).get('/api/spots/' + spot.id + '/schedule')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -940,6 +992,7 @@ describe.skip('the entire app should not explode', function() {
                 spot.price.perHour = pricePerHour;
                 insert(spot, function() {
                     request(app).get('/api/spots/' + spot.id + '/price')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
@@ -961,6 +1014,7 @@ describe.skip('the entire app should not explode', function() {
                         .send({
                             perHour: pricePerHour
                         })
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status).to.equal(200);
