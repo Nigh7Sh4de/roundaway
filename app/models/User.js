@@ -13,86 +13,86 @@ var userSchema = new Schema({
     admin: {
         type: Boolean,
         default: false
-    },
-    lotIds: [],
-    spotIds: [],
-    bookingIds: [],
+    }
+    // lotIds: [],
+    // spotIds: [],
+    // bookingIds: [],
 }, {
     timestamps: true
 });
 
-userSchema.methods.addLot = function(lots, cb) {
-    if (!(lots instanceof Array))
-        lots = [ lots ];
-    var self = this;
-    var errors = [];
-    var added = 0;
-    var count = 0;
-    var next = function(err) {
-        if (err)
-            errors.push(err);
-        if (++count >= lots.length)
-            cb(errors.length > 0 ? errors : null, added);
-    }
-    lots.forEach(function(lot) {
-        if (typeof lot === 'object' && lot != null)
-            lot = lot.id;
-        if (lot == null)
-            return next('Failed to add lot. Lot id cannot be null.');
-        if (typeof lot !== 'string')
-            return next('Failed to add lot. Lot id must be a valid id.');
-        if (self.hasLot(lot))
-            return next('Failed to add lot. User already has this lot.');
+// userSchema.methods.addLot = function(lots, cb) {
+//     if (!(lots instanceof Array))
+//         lots = [ lots ];
+//     var self = this;
+//     var errors = [];
+//     var added = 0;
+//     var count = 0;
+//     var next = function(err) {
+//         if (err)
+//             errors.push(err);
+//         if (++count >= lots.length)
+//             cb(errors.length > 0 ? errors : null, added);
+//     }
+//     lots.forEach(function(lot) {
+//         if (typeof lot === 'object' && lot != null)
+//             lot = lot.id;
+//         if (lot == null)
+//             return next('Failed to add lot. Lot id cannot be null.');
+//         if (typeof lot !== 'string')
+//             return next('Failed to add lot. Lot id must be a valid id.');
+//         if (self.hasLot(lot))
+//             return next('Failed to add lot. User already has this lot.');
         
-        added++;
-        self.lotIds.push(lot);
-        self.save(next);
-    })
-}
+//         added++;
+//         self.lotIds.push(lot);
+//         self.save(next);
+//     })
+// }
 
-userSchema.methods.addSpot = function(spots, cb) {
-    if (!(spots instanceof Array))
-        spots = [spots];
-    var errs = [];
-    for (var i=0;i < spots.length; i++) {
-        var spot = spots[0] || {};
-        var id = spot.id || spot._id || spot;
-        if (!id || typeof id !== 'string') {
-            spots.splice(i--, 1);
-            errs.push('Failed to add spot. Spot id must be a valid id.');
-        }
-            else spots[i] = id;
+// userSchema.methods.addSpot = function(spots, cb) {
+//     if (!(spots instanceof Array))
+//         spots = [spots];
+//     var errs = [];
+//     for (var i=0;i < spots.length; i++) {
+//         var spot = spots[0] || {};
+//         var id = spot.id || spot._id || spot;
+//         if (!id || typeof id !== 'string') {
+//             spots.splice(i--, 1);
+//             errs.push('Failed to add spot. Spot id must be a valid id.');
+//         }
+//             else spots[i] = id;
         
-    }
-    this.spotIds = this.spotIds.concat(spots);;
-    this.save(function(err) {
-        if (err)
-            errs.push(err);
-        errs.length == 0 ? cb() : cb(errs);
-    });
-}
+//     }
+//     this.spotIds = this.spotIds.concat(spots);;
+//     this.save(function(err) {
+//         if (err)
+//             errs.push(err);
+//         errs.length == 0 ? cb() : cb(errs);
+//     });
+// }
 
-userSchema.methods.addBooking = function(bookings, cb) {
-    if (!(bookings instanceof Array))
-        bookings = [bookings];
-    var errs = [];
-    for (var i=0;i < bookings.length; i++) {
-        var booking = bookings[0] || {};
-        var id = booking.id || booking._id || booking;
-        if (!id || typeof id !== 'string') {
-            bookings.splice(i--, 1);
-            errs.push('Failed to add booking. Booking id must be a valid id.');
-        }
-            else bookings[i] = id;
+// userSchema.methods.addBooking = function(bookings, cb) {
+//     if (!(bookings instanceof Array))
+//         bookings = [bookings];
+//     var errs = [];
+//     for (var i=0;i < bookings.length; i++) {
+//         var booking = bookings[0] || {};
+//         var id = booking.id || booking._id || booking;
+//         if (!id || typeof id !== 'string') {
+//             bookings.splice(i--, 1);
+//             errs.push('Failed to add booking. Booking id must be a valid id.');
+//         }
+//             else bookings[i] = id;
         
-    }
-    this.bookingIds = this.bookingIds.concat(bookings);;
-    this.save(function(err) {
-        if (err)
-            errs.push(err);
-        errs.length == 0 ? cb() : cb(errs);
-    });
-}
+//     }
+//     this.bookingIds = this.bookingIds.concat(bookings);;
+//     this.save(function(err) {
+//         if (err)
+//             errs.push(err);
+//         errs.length == 0 ? cb() : cb(errs);
+//     });
+// }
 
 userSchema.methods.updateProfile = function(profile, cb) {
     for (var prop in profile)
@@ -143,29 +143,29 @@ userSchema.methods.getAuth = function(strategy) {
         return this.authid[strategy];
 }
 
-userSchema.methods.hasLot = function(lot) {
-    if (typeof lot === 'object' && lot != null)
-        lot = lot.id;
-    if (typeof lot !== 'string' || lot == '')
-        return null;
-    return this.lotIds.indexOf(lot) >= 0;
-}
+// userSchema.methods.hasLot = function(lot) {
+//     if (typeof lot === 'object' && lot != null)
+//         lot = lot.id;
+//     if (typeof lot !== 'string' || lot == '')
+//         return null;
+//     return this.lotIds.indexOf(lot) >= 0;
+// }
 
-userSchema.methods.hasSpot = function(spot) {
-    if (typeof spot === 'object' && spot != null)
-        spot = spot.id;
-    if (typeof spot !== 'string' || spot == '')
-        return null;
-    return this.spotIds.indexOf(spot) >= 0;
-}
+// userSchema.methods.hasSpot = function(spot) {
+//     if (typeof spot === 'object' && spot != null)
+//         spot = spot.id;
+//     if (typeof spot !== 'string' || spot == '')
+//         return null;
+//     return this.spotIds.indexOf(spot) >= 0;
+// }
 
-userSchema.methods.hasBooking = function(booking) {
-    if (typeof booking === 'object' && booking != null)
-        booking = booking.id;
-    if (typeof booking !== 'string' || booking == '')
-        return null;
-    return this.bookingIds.indexOf(booking) >= 0;
-}
+// userSchema.methods.hasBooking = function(booking) {
+//     if (typeof booking === 'object' && booking != null)
+//         booking = booking.id;
+//     if (typeof booking !== 'string' || booking == '')
+//         return null;
+//     return this.bookingIds.indexOf(booking) >= 0;
+// }
 
 // userSchema.methods.merge = function(anotherUser, cb) {
 //     var errors = [];
