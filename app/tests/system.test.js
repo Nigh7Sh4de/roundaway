@@ -641,7 +641,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('GET /api/lots/:id/spots', function() {
+        describe.skip('GET /api/lots/:id/spots', function() {
             it('should return spot for the lot', function(done) {
                 var spot = new Spot();
                 var lot = new Lot({
@@ -659,53 +659,53 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/lots/:id/spots', function(done) {
-            it('should set the spot for the lot', function(done) {
-                var spot = new Spot();
-                var lot = new Lot();
-                insert(spot, lot, function() {
-                    request(app).put('/api/lots/' + lot.id + '/spots')
-                        .send({spots: [spot.id]})
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
-                            app.db.lots.findById(lot.id, function(err, doc) {
-                                expect(err).to.not.be.ok;
-                                expect(doc.spots).to.deep.include(spot.id);
-                                done();
-                            })
-                        })
-                })
-            })
-        })
-        describe('PUT /api/lots/:id/spots/remove', function(done) {
-            it('shouldremove the spot from the lot', function(done) {
-                var spot = new Spot();
-                var spot2 = new Spot();
-                var lot = new Lot({
-                    spots: [spot.id, spot2.id]
-                })
-                insert(lot, spot, function() {
-                    request(app).put('/api/lots/' + lot.id + '/spots/remove')
-                        .send({spots: [spot.id]})
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
-                            app.db.lots.findById(lot.id, function(err, doc) {
-                                expect(err).to.not.be.ok;
-                                expect(doc.spots).to.deep.include(spot2.id);
-                                expect(doc.spots).to.not.deep.include(spot.id);
-                                doc.addSpots(spot, function(err) {
-                                    expect(err).to.not.be.ok;
-                                    done();
-                                })
-                            })
-                        })
-                })
-            })
-        })
+        // describe('PUT /api/lots/:id/spots', function(done) {
+        //     it('should set the spot for the lot', function(done) {
+        //         var spot = new Spot();
+        //         var lot = new Lot();
+        //         insert(spot, lot, function() {
+        //             request(app).put('/api/lots/' + lot.id + '/spots')
+        //                 .send({spots: [spot.id]})
+        //                 .set('Authorization', 'JWT ' + token)
+        //                 .end(function(err, res) {
+        //                     expect(err).to.not.be.ok;
+        //                     expect(res.status).to.equal(200);
+        //                     app.db.lots.findById(lot.id, function(err, doc) {
+        //                         expect(err).to.not.be.ok;
+        //                         expect(doc.spots).to.deep.include(spot.id);
+        //                         done();
+        //                     })
+        //                 })
+        //         })
+        //     })
+        // })
+        // describe('PUT /api/lots/:id/spots/remove', function(done) {
+        //     it('shouldremove the spot from the lot', function(done) {
+        //         var spot = new Spot();
+        //         var spot2 = new Spot();
+        //         var lot = new Lot({
+        //             spots: [spot.id, spot2.id]
+        //         })
+        //         insert(lot, spot, function() {
+        //             request(app).put('/api/lots/' + lot.id + '/spots/remove')
+        //                 .send({spots: [spot.id]})
+        //                 .set('Authorization', 'JWT ' + token)
+        //                 .end(function(err, res) {
+        //                     expect(err).to.not.be.ok;
+        //                     expect(res.status).to.equal(200);
+        //                     app.db.lots.findById(lot.id, function(err, doc) {
+        //                         expect(err).to.not.be.ok;
+        //                         expect(doc.spots).to.deep.include(spot2.id);
+        //                         expect(doc.spots).to.not.deep.include(spot.id);
+        //                         doc.addSpots(spot, function(err) {
+        //                             expect(err).to.not.be.ok;
+        //                             done();
+        //                         })
+        //                     })
+        //                 })
+        //         })
+        //     })
+        // })
     })
 
     describe('Spot Controller', function() {
