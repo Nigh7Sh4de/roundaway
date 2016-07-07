@@ -313,7 +313,7 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe('GET /api/bookings/:id/spot', function() {
+        describe.skip('GET /api/bookings/:id/spot', function() {
             it('should return spot for the booking', function(done) {
                 var spot = new Spot();
                 var booking = new Booking({
@@ -331,7 +331,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/bookings/:id/spot', function(done) {
+        describe.skip('PUT /api/bookings/:id/spot', function(done) {
             it('should set the spot for the booking', function(done) {
                 var spot = new Spot();
                 spot.price.perHour = 123.45;

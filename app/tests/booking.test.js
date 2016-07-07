@@ -45,7 +45,7 @@ describe('Booking schema', function() {
         })
     })
     
-    describe('getSpot', function() {
+    describe.skip('getSpot', function() {
         it('should return spot id', function() {
             var b = new Booking();
             var spotId = '1z2x3c4v';
@@ -60,7 +60,7 @@ describe('Booking schema', function() {
         })
     })
     
-    describe('setSpot', function() {
+    describe.skip('setSpot', function() {
         it('should set the price', function(done) {
             var b = new Booking();
             var price = 123.45;
@@ -582,7 +582,7 @@ describe('bookingController', function() {
         })
     })
             
-    describe('GetSpotForBooking', function() {
+    describe.skip('GetSpotForBooking', function() {
         it('should return error if booking has no spot attached', function() {
             var booking = new Booking();
             app.db.bookings = {
@@ -675,7 +675,7 @@ describe('bookingController', function() {
         })
     })
     
-    describe('SetSpotForBooking', function() {
+    describe.skip('SetSpotForBooking', function() {
         it('should associate the booking with the spot', function() {
             var spot = new Spot();
             var booking = new Booking();
