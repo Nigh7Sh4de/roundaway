@@ -5,22 +5,30 @@ var Price = require('./Price');
 var Range = require('./Range');
 
 var spotSchema = new Schema({
-    address: String,
-    price: {
-        perHour: Price
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     },
+    lot: {
+        type: Schema.Types.ObjectId,
+        ref: 'Lot'
+    },
+    address: String,
     location: {
         coordinates: {
             type: [Number],
             index: '2dsphere'
         }
     },
+    price: {
+        perHour: Price
+    },
     available: Range(Date),
     booked: Range(Date),
-    bookings: [String],
-    lot: String,
-    number: Number
+    // bookings: [String],
+    description: String
 }, {
+    timestamps: true,
     toJSON: {
         virtuals: true
     },
@@ -106,72 +114,81 @@ spotSchema.methods.setLocation = function(location, address, cb) {
     this.save(cb);
 }
 
-spotSchema.methods.getBookings = function() {
-    return this.bookings;
+// spotSchema.methods.getBookings = function() {
+//     return this.bookings;
+// }
+
+// spotSchema.methods.addBookings = function(bookings, cb) {
+//     if (!(bookings instanceof Array))
+//         bookings = [bookings];
+//     var errs = [];
+//     bookings.forEach(function(booking) {
+//         if (booking == null)
+//             return errs.push('Cannot add empty object as booking.');
+//         if (booking.id == null)
+//             return errs.push('Booking must have an id.');
+//         if (booking.getStart() ==  null || 
+//             booking.getEnd() == null)
+//             return errs.push('Booking must have a start and end time set.');
+//         if (this.bookings.indexOf(booking.id) >= 0)
+//             return errs.push('Booking ' + booking.id + ' already exists on this spot.');
+//         if (!this.available.checkRange(booking.start, booking.end))
+//             return errs.push('Cannot add booking. The specified time range is not available for this spot: ' + booking.start + ' ~ ' + booking.end);
+//         this.bookings.push(booking.id);
+//         this.booked.addRange(booking.start, booking.end);
+//         this.available.removeRange(booking.start, booking.end);
+//     }.bind(this));
+//     this.save(function(err) {
+//         errs = errs.length == 0 ? null : errs;
+//         cb(err || errs);
+//     });
+// }
+
+// spotSchema.methods.removeBookings = function(bookings, cb) {
+//     if (!(bookings instanceof Array))
+//         bookings = [bookings];
+//     var errs = [];
+//     var removed = [];
+//     bookings.forEach(function(booking) {
+//         if (booking == null)
+//             return errs.push('Cannot remove null booking.');
+//         if (booking.id == null)
+//             return errs.push('Cannot remove booking. Booking must have an id.');
+//         var index = this.bookings.indexOf(booking.id);
+//         if (index < 0)
+//             return errs.push('Cannot remove booking. This booking is not assoaciated with this spot');
+//         removed = removed.concat(this.bookings.splice(index, 1));
+//         this.booked.removeRange(booking.start, booking.end);
+//         this.available.addRange(booking.start, booking.end);
+//     }.bind(this));
+//     this.save(function (err) {
+//         errs = errs.length == 0 ? null : errs;
+//         cb(err || errs, removed);
+//     });
+// }
+
+// spotSchema.methods.getNumber = function() {
+//     return this.number;
+// }
+
+// spotSchema.methods.setNumber = function(num, cb) {
+//     var error = setNumber.bind(this)(num);
+//     if (error != null)
+//         return cb(error);
+//     this.save(cb);
+// }
+
+spotSchema.methods.getDescription = function() {
+    return this.description;
 }
 
-spotSchema.methods.addBookings = function(bookings, cb) {
-    if (!(bookings instanceof Array))
-        bookings = [bookings];
-    var errs = [];
-    bookings.forEach(function(booking) {
-        if (booking == null)
-            return errs.push('Cannot add empty object as booking.');
-        if (booking.id == null)
-            return errs.push('Booking must have an id.');
-        if (booking.getStart() ==  null || 
-            booking.getEnd() == null)
-            return errs.push('Booking must have a start and end time set.');
-        if (this.bookings.indexOf(booking.id) >= 0)
-            return errs.push('Booking ' + booking.id + ' already exists on this spot.');
-        if (!this.available.checkRange(booking.start, booking.end))
-            return errs.push('Cannot add booking. The specified time range is not available for this spot: ' + booking.start + ' ~ ' + booking.end);
-        this.bookings.push(booking.id);
-        this.booked.addRange(booking.start, booking.end);
-        this.available.removeRange(booking.start, booking.end);
-    }.bind(this));
-    this.save(function(err) {
-        errs = errs.length == 0 ? null : errs;
-        cb(err || errs);
-    });
-}
-
-spotSchema.methods.removeBookings = function(bookings, cb) {
-    if (!(bookings instanceof Array))
-        bookings = [bookings];
-    var errs = [];
-    var removed = [];
-    bookings.forEach(function(booking) {
-        if (booking == null)
-            return errs.push('Cannot remove null booking.');
-        if (booking.id == null)
-            return errs.push('Cannot remove booking. Booking must have an id.');
-        var index = this.bookings.indexOf(booking.id);
-        if (index < 0)
-            return errs.push('Cannot remove booking. This booking is not assoaciated with this spot');
-        removed = removed.concat(this.bookings.splice(index, 1));
-        this.booked.removeRange(booking.start, booking.end);
-        this.available.addRange(booking.start, booking.end);
-    }.bind(this));
-    this.save(function (err) {
-        errs = errs.length == 0 ? null : errs;
-        cb(err || errs, removed);
-    });
-}
-
-spotSchema.methods.getNumber = function() {
-    return this.number;
-}
-
-spotSchema.methods.setNumber = function(num, cb) {
-    var error = setNumber.bind(this)(num);
-    if (error != null)
-        return cb(error);
+spotSchema.methods.setDescription = function(description, cb) {
+    this.description = String(description);
     this.save(cb);
 }
 
-spotSchema.methods.removeNumber = function(cb) {
-    this.number = null;
+spotSchema.methods.removeDescription = function(cb) {
+    this.description = null;
     this.save(cb);
 }
 
@@ -180,9 +197,7 @@ spotSchema.methods.getLot = function() {
 }
 
 spotSchema.methods.setLot = function(lot, cb) {
-    var error = setLot.bind(this)(lot);
-    if (error != null)
-        return cb(error);
+    this.lot = lot;
     this.save(cb);
 }
 
@@ -191,30 +206,30 @@ spotSchema.methods.removeLot = function(cb) {
     this.save(cb);
 }
 
-spotSchema.methods.setLotAndNumber = function(lot, num, cb) {
-    var error = null;
-    error = setLot.bind(this)(lot);
-    if (error != null)
-        return cb(error);
-    error = setNumber.bind(this)(num);
-    if (error != null)
-        return cb(error);
-    this.save(cb);
-}
+// spotSchema.methods.setLotAndNumber = function(lot, num, cb) {
+//     var error = null;
+//     error = setLot.bind(this)(lot);
+//     if (error != null)
+//         return cb(error);
+//     error = setNumber.bind(this)(num);
+//     if (error != null)
+//         return cb(error);
+//     this.save(cb);
+// }
 
-var setLot = function(lot) {
-    if (typeof lot === 'object' && lot != null)
-        lot = lot.id;
-    if (typeof lot !== 'string')
-        return 'Cannot set lot. Lot id is invalid.';
-    this.lot = lot;
-}
+// var setLot = function(lot) {
+//     if (typeof lot === 'object' && lot != null)
+//         lot = lot.id;
+//     if (typeof lot !== 'string')
+//         return 'Cannot set lot. Lot id is invalid.';
+//     this.lot = lot;
+// }
 
-var setNumber = function(num) {
-    if (typeof num !== 'number')
-        return 'Cannot set number. Number is invalid.';
-    this.number = num;
-}
+// var setNumber = function(num) {
+//     if (typeof num !== 'number')
+//         return 'Cannot set number. Number is invalid.';
+//     this.number = num;
+// }
 
 spotSchema.methods.addAvailability = function(sched, cb) {
     if (!(sched instanceof Array)) {

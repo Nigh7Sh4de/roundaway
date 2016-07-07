@@ -759,7 +759,7 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe('GET /api/spots/:id/location', function() {
+        describe.skip('GET /api/spots/:id/location', function() {
             it('should return location for the spot', function(done) {
                 var spot = new Spot();
                 spot.location.coordinates = [12, 34];
@@ -775,7 +775,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/spots/:id/location', function() {
+        describe.skip('PUT /api/spots/:id/location', function() {
             it('should set coordinates', function(done) {
                 var coords = [12, 21];
                 var spot = new Spot();
@@ -795,7 +795,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('GET /api/spots/:id/bookings', function() {
+        describe.skip('GET /api/spots/:id/bookings', function() {
             it('should get bookings', function(done) {
                 var booking = new Booking();
                 var spot = new Spot({
@@ -813,7 +813,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/spots/:id/bookings', function() {
+        describe.skip('PUT /api/spots/:id/bookings', function() {
             it('should add bookings', function(done) {
                 var spot = new Spot();
                 spot.available.addRange(
@@ -841,7 +841,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/spots/:id/bookings/remove', function() {
+        describe.skip('PUT /api/spots/:id/bookings/remove', function() {
             it('should remove bookings', function(done) {
                 var booking = new Booking();
                 var spot = new Spot({
