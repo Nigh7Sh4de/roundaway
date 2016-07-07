@@ -63,23 +63,20 @@ controller.prototype = {
         
     },
     GetSpotForBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            var spotId = doc.getSpot();
-            if (!spotId)
-                return res.sendBad('Booking does not have a spot attached');
-            this.app.db.spots.findById(spotId, function(spotErr, spotDoc) {
-                if (spotErr)
-                    return res.sendBad(spotErr);
-                else if (!spotDoc)
-                    return res.sendBad('The spot associated with this booking does not exist');
-                else
-                    return res.sendGood('Found spot', spotDoc);
-            })
-        }.bind(this))
+        this.app.db.bookings.findById(req.params.id)
+        .populate('spot')
+        .exec()
+        .then(function(booking) {
+            if (!booking)
+                throw 'Could not find booking';
+            var spot = booking.getSpot();
+            if (!spot)
+                throw 'This booking does not have a spot associated with it';
+            res.sendGood('Found spot', spot.toJSON({getters: true}));
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        });
     },
     SetSpotForBooking: function(req, res) {
         var booking, spot;

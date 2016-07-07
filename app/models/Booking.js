@@ -8,7 +8,12 @@ var statusEnum = new Enum(['unpaid', 'paid', 'archived']);
 var bookingSchema = new Schema({
     spot: {
         type: Schema.Types.ObjectId,
-        ref: 'Spot'
+        ref: 'Spot',
+        set: function(data) {
+            if (typeof data === 'string')
+                data = new mongoose.Types.ObjectId(data);
+            return data;
+        }
     },
     status: {
         type: 'string',

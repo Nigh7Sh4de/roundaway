@@ -1,6 +1,7 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var expressExtensions = require('./../express');
+var mockPromise = require('./mockPromise');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
 var server = require('./../../server');
@@ -45,12 +46,12 @@ describe('Booking schema', function() {
         })
     })
     
-    describe.skip('getSpot', function() {
+    describe('getSpot', function() {
         it('should return spot id', function() {
             var b = new Booking();
-            var spotId = '1z2x3c4v';
-            b.spot = spotId;
-            expect(b.getSpot()).to.equal(spotId);
+            var spot = new Spot();
+            b.spot = spot._id;
+            expect(b.getSpot(), b.getSpot()).to.equal(spot._id);
         })
         
         it('should error if no spot id', function() {
@@ -60,7 +61,7 @@ describe('Booking schema', function() {
         })
     })
     
-    describe.skip('setSpot', function() {
+    describe('setSpot', function() {
         it('should set the price', function(done) {
             var b = new Booking();
             var price = 123.45;
@@ -85,7 +86,7 @@ describe('Booking schema', function() {
             expect(b.spot).to.not.be.ok;
             b.setSpot(s, function(err) {
                 expect(err, err).to.not.be.ok;
-                expect(b.spot).to.equal(s.id);
+                expect(b.spot).to.deep.equal(s._id);
                 done();
             })
         })
@@ -582,96 +583,92 @@ describe('bookingController', function() {
         })
     })
             
-    describe.skip('GetSpotForBooking', function() {
+    describe('GetSpotForBooking', function() {
         it('should return error if booking has no spot attached', function() {
             var booking = new Booking();
+            var mp = mockPromise(booking)
             app.db.bookings = {
-                findById: function(id, cb) {
-                    cb(null, booking);
-                }
+                findById: mp
             }
             app.bookingController.GetSpotForBooking(req, res);
-            expect(res.send.firstCall.args[0]).to.not.have.property('spot');
+            return Promise.all([mp]).then(function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+            })
         })
 
         it('should return the spot associated with the booking', function() {
             var spot = new Spot();
             var booking = new Booking();
-            booking.spot = spot.id;
+            booking.spot = spot;
+            var mp = mockPromise(booking);
             app.db.bookings = {
-                findById: function(id, cb) {
-                    expect(id).to.equal(booking.id);
-                    cb(null, booking);
-                }
+                findById: mp
             }
-            app.db.spots = {
-                findById: function(id, cb) {
-                    expect(id).to.equal(spot.id);
-                    cb(null, spot);
-                }
-            }
-            req.params.id = booking.id;
             app.bookingController.GetSpotForBooking(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(spot)).to.be.true;
+            return Promise.all([mp]).then(function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(spot.toJSON({getters: true}))).to.be.true;
+            });
         })
         
         it('should error if db encountered error', function() {
+            var mp = mockPromise(null, 'some error');
             app.db.bookings = {
-                findById: function(id, cb) {
-                    cb('some error', null);
-                }
+                findById: mp
             }
             app.bookingController.GetSpotForBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            return Promise.all([mp]).then(function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
         })
         
         it('should return error if booking found is null', function() {
+            var mp = mockPromise(null, null);
             app.db.bookings = {
-                findById: function(id, cb) {
-                    cb(null, null);
-                }
+                findById: mp
             }
             app.bookingController.GetSpotForBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            return Promise.all([mp]).then(function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
         })
         
         it('should error if db encountered error looking for spot', function() {
+            var bmp = mockPromise(new Booking());
+            var smp = mockPromise(null, 'some error');
             app.db.bookings = {
-                findById: function(id, cb) {
-                    cb(null, new Booking());
-                }
+                findById: bmp
             }
             app.db.spots = {
-                findById: function(id, cb) {
-                    cb('some error', null);
-                }
+                findById: smp
             }
             app.bookingController.GetSpotForBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            return Promise.all([bmp, smp]).then(function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
         })
         
         it('should return error if spot found is null', function() {
+            var bmp = mockPromise(new Booking());
+            var smp = mockPromise(null, null);
             app.db.bookings = {
-                findById: function(id, cb) {
-                    cb(null, new Booking());
-                }
+                findById: bmp
             }
             app.db.spots = {
-                findById: function(id, cb) {
-                    cb(null, null);
-                }
+                findById: smp
             }
             app.bookingController.GetSpotForBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            return Promise.all([bmp, smp]).then(function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+            })
         })
     })
     
