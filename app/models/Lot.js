@@ -17,6 +17,8 @@ var lotSchema = new Schema({
     // availableSpots: {
     //     type: [Number]
     // }
+}, {
+    timestamps: true
 });
 
 // lotSchema.statics.spotNumbersRange = {
