@@ -74,7 +74,7 @@ bookingSchema.methods.setSpot = function(spot, cb) {
         return cb('Cannot set spot for this booking because the spot provided is not a valid object');
     if (!spot.id)
         return cb('Cannot set spot for this booking because the spot provided does not have a valid id');
-    if (!spot.getPrice().perHour)
+    if (!spot.getPrice() || !spot.getPrice().perHour)
         return cb('Cannot set spot for this booking because the spot provided does not have a set price');
     this.spot = spot.id;
     var onehour = 1000*60*60;
