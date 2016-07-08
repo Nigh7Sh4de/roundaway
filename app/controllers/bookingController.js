@@ -79,40 +79,20 @@ controller.prototype = {
         });
     },
     SetSpotForBooking: function(req, res) {
-        var booking, spot;
-        var i = 0;
-        var total = 2;
-        var next = function(err) {
-                if (err) {
-                    res.sendBad(err);
-                done = function() {}
-                next = function() {}
-            }
-            if (++i >= total)
-                done();
-        }
-        var done = function() {
+        Promise.all([
+            this.app.db.bookings.findById(req.params.id).exec(),
+            this.app.db.spots.findById(req.body.id).exec()
+        ])
+        .then(function(results) {
+            var booking = results[0];
+            var spot = results[1];
             booking.setSpot(spot, function(err) {
-                if (err)
-                    return res.sendBad(err);    
-                res.sendGood();                
+                if (err) throw err;
+                res.sendGood('Set spot for booking', booking);
             });
-        }
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return next(err);
-            else if (!doc)
-                return next('Booking not found');
-            booking = doc;
-            next();
-        });
-        this.app.db.spots.findById(req.body.id, function(spotErr, spotDoc) {
-            if (spotErr)
-                return next(spotErr);
-            else if (!spotDoc)
-                return next('The spot you are trying to set does not exist');
-            spot = spotDoc;
-            next();
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         })
     },
     GetStartOfBooking: function(req, res) {
