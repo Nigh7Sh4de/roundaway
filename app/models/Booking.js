@@ -69,17 +69,22 @@ bookingSchema.methods.getStart = function() {
     return this.start;
 }
 
-bookingSchema.methods.setSpot = function(spot, cb) {
-    if (typeof spot !== 'object' || !spot)
-        return cb('Cannot set spot for this booking because the spot provided is not a valid object');
-    if (!spot.id)
-        return cb('Cannot set spot for this booking because the spot provided does not have a valid id');
-    if (!spot.getPrice() || !spot.getPrice().perHour)
-        return cb('Cannot set spot for this booking because the spot provided does not have a set price');
-    this.spot = spot.id;
-    var onehour = 1000*60*60;
-    this.price = spot.getPrice().perHour * this.getDuration() / onehour;
-    this.save(cb);
+bookingSchema.methods.setSpot = function(spot) {
+    return new Promise(function(resolve, reject) {
+        if (typeof spot !== 'object' || !spot)
+            return reject('Cannot set spot for this booking because the spot provided is not a valid object');
+        if (!spot.id)
+            return reject('Cannot set spot for this booking because the spot provided does not have a valid id');
+        if (!spot.getPrice() || !spot.getPrice().perHour)
+            return reject('Cannot set spot for this booking because the spot provided does not have a set price');
+        this.spot = spot.id;
+        var onehour = 1000*60*60;
+        this.price = spot.getPrice().perHour * this.getDuration() / onehour;
+        this.save(function(err, booking) {
+            if (err) return reject(err);
+            resolve(booking);
+        });
+    }.bind(this))
 }
 
 bookingSchema.methods.getSpot = function() {

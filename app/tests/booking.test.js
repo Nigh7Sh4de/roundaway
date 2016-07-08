@@ -62,7 +62,7 @@ describe('Booking schema', function() {
     })
     
     describe('setSpot', function() {
-        it('should set the price', function(done) {
+        it('should set the price', function() {
             var b = new Booking();
             var price = 123.45;
             var durationInHours = 2;
@@ -72,42 +72,38 @@ describe('Booking schema', function() {
             s.price.perHour = price;
             expect(b.spot).to.not.be.ok;
             expect(b.price).to.not.be.ok;
-            b.setSpot(s, function(err) {
-                expect(err, err).to.not.be.ok;
+            return b.setSpot(s).then(function(spot) {
                 expect(b.price).to.equal(price * durationInHours);
-                done();
-            });
+            })
         })
 
-        it('should accept spot objects', function(done) {
+        it('should accept spot objects', function() {
             var b = new Booking();
             var s = new Spot();
             s.price.perHour = 123.45;
             expect(b.spot).to.not.be.ok;
-            b.setSpot(s, function(err) {
-                expect(err, err).to.not.be.ok;
+            return b.setSpot(s).then(function() {
                 expect(b.spot).to.deep.equal(s._id);
-                done();
             })
         })
         
-        it('should error if invalid spot', function(done) {
+        it('should error if invalid spot', function() {
             var b = new Booking();
-            [
-                null,
+            return Promise.all([
+                {id:'123', getPrice: function() {
+                    return {perHour: 123}
+                }},
                 undefined,
                 123,
                 true,
                 '',
                 {},
                 {someBadProp: 'some unimportant value'}
-            ].forEach(function (input, i, arr) {
-                expect(b.setSpot(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(b.spot).to.not.be.ok;
-                    if (i + 1 >= arr.length)
-                        done();
-                }));
+            ].map(function (input) {
+                return b.setSpot(input);
+            }))
+            .catch(function(err) {
+                expect(b.spot).to.not.be.ok;
             })
         })
     })
