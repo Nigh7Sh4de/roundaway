@@ -31,11 +31,18 @@ var exts = {
 
     sendBad: function(errs, obj, opt) {
         opt = opt || {};
+        errs = (errs instanceof Array ? errs : [errs])
+            .map(function(err) {
+                if (typeof err === 'string')
+                    return err;
+                else if (err instanceof Error)
+                    return err.toString();
+                else return JSON.stringify(err);
+            });
         return this.status(opt.status || 500)
                 .send({
                     status: opt.status || 'ERROR',
-                    errors: errs instanceof Array ?
-                        errs : [errs],
+                    errors: errs, 
                     data: obj
                 });
     },
