@@ -605,7 +605,7 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe('GET /api/lots/:id/location', function() {
+        describe.skip('GET /api/lots/:id/location', function() {
             it('should return location for the lot', function(done) {
                 var lot = new Lot();
                 lot.location.coordinates = [12, 34];
@@ -621,7 +621,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/lots/:id/location', function() {
+        describe.skip('PUT /api/lots/:id/location', function() {
             it('should set coordinates', function(done) {
                 var coords = [12, 21];
                 var lot = new Lot();
