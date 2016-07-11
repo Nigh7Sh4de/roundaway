@@ -7,13 +7,13 @@ var stripe = function(stripe_key) {
 }
 
 stripe.prototype = {
-    charge: function(token, amount, cb) {
+    charge: function(token, amount) {
         amount = parseInt(amount * 100);
-        this.stripe.charges.create({
+        return this.stripe.charges.create({
             card: token,
             amount: amount,
             currency: 'cad'
-        }, cb);
+        });
     }
 }
 
