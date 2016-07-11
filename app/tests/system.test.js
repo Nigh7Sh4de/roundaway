@@ -313,7 +313,7 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe.skip('GET /api/bookings/:id/spot', function() {
+        describe('GET /api/bookings/:id/spot', function() {
             it('should return spot for the booking', function(done) {
                 var spot = new Spot();
                 var booking = new Booking({
@@ -331,7 +331,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe.skip('PUT /api/bookings/:id/spot', function(done) {
+        describe('PUT /api/bookings/:id/spot', function(done) {
             it('should set the spot for the booking', function(done) {
                 var spot = new Spot();
                 spot.price.perHour = 123.45;
@@ -345,7 +345,7 @@ _d('the entire app should not explode', function() {
                             expect(res.status).to.equal(200);
                             app.db.bookings.findById(booking.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
-                                expect(doc.spot).to.deep.equal(spot.id);
+                                expect(doc.spot.toString()).to.deep.equal(spot.id);
                                 done();
                             })
                         })

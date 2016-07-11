@@ -1,4 +1,5 @@
 var Booking = require('./../models/Booking');
+var ObjectId = require('mongoose').Types.ObjectId;
 
 var controller = function(app) {
     this.app = app;
@@ -21,45 +22,53 @@ var controller = function(app) {
 
 controller.prototype = {
     GetAllBookings: function(req, res) {
-        this.app.db.bookings.find({}, function(err, docs) {
-            if (err)
-                return res.sendBad(err);
-            else
-                return res.sendGood('Found bookings', docs.map(function(doc) { return doc.toJSON({getters: true}) }));
+        this.app.db.bookings.find({})
+        .exec()
+        .then(function(docs) {
+            res.sendGood('Found bookings', docs.map(function(doc) { 
+                return doc.toJSON({getters: true}) 
+            }));
+        })
+        .catch(function(err) {
+            res.sendBad(err)
         });
     },
     GetBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            else
-                return res.sendGood('Found booking', doc.toJSON({getters: true}));
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Could not find booking';
+            return res.sendGood('Found booking', booking.toJSON({getters: true}));
         })
+        .catch(function(err) {
+            res.sendBad(err);
+        });
     },
     CreateBooking: function(req, res) {
         var newBooking = new Booking(req.body.booking).toJSON();
         delete newBooking._id;
+        var insert;
         if (req.body.count) {
             if (typeof req.body.count !== 'number' || req.body.count <= 0)
                 return res.sendBad('Could not create booking because the specified count was invalid');
             var arr = [];
-            for (var i=0;i<req.body.count;i++)
-                arr.push(newBooking);
-            this.app.db.bookings.collection.insert(arr, function(err, result) {
-                if (err)
-                    return res.sendBad(err);
-                res.sendGood('Created new bookings', result);
-            })
+            for (var i=0;i<req.body.count;i++) {
+                var b = Object.assign({}, newBooking);
+                b._id = ObjectId();  
+                arr.push(b);
+            }
+            insert = this.app.db.bookings.collection.insert(arr)
         }
         else {
-            this.app.db.bookings.create(newBooking, function(err, result) {
-                if (err)
-                    return res.sendBad(err);
-                res.sendGood('Created new booking', result);
-            })    
+            insert = this.app.db.bookings.create(newBooking);
         }
+        insert
+        .then(function(results) {
+            res.sendGood('Created new bookings', results.ops || results);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
         
     },
     GetSpotForBooking: function(req, res) {
@@ -67,11 +76,9 @@ controller.prototype = {
         .populate('spot')
         .exec()
         .then(function(booking) {
-            if (!booking)
-                throw 'Could not find booking';
+            if (!booking) throw 'Could not find booking';
             var spot = booking.getSpot();
-            if (!spot)
-                throw 'This booking does not have a spot associated with it';
+            if (!spot) throw 'This booking does not have a spot associated with it';
             res.sendGood('Found spot', spot.toJSON({getters: true}));
         })
         .catch(function(err) {
@@ -86,164 +93,164 @@ controller.prototype = {
         .then(function(results) {
             var booking = results[0];
             var spot = results[1];
-            booking.setSpot(spot, function(err) {
-                if (err) throw err;
-                res.sendGood('Set spot for booking', booking);
-            });
+            if (!booking) throw 'Could not find booking';
+            if (!spot) throw 'Could not find spot';
+            return booking.setSpot(spot);
+        })
+        .then(function(b) {
+            res.sendGood('Set spot for booking', b);
         })
         .catch(function(err) {
             res.sendBad(err);
         })
     },
     GetStartOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            res.sendGood('Found start datetime', doc.getStart());
-        });
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            res.sendGood('Found start datetime', booking.getStart());
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
     },
     SetStartOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            doc.setStart(req.body.start, function(err) {
-                if (err)
-                    return res.sendBad(err);
-                res.sendGood();
-            })
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            return booking.setStart(req.body.start)
+        })
+        .then(function(booking) {
+            res.sendGood('Set start of booking', booking);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         });
     },
     GetDurationForBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            var dur = doc.getDuration();
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            var dur = booking.getDuration();
             if (!dur)
-                return res.sendBad('This booking does not have valid start and/or end dates. Start: ' + doc.getStart() + ', End: ' + doc.getEnd());
+                throw 'This booking does not have valid start and/or end dates. Start: ' + doc.getStart() + ', End: ' + doc.getEnd();
             res.sendGood('Found duration', dur);
         })
+        .catch(function(err) {
+            res.sendBad(err);
+        });
     },
     SetDurationForBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            doc.setDuration(req.body.duration, function(err) {
-                    if (err)
-                    return res.sendBad(err);
-                res.sendGood();
-            });
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            return booking.setDuration(req.body.duration);
         })
+        .then(function(booking) {
+            res.sendGood('Set duration of booking', booking);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        });
     },
     GetEndOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            res.sendGood('Found end datetime', doc.getEnd());
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            res.sendGood('Found end datetime', booking.getEnd());
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         });
     },
     SetEndOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            doc.setEnd(req.body.end, function(err) {
-                if (err)
-                    return res.sendBad(err);
-                res.sendGood();
-            })
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            return booking.setEnd(req.body.end);
+        })
+        .then(function(booking) {
+            res.sendGood('Set end of booking', booking);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         });
     },
     GetTimeOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            else {
-                res.sendGood('Found time of booking', {
-                    start: doc.getStart() || 'This booking does not have a start time',
-                    end: doc.getEnd() || 'This booking does not have a start time',
-                })
-            }
-        });
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            res.sendGood('Found time of booking', {
+                start: booking.getStart() || 'This booking does not have a start time',
+                end: booking.getEnd() || 'This booking does not have a start time',
+            })
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        });;
     },
     SetTimeOfBooking: function(req, res) {
         if (!req.body.start && !req.body.end)
             return res.sendBad('Could not set time of booking, you must specify start and/or end times');
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            else {
-                var errs = [];
-                var count = 0;
-                var next = function(err) {
-                    count++;
-                    if (err)
-                        errs.push(err);
-                    if (count >= 2)
-                        done();
-                }
-                var done = function() {
-                    if (errs.length == 0)
-                        res.sendGood();
-                    else
-                        res.sendBad(errs);
-                }
-                if (req.body.start)
-                    doc.setStart(req.body.start, next);
-                else count++;
-                if (req.body.end)
-                    doc.setEnd(req.body.end, next);
-                else count++;
-            }
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            return Promise.all([
+                booking.setStart(req.body.start),
+                booking.setEnd(req.body.end)
+            ])
+        })
+        .then(function(booking) {
+            res.sendGood('Set time of booking', booking);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         });
     },
     GetPriceOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            else if (!doc)
-                return res.sendBad('Booking not found');
-            var price = doc.getPrice();
-            if (!price)
-                return res.sendBad('Could not set price for this booking', doc);
-            else
-                return res.sendGood('Found price', price);
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            var price = booking.getPrice();
+            if (!price) throw 'Could not set price for this booking';
+            return res.sendGood('Found price', price);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         });
     },
     PayForBooking: function(req, res) {
-        var app = this.app;
-        app.db.bookings.findById(req.params.id, function(err, booking) {
-            if (err)
-                return res.sendBad(err);
-            if (!booking)
-                return res.sendBad('Booking not found');
-            if (!req.body.token)
-                return res.sendBad('Could not create a charge because no source token was provided');
+        if (!req.body.token)
+            return res.sendBad('Could not create a charge because no source token was provided');
+        var _booking;
+        var _charge;
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            _booking = booking;
             if (!booking.getPrice())
-                return res.sendBad('Could not create a charge because this booking does not have a price set');
-            app.stripe.charge(req.body.token, booking.getPrice(), function(err, charge) {
-                if (err)
-                    return res.sendBad(err);
-                booking.pay(function(err) {
-                    if (err)
-                        return res.sendBad(err);
-                    res.sendGood('Charge successful', charge);
-                });
-            });
+                throw 'Could not create a charge because this booking does not have a price set';
+            return app.stripe.charge(req.body.token, booking.getPrice())
+        })
+        .then(function(charge) {
+            _charge = charge;
+            return _booking.pay()
+        })
+        .then(function(booking) {
+            res.sendGood('Charge successful', _charge);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         });
     }
 }
