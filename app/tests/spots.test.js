@@ -1,4 +1,5 @@
 var expect = require('chai').expect;
+var ObjectId = require('mongoose').Types.ObjectId;
 var sinon = require('sinon');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
@@ -8,7 +9,7 @@ var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
 var Booking = require('./../models/Booking');
 
-describe('Spot schema', function() {
+describe.only('Spot schema', function() {
     before(function() {
         sinon.stub(Spot.prototype, 'save', function(cb) { cb() });
     })
@@ -21,12 +22,12 @@ describe('Spot schema', function() {
         it('should return the address of the spot', function() {
             var s = new Spot();
             var address = '123 some st'; 
-            s.address = address;
+            s.location.address = address;
             expect(s.getAddress()).to.deep.equal(address);
         });
     })
     
-    describe.skip('getLocation', function() {
+    describe('getLocation', function() {
         it('should return an array with the lat and long', function() {
             var s = new Spot();
             var coords = [123,456];
@@ -46,69 +47,72 @@ describe('Spot schema', function() {
         })
     })
     
-    describe.skip('setLocation', function() {
-        it('should fail if no address is specified', function(done) {
+    describe('setLocation', function() {
+        it('should fail if no address is specified', function() {
             var s = new Spot();
             var coords = [123, 456];
             var address = '';
-            expect(s.address).to.not.be.ok;
-            s.setLocation(coords, address, function(err) {
-                expect(err).to.be.ok;
-                expect(s.address).to.not.be.ok;
+            expect(s.location.address).to.not.be.ok;
+            return s.setLocation(coords, address)
+            .then(function(location) {
+                expect.fail();
+            })
+            .catch(function(err) {
                 expect(s.location.address).to.not.be.ok;
-                done();
             })
         })
 
-        it('should set the address', function(done) {
+        it('should set the address', function() {
             var s = new Spot();
             var coords = [123, 456];
             var address = 'some address';
-            expect(s.address).to.not.be.ok;
-            s.setLocation(coords, address, function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.address).to.deep.equal(address);
-                done();
+            expect(s.location.address).to.not.be.ok;
+            return s.setLocation(coords, address)
+            .then(function(location) {
+                expect(s.location.address).to.deep.equal(address);
             })
         })
 
-        it('should set the location given an array', function(done) {
+        it('should set the location given an array', function() {
             var s = new Spot();
             var coords = [123, 456];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, 'some address', function(err) {
-                expect(err).to.not.be.ok;
+            return s.setLocation(coords, 'some address')
+            .then(function(location) {
                 expect(s.location.coordinates).to.include.all.members(coords);
-                done();
             })
         })
         
-        it('should fail given a small array', function(done) {
+        it('should fail given a small array', function() {
             var s = new Spot();
             var coords = [123];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, 'some address', function(err) {
-                expect(err).to.be.ok;
-                expect(s.location.coordinates).to.not.be.ok;
-                done();
+            return s.setLocation(coords, 'some address')
+            .then(function(location) {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(s.location.address).to.not.be.ok;
             })
         })
         
-        it('should fail given a large array', function(done) {
+        it('should fail given a large array', function() {
             var s = new Spot();
             var coords = [123,456,789];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, 'some address', function(err) {
-                expect(err).to.be.ok;
-                expect(s.location.coordinates).to.not.be.ok;
-                done();
+            return s.setLocation(coords, 'some address')
+            .then(function(location) {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(s.location.address).to.not.be.ok;
             })
         })
         
-        it('should fail if array does not contain numbers', function(done) {
+        it('should fail if array does not contain numbers', function() {
             var s = new Spot();
             expect(s.location.coordinates).to.not.be.ok;
-            [
+            return Promise.all([
                 null,
                 undefined,
                 function(){expect.fail()},
@@ -117,33 +121,30 @@ describe('Spot schema', function() {
                 {id:null},
                 {id:function(){expect.fail()}},
                 ''
-            ].forEach(function(input, i, arr) {
-                s.setLocation([input,input], 'some addres', function(err) {
-                    expect(err).to.be.ok;
-                    expect(s.location.coordinates).to.not.be.ok;
-                    if (i+1 >= arr.length)
-                        done();
-                })
+            ].map(function(input) {
+                return s.setLocation([input,input], 'some addres')
+            }))
+            .then(function(location) {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(s.location.coordinates).to.not.be.ok;
             })
         })
         
-        it('should parse strings into numbers for arrays', function(done) {
+        it('should parse strings into numbers for arrays', function() {
             var s = new Spot();
             var coords_g = '123';
             var coords_t = '456';
             var coords = [coords_g, coords_t];
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, 'some address', function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.location.coordinates).to.include.all.members([
-                    parseFloat(coords_g),
-                    parseFloat(coords_t)
-                ]);
-                done();
+            return s.setLocation(coords, 'some address')
+            .then(function(location) {
+                expect(s.location.coordinates).to.include.all.members(coords);
             })
         })
         
-        it('should set the location given an object', function(done) {
+        it('should set the location given an object', function() {
             var s = new Spot();
             var coords_g = 123;
             var coords_t = 456;
@@ -152,17 +153,16 @@ describe('Spot schema', function() {
                 lat: coords_t
             };
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, 'some address', function(err) {
-                expect(err).to.not.be.ok;
+            return s.setLocation(coords, 'some address')
+            .then(function(location) {
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
-                done();
             })
         })
         
-        it('should fail if not given good input', function(done) {
+        it('should fail if not given good input', function() {
             var s = new Spot();
             expect(s.location.coordinates).to.not.be.ok;
-            [
+            return Promise.all([
                 null,
                 undefined,
                 '123',
@@ -171,20 +171,21 @@ describe('Spot schema', function() {
                 {id:123},
                 {id:null},
                 {id:function(){expect.fail()}}
-            ].forEach(function(input, i, arr) {
-                s.setLocation(input, 'some addres', function(err) {
-                    expect(err).to.be.ok;
-                    expect(s.location.coordinates).to.not.be.ok;
-                    if (i+1 >= arr.length)
-                        done();
-                })
+            ].map(function(input) {
+                return s.setLocation(input, 'some addres')
+            }))
+            .then(function(location) {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(s.location.address).to.not.be.ok;
             })
         })
         
-        it('should fail if object does not have long lat props', function(done) {
+        it('should fail if object does not have long lat props', function() {
             var s = new Spot();
             expect(s.location.coordinates).to.not.be.ok;
-            [
+            return Promise.all([
                 null,
                 undefined,
                 function(){expect.fail()},
@@ -193,17 +194,18 @@ describe('Spot schema', function() {
                 {id:null},
                 {id:function(){expect.fail()}},
                 ''
-            ].forEach(function(input, i, arr) {
-                s.setLocation({long:input,lat:input}, 'some addres', function(err) {
-                    expect(err).to.be.ok;
-                    expect(s.location.coordinates).to.not.be.ok;
-                    if (i+1 >= arr.length)
-                        done();
-                })
+            ].map(function(input) {
+                return s.setLocation({long:input,lat:input}, 'some addres')
+            }))
+            .then(function(location) {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(s.location.address).to.not.be.ok;
             })
         })
         
-        it('should accept lon as long prop', function(done) {
+        it('should accept lon as long prop', function() {
             var s = new Spot();
             var coords_g = 123;
             var coords_t = 456;
@@ -212,14 +214,13 @@ describe('Spot schema', function() {
                 lat: coords_t
             };
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, 'some address', function(err) {
-                expect(err).to.not.be.ok;
+            return s.setLocation(coords, 'some address')
+            .then(function(location) {
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
-                done();
             })
         })
         
-        it('should parse strings into numbers for objects', function(done) {
+        it('should parse strings into numbers for objects', function() {
             var s = new Spot();
             var coords_g = '123';
             var coords_t = '456';
@@ -228,425 +229,130 @@ describe('Spot schema', function() {
                 lat: coords_t
             };
             expect(s.location.coordinates).to.not.be.ok;
-            s.setLocation(coords, 'some address', function(err) {
-                expect(err).to.not.be.ok;
+            return s.setLocation(coords, 'some address')
+            .then(function(location) {
                 expect(s.location.coordinates).to.include.all.members([coords_g,coords_t]);
-                done();
             })
         })
     })
     
-    // describe('getBookings', function() {
-    //     it('should return the bookings attached to the spot', function() {
-    //         var s = new Spot();
-    //         var bookings = ['123','456']; 
-    //         s.bookings = bookings;
-    //         expect(s.getBookings()).to.deep.include.all.members(bookings);
-    //     });
-        
-    //     it('should return an empty array if no bookings are added', function() {
-    //         var s = new Spot();
-    //         var bookings = s.getBookings();
-    //         expect(bookings).to.be.an.instanceOf(Array);
-    //         expect(bookings).to.have.length(0);
-    //     })
-    // })
-    
-    // describe('addBookings', function() {
-    //     it('should fail if range is already booked', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         b.start = new Date('2016/01/01');
-    //         b.end = new Date('2016/01/04');
-    //         var busy = new Date('2016/01/02');
-    //         s.booked.addRange(b.start, busy);
-    //         s.addBookings(b, function(err) {
-    //             expect(err).to.be.ok;
-    //             expect(s.booked.checkRange(b.start, busy)).to.be.true;
-    //             expect(s.booked.checkRange(busy, b.end)).to.be.false;
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should remove availability', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         var oneday = 1000*60*60*24;
-    //         b.start = new Date('2016/01/02');
-    //         b.end = new Date('2016/01/04');
-    //         var pre = new Date(b.start.valueOf() - oneday),
-    //             post = new Date(b.end.valueOf() + oneday);
-    //         s.available.addRange(pre, post);
-    //         s.addBookings(b, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.available.checkRange(pre, b.start)).to.be.true;
-    //             expect(s.available.checkRange(pre, post)).to.be.false;
-    //             expect(s.available.checkRange(b.end, post)).to.be.true;
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should update booking schedule', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         b.start = new Date('2016/01/01');
-    //         b.end = new Date();
-    //         s.available.addRange(b.start, b.end);
-    //         s.addBookings(b, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.booked.checkRange(b.start, b.end)).to.be.true;
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should fail to add a booking that is already in the spot', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         b.start = b.end = new Date();
-    //         s.bookings.push(b.id);
-    //         s.addBookings(b, function(err) {
-    //             expect(err).to.be.ok;
-    //             expect(s.bookings).to.have.length(1);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should fail if booking does not have a start time set', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         b.end = new Date();
-    //         s.addBookings(b, function(err) {
-    //             expect(err).to.be.ok;
-    //             expect(s.bookings).to.have.length(0);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should add a list of bookings to the array', function(done) {
-    //         var s = new Spot();
-    //         var bs = [new Booking(), new Booking(), new Booking()];
-    //         bs.forEach(function(b) {
-    //             b.start = b.end = new Date();
-    //         })
-    //         s.available.addRange(new Date(0), new Date());
-    //         expect(s.bookings).to.have.length(0);
-    //         s.addBookings(bs, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.bookings).to.have.length(bs.length);
-    //             expect(s.bookings).to.include.all.members(bs.map(function(b) {
-    //                 return b.id;
-    //             }));
-    //             done();
-    //         })
-            
-    //     })
-        
-    //     it('should add a single booking to the array', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         b.start = b.end = new Date();
-    //         s.available.addRange(new Date(0), new Date());
-    //         expect(s.bookings).to.have.length(0);
-    //         s.addBookings(b, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.bookings).to.have.length(1);
-    //             expect(s.bookings).to.include(b.id);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should fail if given bad input', function(done) {
-    //         var s = new Spot();
-    //         expect(s.bookings).to.have.length(0);
-    //         [
-    //             null,
-    //             undefined,
-    //             123,
-    //             'abc',
-    //             function(){expect.fail()},
-    //         ].forEach(function(input, i, arr) {
-    //             s.addBookings(input, function(err) {
-    //                 expect(err, JSON.stringify(input)).to.be.ok;
-    //                 expect(s.bookings).to.have.length(0);
-    //                 if (i+1 >= arr.length)
-    //                     done();
-    //             })
-    //         })
-            
-    //     })
-    // })
-    
-    // describe('removeBookings', function() {
-    //     it('should clear booked time for spot', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         b.start = new Date('2016/01/01');
-    //         b.end = new Date();
-    //         s.booked.addRange(b.start, b.end);
-    //         s.bookings.push(b.id);
-    //         s.removeBookings(b, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.bookings).to.not.include(b.id);
-    //             expect(s.booked.checkRange(b.start, b.end)).to.be.false;
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should return availability for spot', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         b.start = new Date('2016/01/01');
-    //         b.end = new Date();
-    //         s.booked.addRange(b.start, b.end);
-    //         s.bookings.push(b.id);
-    //         s.removeBookings(b, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.bookings).to.not.include(b.id);
-    //             expect(s.available.checkRange(b.start, b.end)).to.be.true;
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should error if trying to remove a booking that is not in the spot', function(done) {
-    //         var s = new Spot();
-    //         s.removeBookings(new Booking(), function(err, success) {
-    //             expect(err).to.be.ok;
-    //             expect(err).to.have.length(1);
-    //             expect(success).to.have.length(0);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should return a success id array', function(done) {
-    //         var s = new Spot();
-    //         var booking = new Booking();
-    //         s.bookings.push(booking.id);
-    //         s.removeBookings(booking, function(err, success) {
-    //             expect(s.bookings).to.have.length(0);
-    //             expect(success).to.have.length(1);
-    //             expect(success).deep.include(booking.id);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should remove the given booking', function(done) {
-    //         var s = new Spot();
-    //         var booking = new Booking();
-    //         s.bookings.push(booking.id);
-    //         s.removeBookings(booking, function(err) {
-    //             expect(s.bookings).to.have.length(0);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should remove an array of bookings', function(done) {
-    //         var s = new Spot();
-    //         var bookings = [new Booking(), new Booking(), new Booking()]
-    //         bookings.forEach(function(booking, i) {
-    //             s.bookings.push(booking.id);
-    //         })
-    //         s.removeBookings(bookings, function(err) {
-    //             expect(s.bookings).to.have.length(0);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should error on bad type for each booking', function(done) {
-    //         var s = new Spot();
-    //         var b = new Booking();
-    //         s.bookings.push(b.id);
-    //         expect(s.bookings).to.have.length(1);
-    //         expect(s.bookings).to.deep.include(b.id);
-    //         [
-    //             null, 
-    //             undefined,
-    //             123,
-    //             'abc',
-    //             function(){expect.fail()}
-    //         ].forEach(function(input, i, arr) {
-    //             s.removeBookings(input, function(err) {
-    //                 expect(err, 'error').to.be.an.instanceOf(Array);
-    //                 expect(err, 'error').to.have.length(1);
-    //                 expect(s.bookings, 'bookings').to.have.length(1);
-    //                 expect(s.bookings, 'bookings').to.deep.include(b.id);
-    //                 if (i + 1 >= arr.length)
-    //                     done();
-    //             })
-    //         })
-    //     })
-    // })
-    
-    describe.skip('setLot', function() {
-        it('should error if invalid lot id', function(done) {
+    describe('setLot', function() {
+        it('should error if invalid lot id', function() {
             var s = new Spot();
-            [
+            return Promise.all([
                 null,
                 undefined,
                 123,
                 true
-            ].forEach(function (input, i, arr) {
-                expect(s.setLot(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(s.lot).to.not.be.ok;
-                    if (i + 1 >= arr.length)
-                        done();
-                }));
+            ].map(function (input) {
+                return s.setLot(input);
+            }))
+            .then(function(spot) {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(s.lot).to.not.be.ok;
             })
         })
         
-        it('should set the lot id in the spot', function(done) {
+        it('should set the lot id in the spot', function() {
             var s = new Spot();
-            var id = '1z2x3c4v';
-            s.setLot(id, function(err) {
-                expect(err).to.not.be.ok;
+            var id = ObjectId();
+            return s.setLot(id).then(function(spot) {
                 expect(s.lot).to.equal(id);
-                done();
             })
         });
         
-        it('should set the id of the given lot in the spot', function(done) {
+        it('should set the id of the given lot in the spot', function() {
             var s = new Spot();
             var l = new Lot();
-            s.setLot(l, function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.lot).to.equal(l.id);
-                done();
+            return s.setLot(l).then(function(spot) {
+                expect(s.lot).to.deep.equal(l._id);
             })
         });
     })
 
-    describe.skip('setDescription', function() {
-
+    describe('setDescription', function() {
+        it('should set the description', function() {
+            var s = new Spot();
+            var d = 'some description';
+            return s.setDescription(d).then(function(spot) {
+                expect(s.description).to.deep.equal(d);
+            })
+        })
     })
     
-    // describe('setNumber', function() {
-    //     it('should fail if number is invalid', function(done) {
-    //         var s = new Spot();
-    //         [
-    //             null,
-    //             undefined,
-    //             'abc',
-    //             true
-    //         ].forEach(function (input, i, arr) {
-    //             expect(s.setNumber(input, function(err) {
-    //                 expect(err).to.be.ok;
-    //                 expect(s.number).to.not.be.ok;
-    //                 if (i + 1 >= arr.length)
-    //                     done();
-    //             }));
-    //         })
-    //     })
-    //     it('should set the lot number in the spot', function(done) {
-    //         var s = new Spot();
-    //         var n = 123;
-    //         s.setNumber(n, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.number).to.equal(n);
-    //             done();
-    //         })
-    //     })
-    // })
-    
-    // describe('setLotAndNumber', function() {
-    //     it('should set the lot id and number', function(done) {
-    //         var s = new Spot();
-    //         var l = new Lot();
-    //         var n = 123;
-    //         s.setLotAndNumber(l, n, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.lot).to.equal(l.id);
-    //             expect(s.number).to.equal(n);
-    //             done();
-    //         })
-    //     })
-    // })
-    
-    describe.skip('getLot', function() {
+    describe('getLot', function() {
         it('should return the lot id', function() {
             var s = new Spot();
-            var id = '1z2x3c4v5b';
+            var id = ObjectId();
             s.lot = id;
             expect(s.getLot()).to.equal(id);
         })
     })
 
-    describe.skip('getDescription', function() {
-
-    })
-    
-    // describe('getNumber', function() {
-    //     it('should return the spot\'s lot number', function() {
-    //         var s = new Spot();
-    //         var num = 123;
-    //         s.number = num;
-    //         expect(s.getNumber()).to.equal(num);
-    //     })
-    // })
-    
-    describe('removeLot', function() {
-        it('should remove lot', function(done) {
+    describe('getDescription', function() {
+        it('should return the description', function() {
             var s = new Spot();
-            s.lot = '1z2x3c4v';
-            s.removeLot(function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.lot).to.not.be.ok;
-                done();
-            })    
+            var d = 'some description';
+            s.description = d;
+            expect(s.getDescription()).to.deep.equal(d);
         })
     })
     
-    // describe('removeNumber', function() {
-    //     it('should remove number', function(done) {
-    //         var s = new Spot();
-    //         s.number = 123;
-    //         s.removeNumber(function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(s.number).to.not.be.ok;
-    //             done();
-    //         })
-    //     });
-    // })
+    describe('removeLot', function() {
+        it('should remove the lot', function() {
+            var s = new Spot();
+            s.lot = 'some lot';
+            return s.removeLot().then(function(spot) {
+                expect(s.lot).not.be.ok;
+            })
+        })
+    })
 
-    describe.skip('removeDescription', function() {
-
+    describe('removeDescription', function() {
+        it('should remove the description', function() {
+            var s = new Spot();
+            s.description = 'some description';
+            return s.removeDescription().then(function(spot) {
+                expect(s.description).not.be.ok;
+            })
+        })
     })
     
     describe('addAvailability', function() {
-        it('should be able to parse string', function(done) {
+        it('should be able to parse string', function() {
             var start = '2010/01/01';
             var end = '2016/01/01';
             var s = new Spot();
-            s.addAvailability({start: start, end: end}, function(err) {
-                expect(err).to.not.be.ok;
+            return s.addAvailability({start: start, end: end})
+            .then(function(spot) {
                 expect(s.available.check(new Date(start))).to.be.true;
                 expect(s.available.check(new Date(end))).to.be.false;
-                done();
             })
         })
         
         describe('should add the given recuring range to the availability', function() {
-            it('given an rep count', function(done) {
+            it('given an rep count', function() {
                 var s = new Spot();
                 s.save = function(cb){cb(null)}
                 var start = new Date('2016/01/01');
                 var end = new Date('2016/01/02');
                 var count = 3;
                 var oneday = 1000*60*60*24;
-                s.addAvailability({
+                return s.addAvailability({
                     start: start,
                     end: end,
                     interval: 2 * oneday,
                     count: count
-                }, function(err) {
-                    expect(err).to.not.be.ok;
+                }).then(function(spot) {
                     expect(s.available.ranges).to.have.length(count);
                     for (var i=0; i < count*2; i += 2)
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
-                    done();
-                })
+                });
             })
             
-            it('given a limit', function(done) {
+            it('given a limit', function() {
                 var s = new Spot();
                 s.save = function(cb){cb(null)}
                 var start = new Date('2016/01/01');
@@ -654,25 +360,23 @@ describe('Spot schema', function() {
                 var finish = new Date('2016/01/07');
                 var oneday = 1000*60*60*24;
                 var count = 3;
-                s.addAvailability({
+                return s.addAvailability({
                     start: start,
                     end: end,
                     interval: 2 * oneday,
                     finish: finish    
-                }, function(err) {
-                    expect(err).to.not.be.ok;
+                }).then(function(spot) {
                     expect(s.available.ranges).to.have.length(count);
                     for (var i=0; i < count*2; i += 2)
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
-                    done();
                 })
             })
             
         })
         
-        it('should fail if given bad input', function(done) {
+        it('should fail if given bad input', function() {
             var s = new Spot();
-            [
+            return Promise.all([
                 123,
                 'abc',
                 function(){expect.fail()},
@@ -681,49 +385,47 @@ describe('Spot schema', function() {
                 {},
                 {start: 456},
                 {start: function(){expect.fail()}, end: function(){expect.fail()}}
-            ].forEach(function(input, i, arr) {
-                s.addAvailability(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(s.available.ranges).to.have.length(0);
-                    if (i+1 >= arr.length)
-                        done();
-                })
+            ].map(function(input) {
+                return s.addAvailability(input);
+            })).then(function() {
+                expect.fail();
+            }).catch(function(err) {
+                expect(err).to.be.ok;
+                expect(s.available.ranges).to.have.length(0);
             })
         })
         
-        it('should add the given time range object to the available array', function(done) {
+        it('should add the given time range object to the available array', function() {
             var s = new Spot();
             var start = new Date('2016/01/01');
             var end = new Date('2016/02/01');
             expect(s.available.check(new Date('2015/01/15'))).to.be.false;
             expect(s.available.check(new Date('2016/01/15'))).to.be.false;
             expect(s.available.check(new Date('2017/01/15'))).to.be.false;
-            s.addAvailability({start: start, end: end}, function(err) {
-                expect(err).to.not.be.ok;
+            return s.addAvailability({start: start, end: end})
+            .then(function(spot) {
                 expect(s.available.check(new Date('2015/01/15'))).to.be.false;
                 expect(s.available.check(new Date('2016/01/15'))).to.be.true;
                 expect(s.available.check(new Date('2017/01/15'))).to.be.false;
-                done();
             })
         })
     })
     
     describe('removeAvailability', function() {
-        it('should be able to parse string', function(done) {
+        it('should be able to parse string', function() {
             var start = '2010/01/01';
             var end = '2016/01/01';
             var s = new Spot();
             s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
-            s.removeAvailability({start: start, end: end}, function(err) {
-                expect(err).to.not.be.ok;
+            return s.removeAvailability({start: start, end: end})
+            .then(function(spot) {
                 expect(s.available.check(new Date(start))).to.be.false;
                 expect(s.available.check(new Date(end))).to.be.true;
-                done();
             })
         })
         
         describe('should remove the given recuring range from the availability', function() {
-            it('given an rep count', function(done) {
+            it('given an rep count', function() {
                 var s = new Spot();
                 s.save = function(cb){cb(null)}
                 s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
@@ -731,23 +433,21 @@ describe('Spot schema', function() {
                 var end = new Date('2016/01/02');
                 var count = 3;
                 var oneday = 1000*60*60*24;
-                s.removeAvailability({
+                return s.removeAvailability({
                     start: start,
                     end: end,
                     interval: 2 * oneday,
                     count: count
-                }, function(err) {
-                    expect(err).to.not.be.ok;
+                }).then(function(spot) {
                     expect(s.available.ranges).to.have.length(count + 1);
                     for (var i=1; i < count*2; i += 2) {
                         expect(s.available.check(new Date('2016/01/' + (i)))).to.be.false;
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
                     }
-                    done();
                 })
             })
             
-            it('given a limit', function(done) {
+            it('given a limit', function() {
                 var s = new Spot();
                 s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
                 var start = new Date('2016/01/01');
@@ -755,27 +455,25 @@ describe('Spot schema', function() {
                 var finish = new Date('2016/01/07');
                 var oneday = 1000*60*60*24;
                 var count = 3;
-                s.removeAvailability({
+                return s.removeAvailability({
                     start: start,
                     end: end,
                     interval: 2 * oneday,
                     finish: finish    
-                }, function(err) {
-                    expect(err).to.not.be.ok;
+                }).then(function(spot) {
                     expect(s.available.ranges).to.have.length(count + 1);
                     for (var i=1; i < count*2; i += 2) {
                         expect(s.available.check(new Date('2016/01/' + (i)))).to.be.false;
                         expect(s.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
                     }
-                    done();
                 })
             })
             
         })
         
-        it('should fail if given bad input', function(done) {
+        it('should fail if given bad input', function() {
             var s = new Spot();
-            [
+            return Promise.all([
                 123,
                 'abc',
                 function(){expect.fail()},
@@ -784,17 +482,16 @@ describe('Spot schema', function() {
                 {},
                 {start: 456},
                 {start: function(){expect.fail()}, end: function(){expect.fail()}}
-            ].forEach(function(input, i, arr) {
-                s.removeAvailability(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(s.available.ranges).to.have.length(0);
-                    if (i+1 >= arr.length)
-                        done();
-                })
+            ].map(function(input) {
+                s.removeAvailability(input);
+            })).then(function(spot) {
+                expect.fail()
+            }).catch(function(err) {
+                expect(s.available.ranges).to.have.length(0);
             })
         })
         
-        it('should remove the given time range object from the available array', function(done) {
+        it('should remove the given time range object from the available array', function() {
             var s = new Spot();
             s.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
             var start = new Date('2016/01/01');
@@ -802,12 +499,11 @@ describe('Spot schema', function() {
                 expect(s.available.check(new Date('2015/01/15'))).to.be.true;
                 expect(s.available.check(new Date('2016/01/15'))).to.be.true;
                 expect(s.available.check(new Date('2017/01/15'))).to.be.true;
-            s.removeAvailability({start: start, end: end}, function(err) {
-                expect(err).to.not.be.ok;
+            return s.removeAvailability({start: start, end: end})
+            .then(function(spot) {
                 expect(s.available.check(new Date('2015/01/15'))).to.be.true;
                 expect(s.available.check(new Date('2016/01/15'))).to.be.false;
                 expect(s.available.check(new Date('2017/01/15'))).to.be.true;
-                done();
             })
         })
     })
@@ -830,16 +526,15 @@ describe('Spot schema', function() {
     })
 
     describe('setPrice', function() {
-        it('should set the price', function(done) {
+        it('should set the price', function() {
             var pricePerHour = 123.45;
             var s = new Spot();
-            s.setPrice({
+            return s.setPrice({
                 perHour: pricePerHour
-            }, function(err) {
-                expect(err).to.not.be.ok;
-                expect(s.price.perHour).to.equal(pricePerHour);
-                done();
             })
+            .then(function() {
+                expect(s.price.perHour).to.equal(pricePerHour);
+            });
         })
     })
 })

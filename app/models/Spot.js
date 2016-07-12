@@ -1,7 +1,9 @@
 var ranger = require('rangerjs');
 var mongoose = require('mongoose');
+var ObjectId = mongoose.Types.ObjectId;
 var Schema = mongoose.Schema;
 var Price = require('./Price');
+var Location = require('./Location');
 var Range = require('./Range');
 
 var spotSchema = new Schema({
@@ -13,13 +15,7 @@ var spotSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Lot'
     },
-    address: String,
-    location: {
-        coordinates: {
-            type: [Number],
-            index: '2dsphere'
-        }
-    },
+    location: Location,
     price: {
         perHour: Price
     },
@@ -51,236 +47,183 @@ spotSchema.methods.getPrice = function() {
     return price;
 }
 
-spotSchema.methods.setPrice = function(price, cb) {
-    if (typeof price !== 'object' || !price)
-        return cb('Could not set price because this price object is invalid')
-    for (var type in price) {
-        var p = parseFloat(price[type]);
-        if (isNaN(p))
-            cb('Cannot set price as the supplied price is not a valid number: ' + p);
-        else
-            this.price[type] = p;
-    }
-    this.save(cb);
-}
-
-spotSchema.methods.setPricePerHour = function(price, cb) {
-    price = parseFloat(price);
-    if (isNaN(price))
-        return cb('Cannot set price as the supplied price is not a valid number: ' + price);
-    this.price.perHour = price;
-    this.save(cb);
+spotSchema.methods.setPrice = function(price) {
+    return new Promise(function(resolve, reject) {
+        if (typeof price !== 'object' || !price)
+            return reject('Could not set price because this price object is invalid')
+        for (var type in price) {
+            var p = parseFloat(price[type]);
+            if (isNaN(p))
+                return reject('Cannot set price as the supplied price is not a valid number: ' + p);
+            else
+                this.price[type] = p;
+        }
+        this.save(function(err, spot) {
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this));
 }
 
 spotSchema.methods.getAddress = function() {
-    return this.address;
+    return this.location.address || null;
 }
 
 spotSchema.methods.getLocation = function() {
+    if (!this.location || !this.location.coordinates)
+        return null;
     return Object.assign([], this.location.coordinates, {
         long: this.location.coordinates[0],
         lat: this.location.coordinates[1]
     });
 }
 
-spotSchema.methods.setLocation = function(location, address, cb) {
-    if (typeof address !== 'string' || address == '')
-        return cb('Cannot set address. Provided address is invlaid.');
-    if (location instanceof Array) {
-        if (location.length != 2)
-            return cb('Cannot set location. Specified coordinates are invalid.');
-        var long = parseFloat(location[0]);            
-        var lat = parseFloat(location[1]);            
-        if (isNaN(long) ||
-            isNaN(lat))
-            return cb('Cannot set location. Specified coordinates are invalid.');
-        location = [long, lat];
-    }
-    else {
-        if (typeof location !== 'object' || location == null)
-            return cb('Cannot set location. Specified coordinates are invalid.');
-        location.long = parseFloat(location.long);
-        location.lon = parseFloat(location.lon);
-        location.lat = parseFloat(location.lat);
-        if (isNaN(location.long))
-            location.long = location.lon;
-        if (isNaN(location.long) ||
-            isNaN(location.lat))
-            return cb('Cannot set location. Specified coordinates are invalid.');
-        location = [location.long, location.lat];
-    }
-    this.location.coordinates = location;
-    this.address = address;
-    this.save(cb);
+spotSchema.methods.setLocation = function(coords, address) {
+    return new Promise(function(resolve, reject) {
+        if (typeof address !== 'string' || address == '')
+            return reject('Cannot set address. Provided address is invlaid.');
+        if (coords instanceof Array) {
+            if (coords.length != 2)
+                return reject('Cannot set location because the specified coordinates are invalid.');
+            var long = parseFloat(coords[0]);            
+            var lat = parseFloat(coords[1]);            
+            if (isNaN(long) ||
+                isNaN(lat))
+                return reject('Cannot set location because the specified coordinates are invalid.');
+            coords = [long, lat];
+        }
+        else {
+            if (typeof coords !== 'object' || coords == null)
+                return reject('Cannot set location because the specified coordinates are invalid.');
+            coords.long = parseFloat(coords.long);
+            coords.lon = parseFloat(coords.lon);
+            coords.lat = parseFloat(coords.lat);
+            if (isNaN(coords.long))
+                coords.long = coords.lon;
+            if (isNaN(coords.long) ||
+                isNaN(coords.lat))
+                return reject('Cannot set location because the specified coordinates are invalid.');
+            coords = [coords.long, coords.lat];
+        }
+        this.location = {
+            coordinates: coords,
+            address: address
+        }
+        this.save(function(err, spot) {
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this))
 }
-
-// spotSchema.methods.getBookings = function() {
-//     return this.bookings;
-// }
-
-// spotSchema.methods.addBookings = function(bookings, cb) {
-//     if (!(bookings instanceof Array))
-//         bookings = [bookings];
-//     var errs = [];
-//     bookings.forEach(function(booking) {
-//         if (booking == null)
-//             return errs.push('Cannot add empty object as booking.');
-//         if (booking.id == null)
-//             return errs.push('Booking must have an id.');
-//         if (booking.getStart() ==  null || 
-//             booking.getEnd() == null)
-//             return errs.push('Booking must have a start and end time set.');
-//         if (this.bookings.indexOf(booking.id) >= 0)
-//             return errs.push('Booking ' + booking.id + ' already exists on this spot.');
-//         if (!this.available.checkRange(booking.start, booking.end))
-//             return errs.push('Cannot add booking. The specified time range is not available for this spot: ' + booking.start + ' ~ ' + booking.end);
-//         this.bookings.push(booking.id);
-//         this.booked.addRange(booking.start, booking.end);
-//         this.available.removeRange(booking.start, booking.end);
-//     }.bind(this));
-//     this.save(function(err) {
-//         errs = errs.length == 0 ? null : errs;
-//         cb(err || errs);
-//     });
-// }
-
-// spotSchema.methods.removeBookings = function(bookings, cb) {
-//     if (!(bookings instanceof Array))
-//         bookings = [bookings];
-//     var errs = [];
-//     var removed = [];
-//     bookings.forEach(function(booking) {
-//         if (booking == null)
-//             return errs.push('Cannot remove null booking.');
-//         if (booking.id == null)
-//             return errs.push('Cannot remove booking. Booking must have an id.');
-//         var index = this.bookings.indexOf(booking.id);
-//         if (index < 0)
-//             return errs.push('Cannot remove booking. This booking is not assoaciated with this spot');
-//         removed = removed.concat(this.bookings.splice(index, 1));
-//         this.booked.removeRange(booking.start, booking.end);
-//         this.available.addRange(booking.start, booking.end);
-//     }.bind(this));
-//     this.save(function (err) {
-//         errs = errs.length == 0 ? null : errs;
-//         cb(err || errs, removed);
-//     });
-// }
-
-// spotSchema.methods.getNumber = function() {
-//     return this.number;
-// }
-
-// spotSchema.methods.setNumber = function(num, cb) {
-//     var error = setNumber.bind(this)(num);
-//     if (error != null)
-//         return cb(error);
-//     this.save(cb);
-// }
 
 spotSchema.methods.getDescription = function() {
-    return this.description;
+    return this.description || null;
 }
 
-spotSchema.methods.setDescription = function(description, cb) {
-    this.description = String(description);
-    this.save(cb);
+spotSchema.methods.setDescription = function(description) {
+    return new Promise(function(resolve, reject) {
+        this.description = String(description);
+        this.save(function(err, spot) {
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this))
 }
 
-spotSchema.methods.removeDescription = function(cb) {
-    this.description = null;
-    this.save(cb);
+spotSchema.methods.removeDescription = function() {
+    return new Promise(function(resolve, reject) {
+        this.description = null;
+        this.save(function(err, spot) {
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this))
 }
 
 spotSchema.methods.getLot = function() {
-    return this.lot;
+    return this.lot || null;
 }
 
 spotSchema.methods.setLot = function(lot, cb) {
-    this.lot = lot;
-    this.save(cb);
+    return new Promise(function(resolve, reject) {
+        if (!(lot instanceof ObjectId) && typeof lot === 'object' && lot)
+            lot = lot.id || lot._id || lot;
+        this.lot = lot;
+        this.save(function(err, spot) {
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this))
 }
 
 spotSchema.methods.removeLot = function(cb) {
-    this.lot = null;
-    this.save(cb);
+    return new Promise(function(resolve, reject) {
+        this.lot = null;
+        this.save(function(err, spot) {
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this))
 }
 
-// spotSchema.methods.setLotAndNumber = function(lot, num, cb) {
-//     var error = null;
-//     error = setLot.bind(this)(lot);
-//     if (error != null)
-//         return cb(error);
-//     error = setNumber.bind(this)(num);
-//     if (error != null)
-//         return cb(error);
-//     this.save(cb);
-// }
-
-// var setLot = function(lot) {
-//     if (typeof lot === 'object' && lot != null)
-//         lot = lot.id;
-//     if (typeof lot !== 'string')
-//         return 'Cannot set lot. Lot id is invalid.';
-//     this.lot = lot;
-// }
-
-// var setNumber = function(num) {
-//     if (typeof num !== 'number')
-//         return 'Cannot set number. Number is invalid.';
-//     this.number = num;
-// }
-
-spotSchema.methods.addAvailability = function(sched, cb) {
-    if (!(sched instanceof Array)) {
-        if (sched == null)
-            return cb('Cannot add null schedule to availability.');
-        if (sched.start == null || sched.end == null)
-            return cb('Cannot add availablility. Must have start and end times for each range.');
-        sched = [sched];
-    }
-    var errs = [];
-    for (var i=0; i < sched.length; i++) {
-            var start = new Date(sched[i].start),
-                end = new Date(sched[i].end);
-            if (isNaN(start.valueOf()) || isNaN(end.valueOf()) || start >= end)
-                errs.push('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
-            else if (sched[i].interval && (sched[i].count || sched[i].finish))
-                this.available.addRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
-            else
-                this.available.addRange(start, end);
-    }
-    this.markModified('available');
-    this.save(function(err) {
-        errs = errs.length == 0 ? null : errs;
-        cb(err || errs);
-    });
+spotSchema.methods.addAvailability = function(sched) {
+    return new Promise(function(resolve, reject) {
+        if (!(sched instanceof Array)) {
+            if (sched == null)
+                return reject('Cannot add null schedule to availability.');
+            if (sched.start == null || sched.end == null)
+                return reject('Cannot add availablility. Must have start and end times for each range.');
+            sched = [sched];
+        }
+        var errs = [];
+        for (var i=0; i < sched.length; i++) {
+                var start = new Date(sched[i].start),
+                    end = new Date(sched[i].end);
+                if (isNaN(start.valueOf()) || isNaN(end.valueOf()) || start >= end)
+                    errs.push('Cannot add availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
+                else if (sched[i].interval && (sched[i].count || sched[i].finish))
+                    this.available.addRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
+                else
+                    this.available.addRange(start, end);
+        }
+        this.markModified('available');
+        this.save(function(err, spot) {
+            errs = errs.length == 0 ? null : errs;
+            err = err || errs;
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this));
 }
 
 spotSchema.methods.removeAvailability = function(sched, cb) {
-    if (!(sched instanceof Array)) {
-        if (sched == null)
-            return cb('Cannot remove null schedule from availability.');
-        if (sched.start == null || sched.end == null)
-            return cb('Cannot remove availablility. Must have start and end times for each range to remove.');
-        sched = [sched];
-    }
-    var errs = [];
-    for (var i=0; i < sched.length; i++) {
-        var start = new Date(sched[i].start),
-            end = new Date(sched[i].end);
-        if (isNaN(start.valueOf()) || isNaN(end.valueOf()))
-            errs.push('Cannot remove availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
-        else if (sched[i].interval && (sched[i].count || sched[i].finish))
-            this.available.removeRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
-        else
-            this.available.removeRange(start, end);
-    }
-    this.markModified('available');
-    this.save(function(err, obj) {
-        errs = errs.length == 0 ? null : errs;
-        cb(err || errs);
-    });
+    return new Promise(function(resolve, reject) {
+        if (!(sched instanceof Array)) {
+            if (sched == null)
+                return reject('Cannot remove null schedule from availability.');
+            if (sched.start == null || sched.end == null)
+                return reject('Cannot remove availablility. Must have start and end times for each range to remove.');
+            sched = [sched];
+        }
+        var errs = [];
+        for (var i=0; i < sched.length; i++) {
+            var start = new Date(sched[i].start),
+                end = new Date(sched[i].end);
+            if (isNaN(start.valueOf()) || isNaN(end.valueOf()))
+                errs.push('Cannot remove availability range: ' + sched[i].start + ' ~ ' + sched[i].end);
+            else if (sched[i].interval && (sched[i].count || sched[i].finish))
+                this.available.removeRecuringRange(start, end, sched[i].interval, sched[i].count, new Date(sched[i].finish));
+            else
+                this.available.removeRange(start, end);
+        }
+        this.markModified('available');
+        this.save(function(err, spot) {
+            errs = errs.length == 0 ? null : errs;
+            err = err || errs;
+            if (err) return reject(err);
+            resolve(spot);
+        });
+    }.bind(this));
 }
 
 var Spot = mongoose.model('Spot', spotSchema);
