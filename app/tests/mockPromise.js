@@ -9,8 +9,14 @@ module.exports = function(resolveWith, errorWith) {
         var returnThis = function() {
             return this;
         }
+        var spliceThis = function() {
+            resolveWith.splice(1, 1);
+            return this;
+        }
         promise.populate = returnThis;
         promise.exec = returnThis;
+        promise.limit = spliceThis;
+        promise.elemMatch = spliceThis;
         return promise;
     }
 }
