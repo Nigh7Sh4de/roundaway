@@ -5,19 +5,20 @@ var controller = function(app) {
     this.app = app;
     app.get('/api/bookings', app.checkAuth, app.checkAdmin, this.GetAllBookings.bind(this));
     app.get('/api/bookings/:id', app.checkAuth, app.checkAdmin, this.GetBooking.bind(this));
-    app.put('/api/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateBooking.bind(this));
+    // app.put('/api/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateBooking.bind(this));
     app.get('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, this.GetSpotForBooking.bind(this));
-    app.put('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetSpotForBooking.bind(this));
+    // app.put('/api/bookings/:id/spot', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetSpotForBooking.bind(this));
     app.get('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, this.GetStartOfBooking.bind(this));
-    app.put('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetStartOfBooking.bind(this));
+    // app.put('/api/bookings/:id/start', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetStartOfBooking.bind(this));
     app.get('/api/bookings/:id/duration', app.checkAuth, app.checkAdmin, this.GetDurationForBooking.bind(this));
-    app.put('/api/bookings/:id/duration', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetDurationForBooking.bind(this));
+    // app.put('/api/bookings/:id/duration', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetDurationForBooking.bind(this));
     app.get('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, this.GetEndOfBooking.bind(this));
-    app.put('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetEndOfBooking.bind(this));
+    // app.put('/api/bookings/:id/end', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetEndOfBooking.bind(this));
     app.get('/api/bookings/:id/time', app.checkAuth, app.checkAdmin, this.GetTimeOfBooking.bind(this));
-    app.put('/api/bookings/:id/time', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetTimeOfBooking.bind(this));
+    // app.put('/api/bookings/:id/time', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetTimeOfBooking.bind(this));
     app.get('/api/bookings/:id/price', app.checkAuth, app.checkAdmin, this.GetPriceOfBooking.bind(this));
     app.put('/api/bookings/:id/pay', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.PayForBooking.bind(this));
+    app.get('/api/bookings/:id/status', app.checkAuth, app.checkAdmin, this.GetStatusOfBooking.bind(this));
 }
 
 controller.prototype = {
@@ -44,33 +45,22 @@ controller.prototype = {
             res.sendBad(err);
         });
     },
-    CreateBooking: function(req, res) {
-        var newBooking = new Booking(req.body.booking).toJSON();
-        delete newBooking._id;
-        var insert;
-        if (req.body.count) {
-            if (typeof req.body.count !== 'number' || req.body.count <= 0)
-                return res.sendBad('Could not create booking because the specified count was invalid');
-            var arr = [];
-            for (var i=0;i<req.body.count;i++) {
-                var b = Object.assign({}, newBooking);
-                b._id = ObjectId();  
-                arr.push(b);
-            }
-            insert = this.app.db.bookings.collection.insert(arr)
-        }
-        else {
-            insert = this.app.db.bookings.create(newBooking);
-        }
-        insert
-        .then(function(results) {
-            res.sendGood('Created new bookings', results.ops || results);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        })
+    // CreateBooking: function(req, res) {
+    //     if (!req.body.start) return res.sendBad('Could not create booking as no start date was specified');
+    //     if (!req.body.end) return res.sendBad('Could not create booking as no end date was specified');
+    //     if (req.body.end <= req.body.start) return res.sendBad('Could not create booking as the end date was before the start date');
+    //     if (!req.body.spot) return res.sendBad('Could not create booking as no spot was specified');
+    //     var newBooking = new Booking(req.body).toJSON();
+
+    //     this.app.db.bookings.create(newBooking)
+    //     .then(function(results) {
+    //         res.sendGood('Created new bookings', results.ops || results);
+    //     })
+    //     .catch(function(err) {
+    //         res.sendBad(err);
+    //     })
         
-    },
+    // },
     GetSpotForBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id)
         .populate('spot')
@@ -85,25 +75,25 @@ controller.prototype = {
             res.sendBad(err)
         });
     },
-    SetSpotForBooking: function(req, res) {
-        Promise.all([
-            this.app.db.bookings.findById(req.params.id).exec(),
-            this.app.db.spots.findById(req.body.id).exec()
-        ])
-        .then(function(results) {
-            var booking = results[0];
-            var spot = results[1];
-            if (!booking) throw 'Could not find booking';
-            if (!spot) throw 'Could not find spot';
-            return booking.setSpot(spot);
-        })
-        .then(function(b) {
-            res.sendGood('Set spot for booking', b);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        })
-    },
+    // SetSpotForBooking: function(req, res) {
+    //     Promise.all([
+    //         this.app.db.bookings.findById(req.params.id).exec(),
+    //         this.app.db.spots.findById(req.body.id).exec()
+    //     ])
+    //     .then(function(results) {
+    //         var booking = results[0];
+    //         var spot = results[1];
+    //         if (!booking) throw 'Could not find booking';
+    //         if (!spot) throw 'Could not find spot';
+    //         return booking.setSpot(spot);
+    //     })
+    //     .then(function(b) {
+    //         res.sendGood('Set spot for booking', b);
+    //     })
+    //     .catch(function(err) {
+    //         res.sendBad(err);
+    //     })
+    // },
     GetStartOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id)
         .exec()
@@ -115,20 +105,20 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    SetStartOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id)
-        .exec()
-        .then(function(booking) {
-            if (!booking) throw 'Booking not found';
-            return booking.setStart(req.body.start)
-        })
-        .then(function(booking) {
-            res.sendGood('Set start of booking', booking);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        });
-    },
+    // SetStartOfBooking: function(req, res) {
+    //     this.app.db.bookings.findById(req.params.id)
+    //     .exec()
+    //     .then(function(booking) {
+    //         if (!booking) throw 'Booking not found';
+    //         return booking.setStart(req.body.start)
+    //     })
+    //     .then(function(booking) {
+    //         res.sendGood('Set start of booking', booking);
+    //     })
+    //     .catch(function(err) {
+    //         res.sendBad(err);
+    //     });
+    // },
     GetDurationForBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id)
         .exec()
@@ -143,20 +133,20 @@ controller.prototype = {
             res.sendBad(err);
         });
     },
-    SetDurationForBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id)
-        .exec()
-        .then(function(booking) {
-            if (!booking) throw 'Booking not found';
-            return booking.setDuration(req.body.duration);
-        })
-        .then(function(booking) {
-            res.sendGood('Set duration of booking', booking);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        });
-    },
+    // SetDurationForBooking: function(req, res) {
+    //     this.app.db.bookings.findById(req.params.id)
+    //     .exec()
+    //     .then(function(booking) {
+    //         if (!booking) throw 'Booking not found';
+    //         return booking.setDuration(req.body.duration);
+    //     })
+    //     .then(function(booking) {
+    //         res.sendGood('Set duration of booking', booking);
+    //     })
+    //     .catch(function(err) {
+    //         res.sendBad(err);
+    //     });
+    // },
     GetEndOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id)
         .exec()
@@ -168,20 +158,20 @@ controller.prototype = {
             res.sendBad(err);
         });
     },
-    SetEndOfBooking: function(req, res) {
-        this.app.db.bookings.findById(req.params.id)
-        .exec()
-        .then(function(booking) {
-            if (!booking) throw 'Booking not found';
-            return booking.setEnd(req.body.end);
-        })
-        .then(function(booking) {
-            res.sendGood('Set end of booking', booking);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        });
-    },
+    // SetEndOfBooking: function(req, res) {
+    //     this.app.db.bookings.findById(req.params.id)
+    //     .exec()
+    //     .then(function(booking) {
+    //         if (!booking) throw 'Booking not found';
+    //         return booking.setEnd(req.body.end);
+    //     })
+    //     .then(function(booking) {
+    //         res.sendGood('Set end of booking', booking);
+    //     })
+    //     .catch(function(err) {
+    //         res.sendBad(err);
+    //     });
+    // },
     GetTimeOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id)
         .exec()
@@ -196,25 +186,25 @@ controller.prototype = {
             res.sendBad(err);
         });;
     },
-    SetTimeOfBooking: function(req, res) {
-        if (!req.body.start && !req.body.end)
-            return res.sendBad('Could not set time of booking, you must specify start and/or end times');
-        this.app.db.bookings.findById(req.params.id)
-        .exec()
-        .then(function(booking) {
-            if (!booking) throw 'Booking not found';
-            return Promise.all([
-                booking.setStart(req.body.start),
-                booking.setEnd(req.body.end)
-            ])
-        })
-        .then(function(booking) {
-            res.sendGood('Set time of booking', booking);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        });
-    },
+    // SetTimeOfBooking: function(req, res) {
+    //     if (!req.body.start && !req.body.end)
+    //         return res.sendBad('Could not set time of booking, you must specify start and/or end times');
+    //     this.app.db.bookings.findById(req.params.id)
+    //     .exec()
+    //     .then(function(booking) {
+    //         if (!booking) throw 'Booking not found';
+    //         return Promise.all([
+    //             booking.setStart(req.body.start),
+    //             booking.setEnd(req.body.end)
+    //         ])
+    //     })
+    //     .then(function(booking) {
+    //         res.sendGood('Set time of booking', booking);
+    //     })
+    //     .catch(function(err) {
+    //         res.sendBad(err);
+    //     });
+    // },
     GetPriceOfBooking: function(req, res) {
         this.app.db.bookings.findById(req.params.id)
         .exec()
@@ -252,7 +242,18 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err);
         });
-    }
+    },
+    GetStatusOfBooking: function(req, res) {
+        this.app.db.bookings.findById(req.params.id)
+        .exec()
+        .then(function(booking) {
+            if (!booking) throw 'Booking not found';
+            return res.sendGood('Found price', booking.getStatus());
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        });
+    },
 }
 
 module.exports = controller;

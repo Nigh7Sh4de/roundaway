@@ -305,62 +305,62 @@ routeTest('bookingController', [
         route: '/api/bookings/:id',
         method: 'GetBooking'
     },
-    {
-        verb: verbs.PUT,
-        route: '/api/bookings',
-        method: 'CreateBooking',
-        ignoreId: true
-    },
+    // {
+    //     verb: verbs.PUT,
+    //     route: '/api/bookings',
+    //     method: 'CreateBooking',
+    //     ignoreId: true
+    // },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/spot',
         method: 'GetSpotForBooking'
     },
-    {
-        verb: verbs.PUT,
-        route: '/api/bookings/:id/spot',
-        method: 'SetSpotForBooking'
-    },
+    // {
+    //     verb: verbs.PUT,
+    //     route: '/api/bookings/:id/spot',
+    //     method: 'SetSpotForBooking'
+    // },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/start',
         method: 'GetStartOfBooking'
     },
-    {
-        verb: verbs.PUT,
-        route: '/api/bookings/:id/start',
-        method: 'SetStartOfBooking'
-    },
+    // {
+    //     verb: verbs.PUT,
+    //     route: '/api/bookings/:id/start',
+    //     method: 'SetStartOfBooking'
+    // },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/duration',
         method: 'GetDurationForBooking'
     },
-    {
-        verb: verbs.PUT,
-        route: '/api/bookings/:id/duration',
-        method: 'SetDurationForBooking'
-    },
+    // {
+    //     verb: verbs.PUT,
+    //     route: '/api/bookings/:id/duration',
+    //     method: 'SetDurationForBooking'
+    // },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/end',
         method: 'GetEndOfBooking'
     },
-    {
-        verb: verbs.PUT,
-        route: '/api/bookings/:id/end',
-        method: 'SetEndOfBooking'
-    },
+    // {
+    //     verb: verbs.PUT,
+    //     route: '/api/bookings/:id/end',
+    //     method: 'SetEndOfBooking'
+    // },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/time',
         method: 'GetTimeOfBooking'
     },
-    {
-        verb: verbs.PUT,
-        route: '/api/bookings/:id/time',
-        method: 'SetTimeOfBooking'
-    },
+    // {
+    //     verb: verbs.PUT,
+    //     route: '/api/bookings/:id/time',
+    //     method: 'SetTimeOfBooking'
+    // },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/price',
@@ -370,10 +370,15 @@ routeTest('bookingController', [
         verb: verbs.PUT,
         route: '/api/bookings/:id/pay',
         method: 'PayForBooking'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/bookings/:id/status',
+        method: 'GetStatusOfBooking'
     }
 ])
 
-describe('bookingController', function() {
+describe.only('bookingController', function() {
     var app,
         inject;
     
@@ -448,146 +453,182 @@ describe('bookingController', function() {
         })
     })
     
-    describe('CreateBooking', function() {
-        var emptyBooking;
+    // describe.only('CreateBooking', function() {
+    //     var emptyBooking;
         
-        before(function() {
-            emptyBooking = new Booking().toJSON();
-            delete emptyBooking._id;    
-        })
+    //     before(function() {
+    //         emptyBooking = new Booking().toJSON();
+    //         delete emptyBooking._id;    
+    //     })
         
-        it('should send error if req count is invalid (and not null)', function(done) {
-            [
-                'abc',
-                {},
-                function(){expect.fail()},
-                []
-            ].forEach(function(input, i, arr) {
-                req.body.count = input;
-                res.sent = function() {
-                    if (res.send.callCount >= arr.length) {
-                        expect(res.sendBad.callCount).to.equal(res.send.callCount);
-                        done();
-                    }
-                }
-                app.bookingController.CreateBooking(req, res);
-            })
-        })
+    //     // it('should send error if req count is invalid (and not null)', function(done) {
+    //     //     [
+    //     //         'abc',
+    //     //         {},
+    //     //         function(){expect.fail()},
+    //     //         []
+    //     //     ].forEach(function(input, i, arr) {
+    //     //         req.body.count = input;
+    //     //         res.sent = function() {
+    //     //             if (res.send.callCount >= arr.length) {
+    //     //                 expect(res.sendBad.callCount).to.equal(res.send.callCount);
+    //     //                 done();
+    //     //             }
+    //     //         }
+    //     //         app.bookingController.CreateBooking(req, res);
+    //     //     })
+    //     // })
+
+    //     it('should fail if end is before start', function(done) {
+    //         req.body = {
+    //             spot: '123abc',
+    //             start: new Date('2010/01/01'),
+    //             end: new Date('2000/01/01')
+    //         }
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.CreateBooking(req, res);
+    //     })
+
+    //     it('should fail if not provided enough data', function(done) {
+    //         var body = {
+    //             spot: '1z2x3c4v',
+    //             start: new Date('2000/01/01'),
+    //             end: new Date('2000/01/02')
+    //         };
+    //         [
+    //             'spot',
+    //             'start',
+    //             'end'
+    //         ].forEach(function(input, i, arr) {
+    //             req.body = Object.assign({}, body);
+    //             delete req.body[input];
+    //             res.sent = function() {
+    //                 if (res.send.callCount >= arr.length) {
+    //                     expect(res.sendBad.callCount).to.equal(res.send.callCount);
+    //                     done();
+    //                 }
+    //             };
+    //             app.bookingController.CreateBooking(req, res);
+    //         })
+    //     })
         
-        it('if couldnt create booking should send error', function(done) {
-            app.db.bookings = {
-                create: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.CreateBooking(req, res);
-        })
+    //     it('if couldn\'t create booking should send error', function(done) {
+    //         app.db.bookings = {
+    //             create: mockPromise(null, 'some error')
+    //         }
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.CreateBooking(req, res);
+    //     })
         
-        it('if couldnt insert entire collection should send error', function(done) {
-            app.db.bookings = {
-                collection: {
-                    insert: mockPromise(null, 'some error')
-                }
-            }
-            req.body.count = 5;
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.CreateBooking(req, res);
-        })
+    //     // it('if couldnt insert entire collection should send error', function(done) {
+    //     //     app.db.bookings = {
+    //     //         collection: {
+    //     //             insert: mockPromise(null, 'some error')
+    //     //         }
+    //     //     }
+    //     //     req.body.count = 5;
+    //     //     res.sent = function() {
+    //     //         expect(res.sendBad.calledOnce).to.be.true;
+    //     //         done();
+    //     //     }
+    //     //     app.bookingController.CreateBooking(req, res);
+    //     // })
         
-        it('should create n bookings with the given props', function(done) {
-            var count = 5;
-            var booking = Object.assign({}, emptyBooking);
-            var arr = [];
-            for (var i=0;i<count;i++)
-                arr.push(booking);
-            booking.start = new Date();
-            app.db.bookings = {
-                collection: {
-                    insert: function(obj) {
-                        expect(obj).to.have.length(count);
-                        expect(obj[0]).to.have.property('start');
-                        for (var i=0; i < count; i++) {
-                            arr[i]._id = obj[i]._id;
-                            expect(obj[i]).to.deep.equal(arr[i]);
-                        }
-                        return mockPromise(obj)();
-                    }
-                }
-            }
-            res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-                done();
-            }
-            req.body.count = count;
-            req.body.booking = booking;
-            app.bookingController.CreateBooking(req, res);
-        })
+    //     // it('should create n bookings with the given props', function(done) {
+    //     //     var count = 5;
+    //     //     var booking = Object.assign({}, emptyBooking);
+    //     //     var arr = [];
+    //     //     for (var i=0;i<count;i++)
+    //     //         arr.push(booking);
+    //     //     booking.start = new Date();
+    //     //     app.db.bookings = {
+    //     //         collection: {
+    //     //             insert: function(obj) {
+    //     //                 expect(obj).to.have.length(count);
+    //     //                 expect(obj[0]).to.have.property('start');
+    //     //                 for (var i=0; i < count; i++) {
+    //     //                     arr[i]._id = obj[i]._id;
+    //     //                     expect(obj[i]).to.deep.equal(arr[i]);
+    //     //                 }
+    //     //                 return mockPromise(obj)();
+    //     //             }
+    //     //         }
+    //     //     }
+    //     //     res.sent = function() {
+    //     //         expect(res.send.calledOnce).to.be.true;
+    //     //         expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+    //     //         done();
+    //     //     }
+    //     //     req.body.count = count;
+    //     //     req.body.booking = booking;
+    //     //     app.bookingController.CreateBooking(req, res);
+    //     // })
         
-        it('should create a booking with the given props', function(done) {
-            var booking = Object.assign({}, emptyBooking);
-            booking.start = new Date();
-            app.db.bookings = {
-                create: function(obj) {
-                    expect(obj).to.have.property('start');
-                    return mockPromise(obj)();
-                }
-            }
-            req.body.booking = booking;
-            res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-                done();
-            }
-            app.bookingController.CreateBooking(req, res);
-        })
+    //     it('should create a booking with the given props', function(done) {
+    //         req.body = {
+    //             spot: '123456789012',
+    //             start: new Date('2000/01/01'),
+    //             end: new Date('2010/01/01')
+    //         };
+    //         var b = new Booking(req.body);
+    //         app.db.bookings = {
+    //             create: mockPromise(b)
+    //         }
+    //         res.sendBad = done;
+    //         res.sent = function() {
+    //             expect(res.sendGood.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.CreateBooking(req, res);
+    //     })
         
-        it('should create a blank booking given no params', function(done) {
-            app.db.bookings = {
-                create: function(obj) {
-                    expect(obj).to.deep.equal(emptyBooking);
-                    return mockPromise(obj)();
-                }
-            }
-            res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-                done();
-            }
-            app.bookingController.CreateBooking(req, res);
-        })
+    //     // it('should create a blank booking given no params', function(done) {
+    //     //     app.db.bookings = {
+    //     //         create: function(obj) {
+    //     //             expect(obj).to.deep.equal(emptyBooking);
+    //     //             return mockPromise(obj)();
+    //     //         }
+    //     //     }
+    //     //     res.sent = function() {
+    //     //         expect(res.send.calledOnce).to.be.true;
+    //     //         expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+    //     //         done();
+    //     //     }
+    //     //     app.bookingController.CreateBooking(req, res);
+    //     // })
         
-        it('should create n blank bookings given a count n', function(done) {
-            var count = 5;
-            var arr = [];
-            for (var i=0;i<count;i++)
-                arr.push(emptyBooking);
-            app.db.bookings = {
-                collection: {
-                    insert: function(obj) {
-                        expect(obj).to.have.length(count);
-                        for (var i=0; i < count; i++) {
-                            arr[i]._id = obj[i]._id;
-                            expect(obj[i]).to.deep.equal(arr[i]);
-                        }
-                        return mockPromise(obj)();
-                    }
-                }
-            }
-            req.body.count = count;
-            res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-                done();
-            }
-            app.bookingController.CreateBooking(req, res);
-        })
-    })
+    //     // it('should create n blank bookings given a count n', function(done) {
+    //     //     var count = 5;
+    //     //     var arr = [];
+    //     //     for (var i=0;i<count;i++)
+    //     //         arr.push(emptyBooking);
+    //     //     app.db.bookings = {
+    //     //         collection: {
+    //     //             insert: function(obj) {
+    //     //                 expect(obj).to.have.length(count);
+    //     //                 for (var i=0; i < count; i++) {
+    //     //                     arr[i]._id = obj[i]._id;
+    //     //                     expect(obj[i]).to.deep.equal(arr[i]);
+    //     //                 }
+    //     //                 return mockPromise(obj)();
+    //     //             }
+    //     //         }
+    //     //     }
+    //     //     req.body.count = count;
+    //     //     res.sent = function() {
+    //     //         expect(res.send.calledOnce).to.be.true;
+    //     //         expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+    //     //         done();
+    //     //     }
+    //     //     app.bookingController.CreateBooking(req, res);
+    //     // })
+    // })
             
     describe('GetSpotForBooking', function() {
         it('should return error if booking has no spot attached', function(done) {
@@ -684,100 +725,100 @@ describe('bookingController', function() {
         })
     })
     
-    describe('SetSpotForBooking', function(only) {
-        it('should associate the booking with the spot', function(done) {
-            var booking = new Booking();
-            booking.setSpot = function() {
-                return new Promise(function(s) {
-                    s(booking)
-                })
-            };
-            var spot = new Spot();
-            app.db.bookings = {
-                findById: mockPromise(booking)
-            }
-            app.db.spots = {
-                findById: mockPromise(spot)
-            }
-            req.body = spot;
-            req.params.id = booking.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetSpotForBooking(req, res);
-        })
+    // describe('SetSpotForBooking', function(only) {
+    //     it('should associate the booking with the spot', function(done) {
+    //         var booking = new Booking();
+    //         booking.setSpot = function() {
+    //             return new Promise(function(s) {
+    //                 s(booking)
+    //             })
+    //         };
+    //         var spot = new Spot();
+    //         app.db.bookings = {
+    //             findById: mockPromise(booking)
+    //         }
+    //         app.db.spots = {
+    //             findById: mockPromise(spot)
+    //         }
+    //         req.body = spot;
+    //         req.params.id = booking.id;
+    //         res.sent = function() {
+    //             expect(res.sendGood.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetSpotForBooking(req, res);
+    //     })
         
-        it('should error if db encountered error', function(done) {
-            var bmp = mockPromise(null, 'some error');
-            var smp = mockPromise(new Spot());
-            app.db.bookings = {
-                findById: bmp
-            }
-            app.db.spots = {
-                findById: smp
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetSpotForBooking(req, res);
-        })
+    //     it('should error if db encountered error', function(done) {
+    //         var bmp = mockPromise(null, 'some error');
+    //         var smp = mockPromise(new Spot());
+    //         app.db.bookings = {
+    //             findById: bmp
+    //         }
+    //         app.db.spots = {
+    //             findById: smp
+    //         }
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetSpotForBooking(req, res);
+    //     })
         
-        it('should return error if booking found is null', function(done) {
-            var bmp = mockPromise(null);
-            var smp = mockPromise(new Spot());
-            app.db.bookings = {
-                findById: bmp
-            }
-            app.db.spots = {
-                findById: smp
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetSpotForBooking(req, res);
-        })
+    //     it('should return error if booking found is null', function(done) {
+    //         var bmp = mockPromise(null);
+    //         var smp = mockPromise(new Spot());
+    //         app.db.bookings = {
+    //             findById: bmp
+    //         }
+    //         app.db.spots = {
+    //             findById: smp
+    //         }
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetSpotForBooking(req, res);
+    //     })
         
-        it('should error if db encountered error looking for spot', function(done) {
-            var bmp = mockPromise(new Booking());
-            var smp = mockPromise(null, 'some error');
-            app.db.bookings = {
-                findById: bmp
-            }
-            app.db.spots = {
-                findById: smp
-            }
-            app.db.spots = {
-                findById: smp
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetSpotForBooking(req, res);
-        })
+    //     it('should error if db encountered error looking for spot', function(done) {
+    //         var bmp = mockPromise(new Booking());
+    //         var smp = mockPromise(null, 'some error');
+    //         app.db.bookings = {
+    //             findById: bmp
+    //         }
+    //         app.db.spots = {
+    //             findById: smp
+    //         }
+    //         app.db.spots = {
+    //             findById: smp
+    //         }
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetSpotForBooking(req, res);
+    //     })
         
-        it('should return error if spot found is null', function(done) {
-            var bmp = mockPromise(new Booking());
-            var smp = mockPromise(null);
-            app.db.bookings = {
-                findById: bmp
-            }
-            app.db.spots = {
-                findById: smp
-            }
-            app.db.spots = {
-                findById: smp
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetSpotForBooking(req, res);
-        })
-    })
+    //     it('should return error if spot found is null', function(done) {
+    //         var bmp = mockPromise(new Booking());
+    //         var smp = mockPromise(null);
+    //         app.db.bookings = {
+    //             findById: bmp
+    //         }
+    //         app.db.spots = {
+    //             findById: smp
+    //         }
+    //         app.db.spots = {
+    //             findById: smp
+    //         }
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetSpotForBooking(req, res);
+    //     })
+    // })
     
     describe('GetStartOfBooking', function() {
         it('should return the booking start time', function(done) {
@@ -824,55 +865,55 @@ describe('bookingController', function() {
         })
     })
     
-    describe('SetStartOfBooking', function() {
-        it('should set start time for booking', function(done) {
-            var start = new Date();
-            var b = new Booking();
-            sinon.stub(b, 'setStart', function() {
-                return new Promise(function(s) {
-                    s(b)
-                })
-            });
-            app.db.bookings = {
-                findById: mockPromise(b)
-            }
-            expect(b.start).to.not.be.ok;
-            req.body.start = start;
-            res.sent = function() {
-                expect(b.setStart.calledOnce).to.be.true;
-                expect(b.setStart.calledWith(start)).to.be.true;
-                expect(res.sendGood.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetStartOfBooking(req, res);
-        })
+    // describe('SetStartOfBooking', function() {
+    //     it('should set start time for booking', function(done) {
+    //         var start = new Date();
+    //         var b = new Booking();
+    //         sinon.stub(b, 'setStart', function() {
+    //             return new Promise(function(s) {
+    //                 s(b)
+    //             })
+    //         });
+    //         app.db.bookings = {
+    //             findById: mockPromise(b)
+    //         }
+    //         expect(b.start).to.not.be.ok;
+    //         req.body.start = start;
+    //         res.sent = function() {
+    //             expect(b.setStart.calledOnce).to.be.true;
+    //             expect(b.setStart.calledWith(start)).to.be.true;
+    //             expect(res.sendGood.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetStartOfBooking(req, res);
+    //     })
         
-        it('should error if db encountered error', function(done) {
-            app.db.bookings = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetStartOfBooking(req, res);
-        })
+    //     it('should error if db encountered error', function(done) {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null, 'some error')
+    //         }
+    //         res.sent = function() {
+    //             expect(res.status.calledOnce).to.be.true;
+    //             expect(res.status.calledWith(500)).to.be.true;
+    //             expect(res.send.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetStartOfBooking(req, res);
+    //     })
         
-        it('should return error if booking found is null', function(done) {
-            app.db.bookings = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetStartOfBooking(req, res);
-        })            
-    })
+    //     it('should return error if booking found is null', function(done) {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null)
+    //         }
+    //         res.sent = function() {
+    //             expect(res.status.calledOnce).to.be.true;
+    //             expect(res.status.calledWith(500)).to.be.true;
+    //             expect(res.send.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetStartOfBooking(req, res);
+    //     })            
+    // })
     
     describe('GetDurationForBooking', function() {
         it('should return the booking duration', function() {
@@ -939,58 +980,58 @@ describe('bookingController', function() {
         })
     })
     
-    describe('SetDurationForBooking', function() {
-        it('should set duration for booking', function(done) {
-            var b = new Booking();
-            b.start = new Date('2016/01/01');
-            var duration = 123456789;
-            var end = new Date(b.start.valueOf() + duration); 
-            sinon.stub(b, 'setDuration', function() {
-                return new Promise(function(s) {
-                    s(b)
-                })
-            });
-            app.db.bookings = {
-                findById: mockPromise(b)
-            }
-            expect(b.end).to.not.be.ok;
-            req.body.duration = duration;
-            res.sendBad = done;
-            res.sent = function() {
-                expect(b.setDuration.calledOnce).to.be.true;
-                expect(b.setDuration.calledWith(duration)).to.be.true;
-                expect(res.sendGood.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetDurationForBooking(req, res);
-        })
+    // describe('SetDurationForBooking', function() {
+    //     it('should set duration for booking', function(done) {
+    //         var b = new Booking();
+    //         b.start = new Date('2016/01/01');
+    //         var duration = 123456789;
+    //         var end = new Date(b.start.valueOf() + duration); 
+    //         sinon.stub(b, 'setDuration', function() {
+    //             return new Promise(function(s) {
+    //                 s(b)
+    //             })
+    //         });
+    //         app.db.bookings = {
+    //             findById: mockPromise(b)
+    //         }
+    //         expect(b.end).to.not.be.ok;
+    //         req.body.duration = duration;
+    //         res.sendBad = done;
+    //         res.sent = function() {
+    //             expect(b.setDuration.calledOnce).to.be.true;
+    //             expect(b.setDuration.calledWith(duration)).to.be.true;
+    //             expect(res.sendGood.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetDurationForBooking(req, res);
+    //     })
         
-        it('should error if db encountered error', function(done) {
-            app.db.bookings = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetDurationForBooking(req, res);
-        })
+    //     it('should error if db encountered error', function(done) {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null, 'some error')
+    //         }
+    //         res.sent = function() {
+    //             expect(res.status.calledOnce).to.be.true;
+    //             expect(res.status.calledWith(500)).to.be.true;
+    //             expect(res.send.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetDurationForBooking(req, res);
+    //     })
         
-        it('should return error if booking found is null', function(done) {
-            app.db.bookings = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetDurationForBooking(req, res);
-        })            
-    })
+    //     it('should return error if booking found is null', function(done) {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null)
+    //         }
+    //         res.sent = function() {
+    //             expect(res.status.calledOnce).to.be.true;
+    //             expect(res.status.calledWith(500)).to.be.true;
+    //             expect(res.send.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetDurationForBooking(req, res);
+    //     })            
+    // })
     
     describe('GetEndOfBooking', function() {
         it('should return the booking end time', function(done) {
@@ -1036,55 +1077,55 @@ describe('bookingController', function() {
         })
     })
     
-    describe('SetEndOfBooking', function() {
-        it('should set end time for booking', function(done) {
-            var end = new Date();
-            var b = new Booking();
-            sinon.stub(b, 'setEnd', function() {
-                return new Promise(function(s) {
-                    s(b)
-                })
-            });
-            app.db.bookings = {
-                findById: mockPromise(b)
-            }
-            expect(b.end).to.not.be.ok;
-            req.body.end = end;
-            res.sent = function() {
-                expect(b.setEnd.calledOnce).to.be.true;
-                expect(b.setEnd.calledWith(end)).to.be.true;
-                expect(res.sendGood.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetEndOfBooking(req, res);
-        })
+    // describe('SetEndOfBooking', function() {
+    //     it('should set end time for booking', function(done) {
+    //         var end = new Date();
+    //         var b = new Booking();
+    //         sinon.stub(b, 'setEnd', function() {
+    //             return new Promise(function(s) {
+    //                 s(b)
+    //             })
+    //         });
+    //         app.db.bookings = {
+    //             findById: mockPromise(b)
+    //         }
+    //         expect(b.end).to.not.be.ok;
+    //         req.body.end = end;
+    //         res.sent = function() {
+    //             expect(b.setEnd.calledOnce).to.be.true;
+    //             expect(b.setEnd.calledWith(end)).to.be.true;
+    //             expect(res.sendGood.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetEndOfBooking(req, res);
+    //     })
         
-        it('should error if db encountered error', function(done) {
-            app.db.bookings = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetEndOfBooking(req, res);
-        })
+    //     it('should error if db encountered error', function(done) {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null, 'some error')
+    //         }
+    //         res.sent = function() {
+    //             expect(res.status.calledOnce).to.be.true;
+    //             expect(res.status.calledWith(500)).to.be.true;
+    //             expect(res.send.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetEndOfBooking(req, res);
+    //     })
         
-        it('should return error if booking found is null', function(done) {
-            app.db.bookings = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetEndOfBooking(req, res);
-        })            
-    })
+    //     it('should return error if booking found is null', function(done) {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null)
+    //         }
+    //         res.sent = function() {
+    //             expect(res.status.calledOnce).to.be.true;
+    //             expect(res.status.calledWith(500)).to.be.true;
+    //             expect(res.send.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetEndOfBooking(req, res);
+    //     })            
+    // })
     
     describe('GetTimeOfBooking', function() {
         it('should return the booking start and end time', function(done) {
@@ -1133,57 +1174,57 @@ describe('bookingController', function() {
         })
     })
     
-    describe('SetTimeOfBooking', function() {
-        it('should set start and end time for booking', function(done) {
-            var start = new Date('2000/01/01');
-            var end = new Date('2016/01/01');
-            var b = new Booking();
-            sinon.stub(b, 'setStart', function() {
-                return new Promise(function(s) {
-                    s(b)
-                })
-            });
-            sinon.stub(b, 'setEnd', function() {
-                return new Promise(function(s) {
-                    s(b)
-                })
-            });
-            app.db.bookings = {
-                findById: mockPromise(b)
-            }
-            req.body.start = start;
-            req.body.end = end;
-            res.sent = function() {
-                expect(b.setStart.calledOnce).to.be.true;
-                expect(b.setStart.calledWith(start)).to.be.true;
-                expect(b.setEnd.calledOnce).to.be.true;
-                expect(b.setEnd.calledWith(end)).to.be.true;
-                expect(res.sendGood.calledOnce).to.be.true;
-                done();
-            }
-            app.bookingController.SetTimeOfBooking(req, res);
-        })
+    // describe('SetTimeOfBooking', function() {
+    //     it('should set start and end time for booking', function(done) {
+    //         var start = new Date('2000/01/01');
+    //         var end = new Date('2016/01/01');
+    //         var b = new Booking();
+    //         sinon.stub(b, 'setStart', function() {
+    //             return new Promise(function(s) {
+    //                 s(b)
+    //             })
+    //         });
+    //         sinon.stub(b, 'setEnd', function() {
+    //             return new Promise(function(s) {
+    //                 s(b)
+    //             })
+    //         });
+    //         app.db.bookings = {
+    //             findById: mockPromise(b)
+    //         }
+    //         req.body.start = start;
+    //         req.body.end = end;
+    //         res.sent = function() {
+    //             expect(b.setStart.calledOnce).to.be.true;
+    //             expect(b.setStart.calledWith(start)).to.be.true;
+    //             expect(b.setEnd.calledOnce).to.be.true;
+    //             expect(b.setEnd.calledWith(end)).to.be.true;
+    //             expect(res.sendGood.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         app.bookingController.SetTimeOfBooking(req, res);
+    //     })
                     
-        it('should error if db encountered error', function() {
-            app.db.bookings = {
-                findById: mockPromise(null, 'some error')
-            }
-            app.bookingController.SetTimeOfBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
-        })
+    //     it('should error if db encountered error', function() {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null, 'some error')
+    //         }
+    //         app.bookingController.SetTimeOfBooking(req, res);
+    //         expect(res.status.calledOnce).to.be.true;
+    //         expect(res.status.calledWith(500)).to.be.true;
+    //         expect(res.send.calledOnce).to.be.true;
+    //     })
         
-        it('should return error if booking found is null', function() {
-            app.db.bookings = {
-                findById: mockPromise(null)
-            }
-            app.bookingController.SetTimeOfBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
-        })            
-    })
+    //     it('should return error if booking found is null', function() {
+    //         app.db.bookings = {
+    //             findById: mockPromise(null)
+    //         }
+    //         app.bookingController.SetTimeOfBooking(req, res);
+    //         expect(res.status.calledOnce).to.be.true;
+    //         expect(res.status.calledWith(500)).to.be.true;
+    //         expect(res.send.calledOnce).to.be.true;
+    //     })            
+    // })
 
     describe('GetPriceOfBooking', function() {
         it('should return the price of the booking', function(done) {
@@ -1331,6 +1372,48 @@ describe('bookingController', function() {
             expect(res.status.calledWith(500)).to.be.true;
             expect(res.send.calledOnce).to.be.true;
             expect(charge.callCount).to.equal(0);
+        })
+    })
+
+    describe('GetStatusOfBooking', function() {
+        it('should return the status of the booking', function(done) {
+            var b = new Booking();
+            var status = 'paid';
+            b.status = status;
+            app.db.bookings = {
+                findById: mockPromise(b)
+            }
+            req.params.id = b.id;
+            res.sent = function() {
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.sentWith(status)).to.be.true;
+                done();
+            }
+            app.bookingController.GetStatusOfBooking(req, res);
+        });
+        
+        it('should error if db encountered error', function(done) {
+            app.db.bookings = {
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.bookingController.GetStatusOfBooking(req, res);
+        })
+        
+        it('should return error if booking found is null', function(done) {
+            app.db.bookings = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+                done();
+            }
+            app.bookingController.GetStatusOfBooking(req, res);
         })
     })
 })

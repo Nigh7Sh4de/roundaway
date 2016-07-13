@@ -25,6 +25,10 @@ var bookingSchema = new Schema({
     end: Date,
 });
 
+bookingSchema.methods.getStatus = function() {
+    return this.status;
+}
+
 bookingSchema.methods.setEnd = function(time) {
     return new Promise(function(resolve, reject) {
         if (time == null || typeof time == 'boolean' || time == 0 || time == '')
@@ -40,7 +44,7 @@ bookingSchema.methods.setEnd = function(time) {
 }
 
 bookingSchema.methods.getEnd = function() {
-    return this.end;
+    return this.end || null;
 }
 
 bookingSchema.methods.setDuration = function(dur) {
@@ -81,7 +85,7 @@ bookingSchema.methods.setStart = function(time) {
 }
 
 bookingSchema.methods.getStart = function() {
-    return this.start;
+    return this.start || null;
 }
 
 bookingSchema.methods.setSpot = function(spot) {
