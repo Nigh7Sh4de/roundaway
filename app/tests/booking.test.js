@@ -41,6 +41,15 @@ describe('Booking schema', function() {
             })
         })
     })
+
+    describe('getPrice', function() {
+        it('should return the price', function() {
+            var b = new Booking();
+            var price = 123.45;
+            b.price = price;
+            expect(b.getPrice()).to.equal(price);
+        })
+    })
     
     describe('getSpot', function() {
         it('should return spot id', function() {
@@ -378,7 +387,7 @@ routeTest('bookingController', [
     }
 ])
 
-describe.only('bookingController', function() {
+describe('bookingController', function() {
     var app,
         inject;
     
