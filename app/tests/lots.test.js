@@ -7,7 +7,7 @@ var server = require('./../../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 
-describe('Lot schema', function() {
+describe.only('Lot schema', function() {
     before(function() {
         sinon.stub(Lot.prototype, 'save', function(cb) { cb(null, this) });
     })
@@ -200,15 +200,6 @@ describe('Lot schema', function() {
     //     })
     // })
     
-    describe('getAddress', function() {
-        it('should return the address of the lot', function() {
-            var l = new Lot();
-            var address = '123 some st'; 
-            l.address = address;
-            expect(l.getAddress()).to.deep.equal(address);
-        });
-    })
-    
     describe('getLocation', function() {
         it('should return an array with the lat and long', function() {
             var l = new Lot();
@@ -250,7 +241,7 @@ describe('Lot schema', function() {
             expect(l.address).to.not.be.ok;
             l.setLocation(coords, address, function(err) {
                 expect(err).to.not.be.ok;
-                expect(l.address).to.deep.equal(address);
+                expect(l.location.address).to.deep.equal(address);
                 done();
             })
         })

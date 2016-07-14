@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var Location = require('./Location');
 
 var lotSchema = new Schema({
     user: {
@@ -7,13 +8,7 @@ var lotSchema = new Schema({
         ref: 'User'
     },
     // spots: [],
-    address: String,
-    location: {
-        coordinates: {
-            type: [Number],
-            index: '2dsphere'
-        }
-    }
+    location: Location,
     // availableSpots: {
     //     type: [Number]
     // }
@@ -77,7 +72,8 @@ var lotSchema = new Schema({
 // }
 
 lotSchema.methods.getAddress = function() {
-    return this.address;
+    if (!this.location) return null;
+    return this.location.address || null;
 }
 
 lotSchema.methods.getLocation = function() {
@@ -114,7 +110,7 @@ lotSchema.methods.setLocation = function(location, address, cb) {
         location = [location.long, location.lat];
     }
     this.location.coordinates = location;
-    this.address = address;
+    this.location.address = address;
     this.save(cb);
 }
 
