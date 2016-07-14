@@ -21,7 +21,6 @@ var spotSchema = new Schema({
     },
     available: Range(Date),
     booked: Range(Date),
-    // bookings: [String],
     description: String
 }, {
     timestamps: true,
@@ -36,6 +35,52 @@ var spotSchema = new Schema({
 spotSchema.virtual('available.next').get(function() {
     return this.available.nextRange(new Date());
 })
+
+spotSchema.methods.addBookings = function(bookings) {
+    return new Promise(function(resolve, reject) {
+        bookings = bookings instanceof Array ? bookings : [bookings];
+        bookings.forEach(function(booking) {
+            if (!booking)
+                return reject('Cannot add empty object as booking.');
+            if (booking.getStart() ==  null || 
+                booking.getEnd() == null)
+                return reject('Booking ' + booking.id + ' must have a start and end time set.');
+            if (!this.available.checkRange(booking.start, booking.end))
+                return reject('Cannot add booking ' + booking.id + ' The specified time range is not available for this spot: ' + booking.start + ' ~ ' + booking.end);
+            this.booked.addRange(booking.start, booking.end);
+            this.available.removeRange(booking.start, booking.end);
+            this.markModified('booked');
+            this.markModified('available');
+        }.bind(this))
+        this.save(function(err, spot) {
+            if (err) return reject(err);
+            resolve(spot);
+        })
+    }.bind(this));
+}
+
+
+spotSchema.methods.removeBookings = function(bookings, cb) {
+    return new Promise(function(resolve, reject) {
+        if (!(bookings instanceof Array))
+            bookings = [bookings];
+        for (var i=0; i<bookings.length; i++) {
+            var booking = bookings[i];
+            if (!booking)
+                return reject('Cannot remove null booking');
+            if (!booking.spot || (booking.spot != this && booking.spot != this.id)) 
+                return reject('Cannot remove booking that is not associated with this spot');
+            if (!booking.start || !booking.end)
+                return reject('Cannot remove a booking with no set time');
+            this.booked.removeRange(booking.start, booking.end);
+            this.available.addRange(booking.start, booking.end);
+        }
+        this.save(function (err, spot) {
+            if (err) return reject(err);
+            else return resolve(spot);
+        });
+    }.bind(this))
+}
 
 spotSchema.methods.getPrice = function() {
     var price = {},
@@ -146,9 +191,8 @@ spotSchema.methods.getLot = function() {
 
 spotSchema.methods.setLot = function(lot, cb) {
     return new Promise(function(resolve, reject) {
-        if (!(lot instanceof ObjectId) && typeof lot === 'object' && lot)
-            lot = lot.id || lot._id || lot;
         this.lot = lot;
+        if (lot.location) this.location = lot.location;
         this.save(function(err, spot) {
             if (err) return reject(err);
             resolve(spot);
