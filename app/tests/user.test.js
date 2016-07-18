@@ -251,7 +251,7 @@ describe('userController', function() {
             var users = [new User(), new User()];
             app.db.users.find = mockPromise(users);
             res.sent = function () {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(users)).to.be.true;
                 done();
             }
@@ -281,7 +281,7 @@ describe('userController', function() {
             }
             req.user = user;
             app.userController.GetProfileForSessionUser(req, res);
-            expect(res.send.calledOnce, 'res.send').to.be.true;
+            expect(res.sendGood.calledOnce).to.be.true;
             var args = res.send.firstCall.args[0].data;
             expect(args.name).to.equal(user.profile.name);
             expect(args.authid).to.equal(user.authid);
@@ -355,7 +355,7 @@ describe('userController', function() {
                 findById: mockPromise(user)
             }
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(user.profile)).to.be.true;
                 done();
             }
@@ -367,9 +367,7 @@ describe('userController', function() {
                 findById: mockPromise(null)
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.userController.GetProfileForUser(req,res);

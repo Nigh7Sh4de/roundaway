@@ -792,7 +792,7 @@ describe('spotController', function() {
                 find: mockPromise(spots)
             }
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(simpleSpots)).to.be.true;
                 done();
             }
@@ -831,7 +831,7 @@ describe('spotController', function() {
             }
             req.params.id = spot.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(simpleSpot)).to.be.true;
                 done();
             }
@@ -843,9 +843,7 @@ describe('spotController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.spotController.GetSpot(req, res);
@@ -856,9 +854,7 @@ describe('spotController', function() {
                 findById: mockPromise(null)
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.spotController.GetSpot(req, res);
@@ -1109,7 +1105,7 @@ describe('spotController', function() {
                 available: new Date()
             }
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({spots: limitedSpots})).to.be.true;
                 done();
             }
@@ -1131,7 +1127,7 @@ describe('spotController', function() {
             }
             res.sendBad = done;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({spots: limitedSpots})).to.be.true;
                 done();
             }
@@ -1150,7 +1146,7 @@ describe('spotController', function() {
                 lat: lat
             }
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({spots: spots})).to.be.true;
                 done();
             }
@@ -1342,7 +1338,7 @@ describe('spotController', function() {
             }
             req.params.id = s.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({location: expected}), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
                 done();
             }
@@ -1400,7 +1396,7 @@ describe('spotController', function() {
             }
             req.params.id = s.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(expected)).to.be.true;
                 done();
             }
@@ -1641,7 +1637,7 @@ describe('spotController', function() {
             }
             req.params.id = s.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({available: s.available.ranges})).to.be.true;
                 done();
             }
@@ -1826,7 +1822,7 @@ describe('spotController', function() {
             }
             req.params.id = s.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({booked: s.booked.ranges})).to.be.true;
                 done();
             }
@@ -1866,7 +1862,7 @@ describe('spotController', function() {
             }
             req.params.id = s.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({
                         booked: s.booked.ranges,
                         available: s.available.ranges
@@ -1923,7 +1919,7 @@ describe('spotController', function() {
             }
             req.params.id = s.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({
                     perHour: price
                 })).to.be.true;

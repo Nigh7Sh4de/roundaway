@@ -508,7 +508,7 @@ describe('lotController', function() {
                 find: mockPromise(lots)
             }
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(lots)).to.be.true;
                 done();
             }
@@ -524,7 +524,7 @@ describe('lotController', function() {
             }
             req.params.id = lot.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(lot)).to.be.true;
                 done();
             }
@@ -828,7 +828,7 @@ describe('lotController', function() {
             }
             req.params.id = l.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(expected)).to.be.true;
                 done();
             }
@@ -1022,7 +1022,7 @@ describe('lotController', function() {
             }
             req.params.id = l.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({
                     perHour: price
                 })).to.be.true;

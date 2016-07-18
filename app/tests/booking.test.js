@@ -380,7 +380,7 @@ describe('bookingController', function() {
                 return b.toJSON({getters: true});
             });
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(simpleBookings)).to.be.true;
                 done();
             }
@@ -397,7 +397,7 @@ describe('bookingController', function() {
             var simpleBooking = booking.toJSON({getters: true});
             req.params.id = booking.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(simpleBooking)).to.be.true;
                 done();
             }
@@ -409,9 +409,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetBooking(req, res);
@@ -422,9 +420,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null)
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetBooking(req, res);
@@ -467,9 +463,7 @@ describe('bookingController', function() {
                 findById: mp
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
@@ -481,9 +475,7 @@ describe('bookingController', function() {
                 findById: mp
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
@@ -499,9 +491,7 @@ describe('bookingController', function() {
                 findById: smp
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
@@ -517,9 +507,7 @@ describe('bookingController', function() {
                 findById: smp
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
@@ -541,7 +529,7 @@ describe('bookingController', function() {
             }
             req.params.id = b.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(start)).to.be.true;
                 done();
             }
@@ -554,9 +542,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetStartOfBooking(req, res);
@@ -567,9 +553,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetStartOfBooking(req, res);
@@ -590,7 +574,7 @@ describe('bookingController', function() {
             }
             req.params.id = b.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(dur), res.send.firstCall.args[0]).to.be.true;
                 done();
             }
@@ -609,9 +593,7 @@ describe('bookingController', function() {
             }
             req.params.id = b.id;
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetDurationForBooking(req, res);
@@ -622,9 +604,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetDurationForBooking(req, res);
@@ -635,9 +615,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null)
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetDurationForBooking(req, res);
@@ -657,7 +635,7 @@ describe('bookingController', function() {
             }
             req.params.id = b.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(end)).to.be.true;
                 done();
             }
@@ -669,9 +647,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetEndOfBooking(req, res);
@@ -682,9 +658,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null)
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetEndOfBooking(req, res);
@@ -707,7 +681,7 @@ describe('bookingController', function() {
             req.params.id = b.id;
             res.sendBad = done;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({start: start, end: end})).to.be.true;
                 done();
             }
@@ -719,9 +693,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetTimeOfBooking(req, res);
@@ -732,9 +704,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetTimeOfBooking(req, res);
@@ -754,7 +724,7 @@ describe('bookingController', function() {
             }
             req.params.id = b.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(price)).to.be.true;
                 done();
             }
@@ -777,9 +747,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null)
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetPriceOfBooking(req, res);
@@ -875,9 +843,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null, 'some error')
             }
             app.bookingController.PayForBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            expect(res.sendBad.calledOnce).to.be.true;
             expect(charge.callCount).to.equal(0);
         })
         
@@ -886,9 +852,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null)
             }
             app.bookingController.PayForBooking(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            expect(res.sendBad.calledOnce).to.be.true;
             expect(charge.callCount).to.equal(0);
         })
     })
@@ -903,7 +867,7 @@ describe('bookingController', function() {
             }
             req.params.id = b.id;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(status)).to.be.true;
                 done();
             }
@@ -926,9 +890,7 @@ describe('bookingController', function() {
                 findById: mockPromise(null)
             }
             res.sent = function() {
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
+                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.bookingController.GetStatusOfBooking(req, res);

@@ -85,7 +85,7 @@ controller.prototype = {
             if (!user) throw 'Could not get profile for user as this user was not found';
             res.sendGood('Found profilr for user', user.profile);
         })
-        .then(function(err) {
+        .catch(function(err) {
             res.sendBad(err);
         })
     }
