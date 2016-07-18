@@ -92,7 +92,8 @@ describe('Booking schema', function() {
             })
         })
         
-        it('should error if invalid spot', function() {
+        it.only('should error if invalid spot', function() {
+            expect.fail();
             var b = new Booking();
             return Promise.all([
                 {id:'123', getPrice: function() {
