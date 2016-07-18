@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var mockPromise = require('./mockPromise');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
@@ -7,7 +8,7 @@ var server = require('./../../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 
-describe.only('Lot schema', function() {
+describe('Lot schema', function() {
     before(function() {
         sinon.stub(Lot.prototype, 'save', function(cb) { cb(null, this) });
     })
@@ -15,190 +16,224 @@ describe.only('Lot schema', function() {
     after(function() {
         Lot.prototype.save.restore();
     })
-    
-    // describe('getSpots', function() {
-    //     it('should return the spots attached to the lot', function() {
-    //         var l = new Lot();
-    //         var spots = ['123','456']; 
-    //         l.spots = spots;
-    //         expect(l.getSpots()).to.deep.include.all.members(spots);
-    //     });
+
+    describe('getPrice', function() {
+        it('should return null if no price is set', function() {
+            var l = new Lot();
+            var price = l.getPrice();
+            expect(price).to.be.null;
+        })
+
+        it('should return the price', function() {
+            var pricePerHour = 123.45;
+            var l = new Lot();
+            l.price.perHour = pricePerHour;
+            expect(l.getPrice()).to.deep.equal({
+                perHour: pricePerHour
+            });
+        })
+    })
+
+    describe('setPrice', function() {
+        it('should set the price', function() {
+            var pricePerHour = 123.45;
+            var l = new Lot();
+            return l.setPrice({
+                perHour: pricePerHour
+            })
+            .then(function() {
+                expect(l.price.perHour).to.equal(pricePerHour);
+            });
+        })
+    })
+
+    describe('addAvailability', function() {
+        it('should be able to parse string', function() {
+            var start = '2010/01/01';
+            var end = '2016/01/01';
+            var l = new Lot();
+            return l.addAvailability({start: start, end: end})
+            .then(function(lot) {
+                expect(l.available.check(new Date(start))).to.be.true;
+                expect(l.available.check(new Date(end))).to.be.false;
+            })
+        })
         
-    //     it('should return an empty array if no spots are added', function() {
-    //         var l = new Lot();
-    //         var spots = l.getSpots();
-    //         expect(spots).to.be.an.instanceOf(Array);
-    //         expect(spots).to.not.be.ok;
-    //     })
-    // })
-    
-    // describe('addSpots', function() {
-    //     it('should fail to add a spot that is already in the lot', function(done) {
-    //         var l = new Lot();
-    //         var s = new Spot();
-    //         l.spots.push(s.id);
-    //         l.spotNumbers.push(s.number = 1);
-    //         l.addSpots(s, function(err) {
-    //             expect(err).to.be.ok;
-    //             expect(err).to.have.length(1);
-    //             expect(l.spots).to.have.length(1);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should add a list of spots to the array', function(done) {
-    //         var spots = [new Spot(), new Spot()];
-    //         var l = new Lot();
-    //         expect(l.spots).to.not.be.ok;
-    //         l.addSpots(spots, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spots).to.have.length(spots.length);
-    //             spots.forEach(function(spot) {
-    //                 expect(l.spots).to.include(spot.id);
-    //             })
-    //             done();
-    //         });
-    //     })
-        
-    //     it('should add a list of spot ids to the array', function(done) {
-    //         var spots = ['123','456'];
-    //         var l = new Lot();
-    //         expect(l.spots).to.not.be.ok;
-    //         l.addSpots(spots, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spots).to.have.length(spots.length);
-    //             spots.forEach(function(spot) {
-    //                 expect(l.spots).to.include(spot);
-    //             })
-    //             done();
-    //         });
-    //     })
-        
-    //     it('should add a single spot to the array', function(done) {
-    //         var spot = new Spot();
-    //         var l = new Lot();
-    //         expect(l.spots).to.not.be.ok;
-    //         l.addSpots(spot, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spots).to.have.length(1);
-    //             expect(l.spots).to.include(spot.id);
-    //             done();
-    //         });
-    //     })
-        
-    //     it('should add a single spot id to the array', function(done) {
-    //         var spot = '123';
-    //         var l = new Lot();
-    //         expect(l.spots).to.not.be.ok;
-    //         l.addSpots(spot, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spots).to.have.length(1);
-    //             expect(l.spots).to.include(spot);
-    //             done();
-    //         });
-    //     })
-        
-    //     it('should fail if given bad input', function(done) {
-    //         var l = new Lot();
-    //         expect(l.spots).to.not.be.ok;
-    //         [
-    //             null,
-    //             undefined,
-    //             123,
-    //             function(){expect.fail()},
-    //             {},
-    //             {id:123},
-    //             {id:null},
-    //             {id:function(){expect.fail()}}
-    //         ].forEach(function(input, i, arr) {
-    //             l.addSpots(input, function(err) {
-    //                 expect(err).to.be.ok;
-    //                 expect(l.spots).to.not.be.ok;
-    //                 if (i+1 >= arr.length)
-    //                     done();
-    //             })
-    //         })
+        describe('should add the given recuring range to the availability', function() {
+            it('given an rep count', function() {
+                var l = new Lot();
+                l.save = function(cb){cb(null)}
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var count = 3;
+                var oneday = 1000*60*60*24;
+                return l.addAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    count: count
+                }).then(function(lot) {
+                    expect(l.available.ranges).to.have.length(count);
+                    for (var i=0; i < count*2; i += 2)
+                        expect(l.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                });
+            })
             
-    //     })
-    // })
+            it('given a limit', function() {
+                var l = new Lot();
+                l.save = function(cb){cb(null)}
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var finish = new Date('2016/01/07');
+                var oneday = 1000*60*60*24;
+                var count = 3;
+                return l.addAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    finish: finish    
+                }).then(function(lot) {
+                    expect(l.available.ranges).to.have.length(count);
+                    for (var i=0; i < count*2; i += 2)
+                        expect(l.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                })
+            })
+            
+        })
+        
+        it('should fail if given bad input', function() {
+            var l = new Lot();
+            return Promise.all([
+                123,
+                'abc',
+                function(){expect.fail()},
+                null,
+                undefined,
+                {},
+                {start: 456},
+                {start: function(){expect.fail()}, end: function(){expect.fail()}}
+            ].map(function(input) {
+                return l.addAvailability(input);
+            })).then(function() {
+                expect.fail();
+            }).catch(function(err) {
+                expect(err).to.be.ok;
+                expect(l.available.ranges).to.have.length(0);
+            })
+        })
+        
+        it('should add the given time range object to the available array', function() {
+            var l = new Lot();
+            var start = new Date('2016/01/01');
+            var end = new Date('2016/02/01');
+            expect(l.available.check(new Date('2015/01/15'))).to.be.false;
+            expect(l.available.check(new Date('2016/01/15'))).to.be.false;
+            expect(l.available.check(new Date('2017/01/15'))).to.be.false;
+            return l.addAvailability({start: start, end: end})
+            .then(function(lot) {
+                expect(l.available.check(new Date('2015/01/15'))).to.be.false;
+                expect(l.available.check(new Date('2016/01/15'))).to.be.true;
+                expect(l.available.check(new Date('2017/01/15'))).to.be.false;
+            })
+        })
+    })
     
-    // describe('removeSpots', function() {
-    //     it('should error if trying to remove a spot that is not in the lot', function(done) {
-    //         var l = new Lot();
-    //         l.removeSpots(new Spot(), function(err, success) {
-    //             expect(err).to.be.ok;
-    //             expect(err).to.have.length(1);
-    //             expect(success).to.not.be.ok;
-    //             done();
-    //         })
-    //     })
+    describe('removeAvailability', function() {
+        it('should be able to parse string', function() {
+            var start = '2010/01/01';
+            var end = '2016/01/01';
+            var l = new Lot();
+            l.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+            return l.removeAvailability({start: start, end: end})
+            .then(function(lot) {
+                expect(l.available.check(new Date(start))).to.be.false;
+                expect(l.available.check(new Date(end))).to.be.true;
+            })
+        })
         
-    //     it('should return a success id array', function(done) {
-    //         var l = new Lot();
-    //         var spot = new Spot();
-    //         l.spots.push(spot.id);
-    //         l.spotNumbers.push(123);
-    //         l.removeSpots(spot, function(err, success) {
-    //             expect(l.spots).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             expect(success).to.have.length(1);
-    //             expect(success).deep.include(spot.id);
-    //             done();
-    //         })
-    //     })
+        describe('should remove the given recuring range from the availability', function() {
+            it('given an rep count', function() {
+                var l = new Lot();
+                l.save = function(cb){cb(null)}
+                l.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var count = 3;
+                var oneday = 1000*60*60*24;
+                return l.removeAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    count: count
+                }).then(function(lot) {
+                    expect(l.available.ranges).to.have.length(count + 1);
+                    for (var i=1; i < count*2; i += 2) {
+                        expect(l.available.check(new Date('2016/01/' + (i)))).to.be.false;
+                        expect(l.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                    }
+                })
+            })
+            
+            it('given a limit', function() {
+                var l = new Lot();
+                l.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+                var start = new Date('2016/01/01');
+                var end = new Date('2016/01/02');
+                var finish = new Date('2016/01/07');
+                var oneday = 1000*60*60*24;
+                var count = 3;
+                return l.removeAvailability({
+                    start: start,
+                    end: end,
+                    interval: 2 * oneday,
+                    finish: finish    
+                }).then(function(lot) {
+                    expect(l.available.ranges).to.have.length(count + 1);
+                    for (var i=1; i < count*2; i += 2) {
+                        expect(l.available.check(new Date('2016/01/' + (i)))).to.be.false;
+                        expect(l.available.check(new Date('2016/01/' + (i + 1)))).to.be.true;
+                    }
+                })
+            })
+            
+        })
         
-    //     it('should remove the given spot', function(done) {
-    //         var l = new Lot();
-    //         var spot = new Spot();
-    //         l.spots.push(spot.id);
-    //         l.spotNumbers.push(123);
-    //         l.removeSpots(spot, function(err) {
-    //             expect(l.spots).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             done();
-    //         })
-    //     })
+        it('should fail if given bad input', function() {
+            var l = new Lot();
+            return Promise.all([
+                123,
+                'abc',
+                function(){expect.fail()},
+                null,
+                undefined,
+                {},
+                {start: 456},
+                {start: function(){expect.fail()}, end: function(){expect.fail()}}
+            ].map(function(input) {
+                l.removeAvailability(input);
+            })).then(function(lot) {
+                expect.fail()
+            }).catch(function(err) {
+                expect(l.available.ranges).to.have.length(0);
+            })
+        })
         
-    //     it('should remove an array of spots', function(done) {
-    //         var l = new Lot();
-    //         var spots = [new Spot(), new Spot(), new Spot()]
-    //         spots.forEach(function(spot, i) {
-    //             l.spots.push(spot.id);
-    //             l.spotNumbers.push(spot.number = i + 1);
-    //         })
-    //         l.removeSpots(spots, function(err) {
-    //             expect(l.spots).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should error on bad type for each spot', function(done) {
-    //         var l = new Lot();
-    //         var s = new Spot();
-    //         s.number = 1;
-    //         l.spots.push(s.id);
-    //         l.spotNumbers.push(s.number);
-    //         expect(l.spots).to.have.length(1);
-    //         expect(l.spots).to.deep.include(s.id);
-    //         [
-    //             null, 
-    //             undefined,
-    //             123,
-    //             'abc',
-    //             function(){expect.fail()}
-    //         ].forEach(function(input, i, arr) {
-    //             l.removeSpots(input, function(err) {
-    //                 expect(err, 'error').to.be.an.instanceOf(Array);
-    //                 expect(err, 'error').to.have.length(1);
-    //                 expect(l.spots, 'spots').to.have.length(1);
-    //                 expect(l.spots, 'spots').to.deep.include(s.id);
-    //                 if (i + 1 >= arr.length)
-    //                     done();
-    //             })
-    //         })
-    //     })
-    // })
+        it('should remove the given time range object from the available array', function() {
+            var l = new Lot();
+            l.available.addRange(new Date('2000/01/01'), new Date('2020/01/01'));
+            var start = new Date('2016/01/01');
+            var end = new Date('2016/02/01');
+                expect(l.available.check(new Date('2015/01/15'))).to.be.true;
+                expect(l.available.check(new Date('2016/01/15'))).to.be.true;
+                expect(l.available.check(new Date('2017/01/15'))).to.be.true;
+            return l.removeAvailability({start: start, end: end})
+            .then(function(lot) {
+                expect(l.available.check(new Date('2015/01/15'))).to.be.true;
+                expect(l.available.check(new Date('2016/01/15'))).to.be.false;
+                expect(l.available.check(new Date('2017/01/15'))).to.be.true;
+            })
+        })
+    })
     
     describe('getLocation', function() {
         it('should return an array with the lat and long', function() {
@@ -552,15 +587,35 @@ routeTest('lotController', [
         route: '/api/lots/:id/location',
         method: 'GetLocationOfLot'
     },
-    {
-        verb: verbs.PUT,
-        route: '/api/lots/:id/location',
-        method: 'SetLocationOfLot'
-    },
+    // {
+    //     verb: verbs.PUT,
+    //     route: '/api/lots/:id/location',
+    //     method: 'SetLocationOfLot'
+    // },
     {
         verb: verbs.GET,
         route: '/api/lots/:id/spots',
         method: 'GetSpotsForLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/available',
+        method: 'AddAvailabilityToLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/available/remove',
+        method: 'RemoveAvailabilityFromLot'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id/price',
+        method: 'GetPriceOfLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/price',
+        method: 'SetPriceOfLot'
     }
     //,
     // {
@@ -586,56 +641,55 @@ describe('lotController', function() {
     })
     
     describe('GetAllLots', function() {
-        it('should return all lots', function() {
+        it('should return all lots', function(done) {
             var lots = [new Lot(), new Lot()];
             app.db.lots = {
-                find: function(obj, cb) {
-                    cb(null, lots);
-                }
+                find: mockPromise(lots)
+            }
+            res.sent = function() {
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.sentWith(lots)).to.be.true;
+                done();
             }
             app.lotController.GetAllLots(null, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith({lots: lots})).to.be.true;
         })
     })
     
     describe('GetLot', function() {
-        it('should get lot with specified id', function() {
+        it('should get lot with specified id', function(done) {
             var lot = new Lot();
             app.db.lots = {
-                findById: function(id, cb) {
-                    expect(id).to.equal(lot.id);
-                    cb(null, lot);
-                }
+                findById: mockPromise(lot)
             }
             req.params.id = lot.id;
-            app.lotController.GetLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith({lot: lot})).to.be.true;
-        })
-        
-        it('should error if db encountered error', function() {
-            app.db.lots = {
-                findById: function(id, cb) {
-                    cb('some error');
-                }
+            res.sent = function() {
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.sentWith(lot)).to.be.true;
+                done();
             }
             app.lotController.GetLot(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
         })
         
-        it('should return error if lot found is null', function() {
+        it('should error if db encountered error', function(done) {
             app.db.lots = {
-                findById: function(id, cb) {
-                    cb(null, null);
-                }
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
             }
             app.lotController.GetLot(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+        })
+        
+        it('should return error if lot found is null', function(done) {
+            app.db.lots = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.GetLot(req, res);
         })
     })
     
@@ -644,247 +698,302 @@ describe('lotController', function() {
         
         before(function() {
             emptyLot = new Lot().toJSON();
+            delete emptyLot.id;
             delete emptyLot._id;    
         })
+
+        it('should error if no location was provided', function(done) {
+            app.db.lots = {
+                create: function(obj) {
+                    delete obj.id;
+                    delete obj._id;
+                    expect(obj).to.deep.equal(emptyLot);
+                    return mockPromise(obj)();
+                }
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.CreateLot(req, res);
+        })
         
-        it('should send error if req count is invalid (and not null)', function() {
+        it('should send error if req count is invalid (and not null)', function(done) {
             [
                 'abc',
                 {},
                 function(){expect.fail()},
                 []
-            ].forEach(function(input) {
+            ].forEach(function(input, i, arr) {
                 req.body.count = input;
+                res.sent = function() {
+                    if (res.send.callCount >= arr.length) {
+                        expect(res.sendBad.callCount).to.equal(arr.length);
+                        done();                    
+                    }
+                }
                 app.lotController.CreateLot(req, res);
-                expect(res.status.calledOnce).to.be.true;
-                expect(res.status.calledWith(500)).to.be.true;
-                expect(res.send.calledOnce).to.be.true;
-                res.status.reset();
-                res.send.reset();
             })
         })
         
-        it('if couldnt create lot should send error', function() {
+        it('if couldnt create lot should send error', function(done) {
             app.db.lots = {
-                create: function(obj, cb) {
-                    cb('some error');
-                }
+                create: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
             }
             app.lotController.CreateLot(req, res);
-            expect(res.sendBad.calledOnce).to.be.true;
         })
         
-        it('if couldnt insert entire collection should send error', function() {
+        it('if couldnt insert entire collection should send error', function(done) {
             app.db.lots = {
                 collection: {
-                    insert: function(obj, cb) {
-                        cb('some error');
-                    }
+                    insert: mockPromise(null, 'some error')
                 }
             }
             req.body.count = 5;
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
             app.lotController.CreateLot(req, res);
-            expect(res.sendBad.calledOnce).to.be.true;
         })
         
-        it('should create n lots with the given props', function() {
+        it('should create n lots with the given props', function(done) {
             var count = 5;
             var lot = Object.assign({}, emptyLot);
             var arr = [];
-            for (var i=0;i<count;i++)
+            for (var i=0;i<count;i++) {
+                delete lot.id;
+                delete lot._id;
                 arr.push(lot);
-            lot.address = '123 fake st';
+            }
+            lot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            lot.price = {
+                perHour: 123.45
+            };
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
             app.db.lots = {
                 collection: {
-                    insert: function(obj, cb) {
+                    insert: function(obj) {
                         expect(obj).to.have.length(count);
-                        expect(obj[0]).to.have.property('address');
+                        expect(obj[0]).to.have.deep.property('price.perHour');
+                        obj[0].price.perHour /= 100;
+                        obj.forEach(function(o, i) {
+                            delete o.id;
+                            delete o._id;
+                        })
                         expect(obj).to.deep.include.all.members(arr);
-                        cb(null, obj);
+                        return mockPromise(obj)();
                     }
                 }
             }
             req.body.count = count;
             req.body.lot = lot;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
             app.lotController.CreateLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
         })
         
-        it('should create a lot with the given props', function() {
+        it('should create a lot with the given props', function(done) {
             var lot = Object.assign({}, emptyLot);
-            lot.address = '123 fake st';
+            lot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            lot.price = {
+                perHour: 123.45
+            };
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
             app.db.lots = {
-                create: function(obj, cb) {
-                    expect(obj).to.have.property('address');
-                    cb(null, obj);
+                create: function(obj) {
+                    expect(obj).to.have.property('price');
+                    return mockPromise(obj)();
                 }
             }
             req.body.lot = lot;
-            app.lotController.CreateLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
-        })
-        
-        it('should create a blank lot given no params', function() {
-            app.db.lots = {
-                create: function(obj, cb) {
-                    expect(obj).to.deep.equal(emptyLot);
-                    cb(null, obj);
-                }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();    
             }
             app.lotController.CreateLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
         })
         
-        it('should create n blank lots given a count n', function() {
+        it('should create a blank lot given no additional params', function(done) {
+            var lot = Object.assign({}, emptyLot);
+            lot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            req.body.lot = lot;
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
+            app.db.lots = {
+                create: function(obj) {
+                    delete obj.id;
+                    delete obj._id;
+                    expect(obj).to.deep.equal(lot);
+                    return mockPromise(obj)();
+                }
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.CreateLot(req, res);
+        })
+        
+        it('should create n blank lots given a count n and no additional params', function(done) {
+            var lot = Object.assign({}, emptyLot);
+            lot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            delete lot.id;
+            delete lot._id;
             var count = 5;
             var arr = [];
-            for (var i=0;i<count;i++)
-                arr.push(emptyLot);
+            for (var i=0;i<count;i++) {
+                arr.push(lot);
+            }
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
             app.db.lots = {
                 collection: {
-                    insert: sinon.spy(function(obj, cb) {
+                    insert: sinon.spy(function(obj) {
                         expect(obj).to.have.length(count);
+                        obj.forEach(function(o) {
+                            delete o.id;
+                            delete o._id;
+                        })
                         expect(obj).to.deep.include.all.members(arr);
-                        cb(null, obj);
+                        return mockPromise(obj)();
                     })
                 }
             }
             req.body.count = count;
+            req.body.lot = lot;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
             app.lotController.CreateLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
         })
     })
+    
+    // describe('CreateLot', function() {
+    //     beforeEach(function() {
+    //         sinon.stub(Lot.prototype, 'setLocation', mockPromise(new Lot()));
+    //     })
+
+    //     afterEach(function() {
+    //         Lot.prototype.setLocation.restore();
+    //     })
+    //     it('should create a new lot with the given location', function(done) {
+    //         app.geocoder = {
+    //             reverse: mockPromise([{formattedAddress: '123 fake st'}])
+    //         }
+    //         res.sent = function() {
+    //             expect(Lot.prototype.setLocation.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         req.body.coordinates = {
+    //             lon: 12,
+    //             lat: 21
+    //         }
+    //         app.lotController.CreateLot(req, res);
+    //     })  
+
+    //     it('should fail if no location is provided', function(done) {
+    //         app.geocoder = {
+    //             reverse: mockPromise([{formattedAddress: '123 fake st'}])
+    //         }
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         req.body.coordinates = {
+    //             badProp: 'some value'
+    //         }
+    //         app.lotController.CreateLot(req, res);
+    //     })  
+
+    //     it('should fail if lot could not set location', function(done) {
+    //         app.geocoder = {
+    //             reverse: mockPromise([{formattedAddress: '123 fake st'}])
+    //         }
+    //         Lot.prototype.setLocation.restore();
+    //         sinon.stub(Lot.prototype, 'setLocation', mockPromise(null, 'some error'));
+    //         res.sent = function() {
+    //             expect(res.sendBad.calledOnce).to.be.true;
+    //             done();
+    //         }
+    //         req.body.coordinates = {
+    //             lon: 12,
+    //             lat: 21
+    //         }
+    //         app.lotController.CreateLot(req, res);
+    //     })    
+    // })
     
     describe('GetLocationOfLot', function() {
-        it('should return the lot\'s location', function() {
+        it('should return the lot\'s location', function(done) {
             var l = new Lot();
-            l.address = '123 fake st';
+            l.location.address = '123 fake st';
             l.location.coordinates = [123, 456];
-            var expected = {
-                address: l.getAddress(),
-                coordinates: l.getLocation()
-            }
             app.db.lots = {
-                findById: function(id, cb) {
-                    expect(id).to.equal(l.id);
-                    cb(null, l);
-                }
+                findById: mockPromise(l)
             }
             req.params.id = l.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(JSON.parse(JSON.stringify(l.location))), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(l.location)).to.be.true;
+                done();
+            }
             app.lotController.GetLocationOfLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith({location: expected}), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
         });
         
-        it('should error if db encountered error', function() {
+        it('should error if db encountered error', function(done) {
             app.db.lots = {
-                findById: function(id, cb) {
-                    cb('some error');
-                }
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
             }
             app.lotController.GetLocationOfLot(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
         })
         
-        it('should return error if lot found is null', function() {
+        it('should return error if lot found is null', function(done) {
             app.db.lots = {
-                findById: function(id, cb) {
-                    cb(null, null);
-                }
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
             }
             app.lotController.GetLocationOfLot(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
         })
     })
     
-    describe('SetLocationOfLot', function() {
-        var l = new Lot();
-        var coords = {
-            long: 123,
-            lat: 456
-        };
-        var address = '123 fake st';
-        
-        beforeEach(function() {
-            l = new Lot();
-            sinon.stub(l, 'setLocation', function(l,a,cb) {
-                cb();
-            })
-            sinon.stub(app.geocoder, 'reverse', function(opt, cb) {
-                expect(opt.lat).to.equal(coords.lat);
-                expect(opt.lon).to.equal(coords.long);
-                cb(null, [{formattedAddress: address}]);
-            })
-            app.db.lots = {
-                findById: function(id, cb) {
-                    expect(id).to.equal(l.id);
-                    cb(null, l);
-                }
-            }
-            req.params.id = l.id;
-        })
-        
-        it('should set location given coordinates as array', function(done) {
-            req.body = {
-                coordinates: [coords.long, coords.lat]
-            }
-            res.sendStatus = function(status) {
-                expect(l.setLocation.calledOnce).to.be.true;
-                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
-                expect(status).to.equal(200);
-                done();
-            }
-            app.lotController.SetLocationOfLot(req, res);
-        })
-        
-        it('should set location given lon and lat as object', function(done) {
-            req.body = {
-                coordinates: {
-                    lon: coords.long,
-                    lat: coords.lat
-                }
-            }
-            res.sendStatus = function(status) {
-                expect(l.setLocation.calledOnce).to.be.true;
-                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
-                expect(status).to.equal(200);
-                done();
-            }
-            app.lotController.SetLocationOfLot(req, res);
-        })
-        
-        it('should set location given long and lat as object', function(done) {
-            req.body = {
-                coordinates: {
-                    long: coords.long,
-                    lat: coords.lat
-                }
-            }
-            res.sendStatus = function(status) {
-                expect(l.setLocation.calledOnce).to.be.true;
-                expect(l.setLocation.calledWith({lat:coords.lat,lon:coords.long}, address)).to.be.true;
-                expect(status).to.equal(200);
-                done();
-            }
-            app.lotController.SetLocationOfLot(req, res);
-        })
-    })
-    
-    describe.skip('GetSpotsForLot', function(done) {
+    describe('GetSpotsForLot', function(done) {
         it('should return an empty array if no spots are assigned', function(done) {
             var l = new Lot();
-            app.db.lots = {
-                findById: function(id,cb) {
-                    return cb(null, l);
-                }
+            app.db.spots = {
+                find: mockPromise([])
             }
             req.params.id = l.id;
             res.sent = function(body) {
@@ -895,977 +1004,286 @@ describe('lotController', function() {
         })
         
         
-        it('should return the lot\'s spots', function() {
+        it('should return the lot\'s spots', function(done) {
             var l = new Lot();
-            var expected = [
-                new Spot(),
-                new Spot()
-            ]
-            l.spots = [expected[0].id, expected[1].id];
-            app.db.lots = {
-                findById: function(id, cb) {
-                    expect(id).to.equal(l.id);
-                    cb(null, l);
-                }
+            var _spot = {
+                lot: l
             }
+            var expected = [
+                new Spot(_spot),
+                new Spot(_spot)
+            ]
             app.db.spots = {
-                findById: function(id, cb) {
-                    for(var i=0;i<expected.length;i++)
-                        if (expected[i].id == id)
-                            return cb(null, expected[i]);
-                    return cb('spot not found');
-                }
+                find: mockPromise(expected)
             }
             req.params.id = l.id;
+            res.sent = function() {
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.sentWith(expected)).to.be.true;
+                done();
+            }
             app.lotController.GetSpotsForLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(expected)).to.be.true;
         });
         
-        it('should return the lot\'s spots and error messages for failures', function() {
-            var l = new Lot();
-            var msg = 'Spot not found';
-            var expected = [
-                new Spot(),
-                msg
-            ]
-            l.spots = [expected[0].id, '123'];
+        it('should error if db encountered error', function(done) {
             app.db.lots = {
-                findById: function(id, cb) {
-                    expect(id).to.equal(l.id);
-                    cb(null, l);
-                }
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.GetSpotsForLot(req, res);
+        })
+        
+        it('should return error if lot found is null', function(done) {
+            app.db.lots = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.GetSpotsForLot(req, res);
+        })          
+    })
+
+    describe('AddAvailabilityToLot', function() {
+        it('should fail if given bad input', function(done) {
+            var l = new Lot();
+            [
+                123,
+                '123',
+                {},
+                {badProp: 'some value'},
+                function(){expect.fail()}
+            ].forEach(function(input, i, arr) {
+                req.body = input;
+                res.sent = function() {
+                    if (res.send.callCount >= arr.length) {
+                        expect(res.sendBad.callCount).to.equal(res.send.callCount);
+                        done();
+                    }
+                }                
+                app.lotController.AddAvailabilityToLot(req, res);
+            })
+        })
+
+        it('should add the availability to all spots in the lot', function(done) {
+            var l = new Lot();
+            var s = new Spot({
+                lot: l
+            })
+            sinon.stub(l, 'addAvailability')
+            sinon.stub(s, 'addAvailability')
+            app.db.lots = {
+                findById: mockPromise(l)
             }
             app.db.spots = {
-                findById: function(id, cb) {
-                    if (expected[0].id == id)
-                        return cb(null, expected[0]);
-                    return cb(msg);
-                }
+                find: mockPromise([s])
+            }
+            req.body = {
+                start: new Date('2000/01/01'),
+                end: new Date('2000/01/01')
             }
             req.params.id = l.id;
-            app.lotController.GetSpotsForLot(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.send.firstCall.args[0].data[0]).to.deep.equal(expected[0]);
-            expect(res.send.firstCall.args[0].data[1]).to.be.a('string');
-        });
+            res.sent = function() {
+                expect(l.addAvailability.calledOnce).to.be.true;
+                expect(l.addAvailability.calledWith(req.body)).to.be.true;
+                expect(s.addAvailability.calledOnce).to.be.true;
+                expect(s.addAvailability.calledWith(req.body)).to.be.true;
+                done();
+            }
+            app.lotController.AddAvailabilityToLot(req, res);
+        })
         
         it('should error if db encountered error', function() {
             app.db.lots = {
-                findById: function(id, cb) {
-                    cb('some error');
-                }
+                findById: mockPromise(null, 'some error')
             }
-            app.lotController.GetSpotsForLot(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+            }
+            app.lotController.AddAvailabilityToLot(req, res);
         })
         
         it('should return error if lot found is null', function() {
             app.db.lots = {
-                findById: function(id, cb) {
-                    cb(null, null);
-                }
+                findById: mockPromise(null)
             }
-            app.lotController.GetSpotsForLot(req, res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+            }
+            app.lotController.AddAvailabilityToLot(req, res);
         })          
     })
     
-    // describe('AddSpotsToLot', function(done) {
-    //     afterEach(function() {
-    //         if (Spot.prototype.save.restore != null)
-    //             Spot.prototype.save.restore()
-    //     })
+    describe('RemoveAvailabilityFromLot', function() {
+        it('should fail if given bad input', function(done) {
+            var l = new Lot();
+            [
+                123,
+                '123',
+                {},
+                {badProp: 'some value'},
+                function(){expect.fail()}
+            ].forEach(function(input, i, arr) {
+                req.body = input;
+                res.sent = function() {
+                    if (res.send.callCount >= arr.length) {
+                        expect(res.sendBad.callCount).to.equal(res.send.callCount);
+                        done();
+                    }
+                }                
+                app.lotController.RemoveAvailabilityFromLot(req, res);
+            })
+        })
+
+        it('should add the availability to all spots in the lot', function(done) {
+            var l = new Lot();
+            var s = new Spot({
+                lot: l
+            })
+            sinon.stub(l, 'removeAvailability')
+            sinon.stub(s, 'removeAvailability')
+            app.db.lots = {
+                findById: mockPromise(l)
+            }
+            app.db.spots = {
+                find: mockPromise([s])
+            }
+            req.body = {
+                start: new Date('2000/01/01'),
+                end: new Date('2000/01/01')
+            }
+            req.params.id = l.id;
+            res.sent = function() {
+                expect(l.removeAvailability.calledOnce).to.be.true;
+                expect(l.removeAvailability.calledWith(req.body)).to.be.true;
+                expect(s.removeAvailability.calledOnce).to.be.true;
+                expect(s.removeAvailability.calledWith(req.body)).to.be.true;
+                done();
+            }
+            app.lotController.RemoveAvailabilityFromLot(req, res);
+        })
         
-    //     it('should add the required number of spots given a count', function(done) {
-    //         var l = new Lot();
-    //         sinon.stub(l, 'addSpots', function(spots, cb) {
-    //             cb(null);
-    //         });
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null);
-    //         })
-    //         l.location.coordinates = [123, 456];
-    //         var newSpots = [
-    //             new Spot(), new Spot()
-    //         ]
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 expect(id).to.equal(l.id);
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         sinon.stub(Spot.prototype, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         sinon.stub(l, 'claimSpotNumbers', function(nums, cb) {
-    //             cb(null, [l.claimSpotNumbers.callCount]);
-    //         })
-    //         req.params.id = l.id;
-    //         req.body = {
-    //             count: 2
-    //         }
-    //         res.status = function(status) {
-    //             expect(status).to.equal(200);
-    //             expect(l.addSpots.calledOnce).to.be.true;
-    //             expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
-    //             l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
-    //                 expect(newSpot.number).to.equal(i+1);
-    //                 expect(newSpot.location.coordinates).to.deep.include.all.members(l.location.coordinates);
-    //             })
-    //             expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
-    //             done();
-    //         }
-    //         app.lotController.AddSpotsToLot(req, res);
-    //     });
+        it('should error if db encountered error', function() {
+            app.db.lots = {
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+            }
+            app.lotController.RemoveAvailabilityFromLot(req, res);
+        })
         
-    //     it('should add the specified spots and set spot numbers', function(done) {
-    //         var l = new Lot();
-    //         sinon.stub(l, 'addSpots', function(spots, cb) {
-    //             cb(null);
-    //         });
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null);
-    //         })
-    //         l.location.coordinates = [123, 456];
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 expect(id).to.equal(l.id);
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         sinon.stub(Spot.prototype, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         sinon.stub(l, 'claimSpotNumbers', function(nums, cb) {
-    //             cb(null, [l.claimSpotNumbers.callCount]);
-    //         })
-    //         var newSpots = [
-    //             new Spot(), new Spot()
-    //         ]
-    //         req.params.id = l.id;
-    //         req.body = {
-    //             spots: newSpots
-    //         }
-    //         res.status = function(status) {
-    //             expect(status).to.equal(200);
-    //             expect(l.addSpots.calledOnce).to.be.true;
-    //             expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
-    //             l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
-    //                 expect(newSpot.number).to.equal(i+1);
-    //                 expect(newSpot.location.coordinates).to.deep.include.all.members(l.location.coordinates);
-    //             })
-    //             expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
-    //             done();
-    //         }
-    //         app.lotController.AddSpotsToLot(req, res);
-    //     })
+        it('should return error if lot found is null', function() {
+            app.db.lots = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+            }
+            app.lotController.RemoveAvailabilityFromLot(req, res);
+        })          
+    })
+
+    describe('GetPriceOfLot', function() {
+        it('should error if price is not set', function(done) {
+            var l = new Lot();
+            var price = 123.45;
+            app.db.lots = {
+                findById: mockPromise(l)
+            }
+            req.params.id = l.id;
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.GetPriceOfLot(req, res);
+        })
+
+        it('should return the price of the spot', function(done) {
+            var l = new Lot();
+            var price = 123.45;
+            l.price.perHour = price;
+            app.db.lots = {
+                findById: mockPromise(l)
+            }
+            req.params.id = l.id;
+            res.sent = function() {
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.sentWith({
+                    perHour: price
+                })).to.be.true;
+                done();
+            }
+            app.lotController.GetPriceOfLot(req, res);
+        })
         
-    //     it('should add the specified spot ids and set spot numbers', function(done) {
-    //         var l = new Lot();
-    //         sinon.stub(l, 'addSpots', function(spots, cb) {
-    //             cb(null);
-    //         });
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null);
-    //         })
-    //         l.location.coordinates = [123, 456];
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 expect(id).to.equal(l.id);
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         app.db.spots = {
-    //             findById: function(id, cb) {
-    //                 var found = false;
-    //                 newSpots.forEach(function(spot) {
-    //                     if (spot.id == id)
-    //                         return found = spot;
-    //                 })
-    //                 if (!found)
-    //                     cb('spot not found');
-    //                 else
-    //                     cb(null, found);
-    //             }
-    //         }
-    //         sinon.stub(Spot.prototype, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         sinon.stub(l, 'claimSpotNumbers', function(nums, cb) {
-    //             cb(null, [l.claimSpotNumbers.callCount]);
-    //         })
-    //         var newSpots = [
-    //             new Spot(), new Spot()
-    //         ]
-    //         req.params.id = l.id;
-    //         req.body = {
-    //             spots: newSpots.map(function(spot) {
-    //                 return spot.id;
-    //             })
-    //         }
-    //         res.status = function(status) {
-    //             expect(status).to.equal(200);
-    //             expect(l.addSpots.calledOnce).to.be.true;
-    //             expect(l.addSpots.firstCall.args[0]).to.have.length(newSpots.length);
-    //             l.addSpots.firstCall.args[0].forEach(function(newSpot, i) {
-    //                 expect(newSpot.number).to.equal(i+1);
-    //                 expect(newSpot.location.coordinates).to.deep.include.all.members(l.location.coordinates);
-    //             })
-    //             expect(Spot.prototype.save.callCount).to.equal(newSpots.length);
-    //             done();
-    //         }
-    //         app.lotController.AddSpotsToLot(req, res);
-    //     })
+        it('should error if db encountered error', function(done) {
+            app.db.lots = {
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.GetPriceOfLot(req, res);
+        })
         
-    //     it('should error if db encountered error', function() {
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb('some error');
-    //             }
-    //         }
-    //         app.lotController.AddSpotsToLot(req, res);
-    //         expect(res.status.calledOnce).to.be.true;
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should return error if lot found is null', function() {
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, null);
-    //             }
-    //         }
-    //         app.lotController.AddSpotsToLot(req, res);
-    //         expect(res.status.calledOnce).to.be.true;
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     }) 
-        
-    //     describe('should return error if malformed body', function() {
-    //         var badBodyTest = function(body) {
-    //             var l = new Lot();
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             req.body = body;
-    //             app.lotController.AddSpotsToLot(req, res);
-    //             expect(res.status.calledOnce).to.be.true;
-    //             expect(res.status.calledWith(500)).to.be.true;
-    //             expect(res.send.calledOnce).to.be.true;    
-    //             res.status.reset();
-    //             res.send.reset();
-    //         }
-            
-    //         it('empty', function() {
-    //             badBodyTest({});
-    //         })
-            
-    //         it('bad props', function() {
-    //             badBodyTest({someProp: 'some value'});
-    //         })
-            
-    //         it('bad type for count', function() {
-    //             [
-    //                 'abc',
-    //                 function(){expect.fail()},
-    //                 null,
-    //                 {}
-    //             ].forEach(function(input) {
-    //                 badBodyTest({
-    //                     count: input
-    //                 })
-    //             })
-    //         })
-            
-    //         it('bad type for spots array', function() {
-    //             [
-    //                 {},
-    //                 123,
-    //                 'abc',
-    //                 function(){expect.fail()},
-    //                 null,
-    //                 undefined
-    //             ].forEach(function(input) {
-    //                 badBodyTest({
-    //                     spots: input
-    //                 })
-    //             })
-    //         })
-            
-    //         it('bad type for spots', function() {
-    //             [
-    //                 {},
-    //                 123,
-    //                 function(){expect.fail()},
-    //                 null,
-    //                 undefined
-    //             ].forEach(function(input) {
-    //                 badBodyTest({
-    //                     spots: [input]
-    //                 })
-    //             })
-    //         })
-    //     })
-        
-    //     describe('should return fail when', function() {
-    //         it('could not claimSpotNumbers during count', function() {
-    //             var l = new Lot();
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-    //                 cb('some error');
-    //             })
-    //             req.body = {
-    //                 count: 1
-    //             }
-    //             app.lotController.AddSpotsToLot(req,res);
-    //             expect(res.status.calledOnce).to.be.true;
-    //             expect(res.status.calledWith(500)).to.be.true;
-    //             expect(res.send.calledOnce).to.be.true;
-    //             expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //         })
-            
-    //         it('could not save Spot during count', function(done) {
-    //             var l = new Lot();
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-    //                 cb(null, 1);
-    //             })
-    //             sinon.stub(Spot.prototype, 'save', function(cb) {
-    //                 cb('some error');
-    //             })
-    //             req.body = {
-    //                 count: 1
-    //             }
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //                 done();
-    //             });
-    //             app.lotController.AddSpotsToLot(req,res);
-    //         })
-            
-    //         it('encountered error finding spot during search', function(done) {
-    //             var l = new Lot();
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb('some error');
-    //                 }
-    //             }
-    //             req.body = {
-    //                 spots: ['123']
-    //             }
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //                 done();
-    //             });
-    //             app.lotController.AddSpotsToLot(req,res);
-    //         })
-            
-    //         it('could not find spot during search', function(done) {
-    //             var l = new Lot();
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, null);
-    //                 }
-    //             }
-    //             req.body = {
-    //                 spots: ['123']
-    //             }
-    //             res.sent = function() {
-    //                 expect(res.sendBad.calledOnce).to.be.true;
-    //                 done();
-    //             };
-    //             app.lotController.AddSpotsToLot(req,res);
-    //         })
-            
-    //         it('could not claimSpotNumbers during search', function(done) {
-    //             var l = new Lot();
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, new Spot());
-    //                 }
-    //             }
-    //             sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-    //                 cb('some error');
-    //             })
-    //             req.body = {
-    //                 spots: ['123']
-    //             }
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //                 done();
-    //             });
-    //             app.lotController.AddSpotsToLot(req,res);
-    //         })
-            
-    //         it('could not save Spot during search', function(done) {
-    //             var l = new Lot();
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, new Spot());
-    //                 }
-    //             }
-    //             sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-    //                 cb(null, 1);
-    //             })
-    //             sinon.stub(Spot.prototype, 'save', function(cb) {
-    //                 cb('some error');
-    //             })
-    //             req.body = {
-    //                 spots: ['123']
-    //             }
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //                 done();
-    //             });
-    //             app.lotController.AddSpotsToLot(req,res);
-    //         })
-            
-    //         it('could not addSpots', function(done) {
-    //             var l = new Lot();
-    //             var s = new Spot();
-    //             var number = 123;
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, s);
-    //                 }
-    //             }
-    //             sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-    //                 cb(null, [1]);
-    //             })
-    //             sinon.stub(l, 'unClaimSpotNumbers', function(num, cb) {
-    //                 cb(null);
-    //             })
-    //             sinon.stub(l, 'addSpots', function(spots, cb) {
-    //                 cb(['some error']);
-    //             })
-    //             sinon.stub(s, 'save', function(cb) {
-    //                 cb(null, this);
-    //             })
-    //             req.body = {
-    //                 spots: [s.id]
-    //             }
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.sendBad.calledOnce).to.be.true;
-    //                 expect(res.sendBad.firstCall.args[0]).to.have.length(1);
-    //                 expect(s.number).to.not.be.ok;
-    //                 done();
-    //             });
-    //             app.lotController.AddSpotsToLot(req,res);
-    //         })
-    //     })  
-        
-    //     it('should still save succesfull spots when others fail', function(done) {
-    //         var l = new Lot();
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         app.db.spots = {
-    //             findById: function(id, cb) {
-    //                 for (var i=0;i<spots.length;i++)
-    //                     if (spots[i].id == id)
-    //                         return cb(null, spots[i]);
-    //                 cb(null, null);
-    //             }
-    //         }
-    //         sinon.stub(l, 'claimSpotNumbers', function(num, cb) {
-    //             if (l.claimSpotNumbers.callCount <= 1)
-    //                 cb(null, l.claimSpotNumbers.callCount);
-    //             else
-    //                 cb('some error');
-    //         })
-    //         sinon.stub(l, 'addSpots', function(spots, cb) {
-    //             expect(spots).to.have.length(1);
-    //             cb(null);
-    //         })
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         sinon.stub(Spot.prototype, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         var spots = [
-    //             new Spot(),
-    //             new Spot()
-    //         ]
-    //         req.body = {
-    //             spots: spots.map(function(spot) {
-    //                 return spot.id;
-    //             })
-    //         }
-    //         res.sent = function() {
-    //             expect(res.sendGood.calledOnce).to.be.true;
-    //             expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //             done();
-    //         };
-    //         app.lotController.AddSpotsToLot(req,res);
-    //     })   
-    // })
+        it('should return error if spot found is null', function(done) {
+            app.db.lots = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.GetPriceOfLot(req, res);
+        })
+    })
     
-    // describe('RemoveSpotsFromLot', function() {
-    //     it('should remove the given range of spot numbers', function(done) {
-    //         var l = new Lot();
-    //         var spots = [new Spot(), new Spot(), new Spot()]
-    //         spots.forEach(function(s, i) {
-    //             s.save = sinon.spy(function(cb) {
-    //                 cb(null, this);
-    //             });
-    //             s.number = i + 1;
-    //             s.location = l.location;
-    //             l.spotNumbers.push(s.number);
-    //             l.spots.push(s.id);
-    //         })
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         app.db.spots = {
-    //             findById: function(id, cb) {
-    //                 var found = null;
-    //                 spots.forEach(function(s) {
-    //                     if (s.id == id)
-    //                         return found = s;
-    //                 })
-    //                 cb(found == null ? 'Could not find spot' : null, found);
-    //             },
-    //             find: function(search, cb) {
-    //                 cb(null, [spots[0], spots[1]]);
-    //             }
-    //         }
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         res.send = sinon.spy(function() {
-    //             expect(res.status.calledOnce).to.be.true;
-    //             expect(res.status.calledWith(200)).to.be.true;
-    //             spots.forEach(function(s, i) {
-    //                 if (i < 2) {
-    //                     expect(s.number).to.be.null;
-    //                     expect(l.spotNumbers).to.not.deep.include(i+1);
-    //                     expect(l.spots).to.not.deep.include(s.id);
-    //                     expect(s.save.calledOnce).to.be.true;
-    //                 }
-    //                 else {
-    //                     expect(s.number).to.not.be.null;
-    //                     expect(l.spotNumbers).to.deep.include(s.number);
-    //                     expect(l.spots).to.deep.include(s.id);
-    //                     expect(s.save.callCount).to.equal(0);
-    //                 }
-    //             })
-    //             expect(l.save.calledOnce).to.be.true;
-    //             done();
-    //         });
-    //         req.params.id = l.id;
-    //         req.body = {
-    //             from: 1,
-    //             to: 2
-    //         }
-    //         app.lotController.RemoveSpotsFromLot(req, res);
-    //     })
-    //     it('should remove the given spot ids from spots', function(done) {
-    //         var l = new Lot();
-    //         var s = new Spot();
-    //         l.spots.push(s.id);
-    //         s.location = l.location;
-    //         s.number = 1;
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         app.db.spots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, s);
-    //             }
-    //         }
-    //         sinon.stub(s, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         res.send = sinon.spy(function() {
-    //             expect(res.status.calledOnce).to.be.true;
-    //             expect(res.status.calledWith(200)).to.be.true;
-    //             expect(s.number).to.be.null;
-    //             expect(l.spots).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             done();
-    //         });
-    //         req.params.id = l.id;
-    //         req.body.spots = [s.id];
-    //         app.lotController.RemoveSpotsFromLot(req, res);
-    //     })
+    describe('SetPriceOfLot', function() {
+        it('should set the price of the lot', function(done) {
+            var l = new Lot();
+            var pricePerHour = 123.45;
+            sinon.stub(l, 'setPrice', function(price, cb) {
+                expect(price.perHour).to.equal(pricePerHour);
+                cb(null, this);
+            })
+            app.db.lots = {
+                findById: mockPromise(l)
+            }
+            req.params.id = l.id;
+            req.body.perHour = pricePerHour;
+            res.sent = function() {
+                expect(l.setPrice.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.SetPriceOfLot(req, res);
+        })
         
-    //     it('should remove the given spot objects', function(done) {
-    //         var l = new Lot();
-    //         var s = new Spot();
-    //         l.spots.push(s.id);
-    //         s.location = l.location;
-    //         s.number = 1;
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         app.db.spots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, s);
-    //             }
-    //         }
-    //         sinon.stub(s, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         res.send = sinon.spy(function() {
-    //             expect(res.status.calledOnce).to.be.true;
-    //             expect(res.status.calledWith(200)).to.be.true;
-    //             expect(s.number).to.be.null;
-    //             expect(l.spots).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             done();
-    //         });
-    //         req.params.id = l.id;
-    //         req.body.spots = [s];
-    //         app.lotController.RemoveSpotsFromLot(req, res);
-    //     })
+        it('should error if db encountered error', function(done) {
+            app.db.lots = {
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.SetPriceOfLot(req, res);
+        })
         
-    //     it('should return 200 if removeSpots succededs for any spot', function(done) {
-    //         var l = new Lot();
-    //         var s = new Spot();
-    //         var _s = null;
-    //         l.spots.push(s.id);
-    //         s.location = l.location;
-    //         s.number = 1;
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         app.db.spots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, s);
-    //             }
-    //         }
-    //         sinon.stub(s, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         sinon.stub(l, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         res.send = sinon.spy(function() {
-    //             expect(res.status.calledOnce).to.be.true;
-    //             expect(res.status.calledWith(200)).to.be.true;
-    //             expect(s.number).to.be.null;
-    //             expect(l.spots).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             done();
-    //         });
-    //         req.params.id = l.id;
-    //         req.body.spots = [s, _s];
-    //         app.lotController.RemoveSpotsFromLot(req, res);
-    //     });
-        
-    //     describe('should error when', function() {
-    //         it('encounters error finding lot', function(done) {
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb('some error');
-    //                 }
-    //             }
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 done();
-    //             })
-    //             app.lotController.RemoveSpotsFromLot(req, res);
-    //         })
-            
-    //         it('lot not found', function(done) {
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, null);
-    //                 }
-    //             }
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 done();
-    //             })
-    //             app.lotController.RemoveSpotsFromLot(req, res);
-    //         })
-            
-    //         it('error finding spot', function(done) {
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, new Lot());
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb('some error');
-    //                 }                        
-    //             }
-    //             req.body.spots = ['123']
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 done();
-    //             })
-    //             app.lotController.RemoveSpotsFromLot(req, res);
-    //         })
-            
-    //         it('spot not found', function(done) {
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, new Lot());
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, null);
-    //                 }                        
-    //             }
-    //             req.body.spots = ['123']
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 done();
-    //             })
-    //             app.lotController.RemoveSpotsFromLot(req, res);
-    //         })
-            
-    //         it('could not removeSpots', function(done) {
-    //             var l = new Lot();
-    //             sinon.stub(l, 'removeSpots', function(spots, cb) {
-    //                 cb('some error');
-    //             })
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, new Spot());
-    //                 }                        
-    //             }
-    //             req.body.spots = ['123']
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.sendBad.calledOnce).to.be.true;
-    //                 expect(res.sendBad.calledWith('some error')).to.be.true;
-    //                 done();
-    //             })
-    //             app.lotController.RemoveSpotsFromLot(req, res);
-    //         })
-            
-    //         it('could not save Spot', function(done) {
-    //             var l = new Lot();
-    //             var s = new Spot();
-    //             sinon.stub(l, 'removeSpots', function(spots, cb) {
-    //                 cb(null, [s.id]);
-    //             })
-    //             sinon.stub(s, 'save', function(cb) {
-    //                 cb('some error');
-    //             })
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             app.db.spots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, s);
-    //                 }                        
-    //             }
-    //             req.body.spots = ['123']
-    //             res.send = sinon.spy(function() {
-    //                 expect(res.send.calledOnce).to.be.true;
-    //                 expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //                 expect(res.status.calledOnce).to.be.true;
-    //                 expect(res.status.calledWith(500)).to.be.true;
-    //                 done();
-    //             })
-    //             app.lotController.RemoveSpotsFromLot(req, res);
-    //         })
-    //     })
-        
-    //     describe('should return error if malformed body', function() {
-    //         var badBodyTest = function(body) {
-    //             var l = new Lot();
-    //             sinon.stub(l, 'save', function(cb) {
-    //                 cb(null, this);
-    //             })
-    //             app.db.lots = {
-    //                 findById: function(id, cb) {
-    //                     cb(null, l);
-    //                 }
-    //             }
-    //             req.body = body;
-    //             app.lotController.RemoveSpotsFromLot(req, res);
-    //             expect(res.status.calledOnce).to.be.true;
-    //             expect(res.status.calledWith(500)).to.be.true;
-    //             expect(res.send.calledOnce).to.be.true;    
-    //             res.status.reset();
-    //             res.send.reset();
-    //         }
-            
-    //         it('empty', function() {
-    //             badBodyTest({});
-    //         })
-            
-    //         it('bad props', function() {
-    //             badBodyTest({someProp: 'some value'});
-    //         })
-            
-    //         it('bad type for from', function() {
-    //             [
-    //                 'abc',
-    //                 function(){expect.fail()},
-    //                 null,
-    //                 {}
-    //             ].forEach(function(input) {
-    //                 badBodyTest({
-    //                     from: input,
-    //                     to: 10
-    //                 })
-    //             })
-    //         })
-            
-    //         it('bad type for to', function() {
-    //             [
-    //                 'abc',
-    //                 function(){expect.fail()},
-    //                 null,
-    //                 {}
-    //             ].forEach(function(input) {
-    //                 badBodyTest({
-    //                     from: 1,
-    //                     to: input
-    //                 })
-    //             })
-    //         })
-            
-    //         it('too small for from', function() {
-    //             badBodyTest({
-    //                 from: Lot.spotNumbersRange.min - 1,
-    //                 to: Lot.spotNumbersRange.max
-    //             })
-    //         })
-            
-    //         it('too big for to', function() {
-    //             badBodyTest({
-    //                 from: Lot.spotNumbersRange.min,
-    //                 to: Lot.spotNumbersRange.max + 1
-    //             })
-    //         })
-            
-    //         it('bad type for spots', function() {
-    //             [
-    //                 123,
-    //                 function(){expect.fail()},
-    //                 null,
-    //                 undefined
-    //             ].forEach(function(input) {
-    //                 badBodyTest({
-    //                     spots: [input]
-    //                 })
-    //             })
-    //         })
-    //     })
-        
-    //     it('should still save succesfull updates', function(done) {
-    //         var l = new Lot();
-    //         var s = new Spot();
-    //         sinon.stub(l, 'removeSpots', function(spots, cb) {
-    //             expect(spots).to.have.length(1);
-    //             cb(null, [s.id]);
-    //         })
-    //         sinon.stub(s, 'save', function(cb) {
-    //             cb(null, this);
-    //         })
-    //         app.db.lots = {
-    //             findById: function(id, cb) {
-    //                 cb(null, l);
-    //             }
-    //         }
-    //         app.db.spots = {
-    //             findById: function(id, cb) {
-    //                 if (id == s.id)
-    //                     cb(null, s);
-    //                 else
-    //                     cb('some error');
-    //             }                        
-    //         }
-    //         req.body.spots = ['123', s.id]
-    //         res.sent = function() {
-    //             expect(res.send.calledOnce).to.be.true;
-    //             expect(res.send.firstCall.args[0].errors).to.have.length(1);
-    //             done();
-    //         }
-    //         app.lotController.RemoveSpotsFromLot(req, res);
-    //     })
-    // })
+        it('should return error if lot found is null', function(done) {
+            app.db.spots = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.SetPriceOfLot(req, res);
+        })
+    })
 })

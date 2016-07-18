@@ -590,6 +590,11 @@ _d('the entire app should not explode', function() {
             it('should create a new lot', function(done) {
                 request(app).put('/api/lots')
                     .set('Authorization', 'JWT ' + token)
+                    .send({lot: {
+                        location: {
+                            coordinates: [12, 21]
+                        }
+                    }})
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
                         expect(res.status).to.equal(200);
@@ -605,7 +610,7 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe.skip('GET /api/lots/:id/location', function() {
+        describe('GET /api/lots/:id/location', function() {
             it('should return location for the lot', function(done) {
                 var lot = new Lot();
                 lot.location.coordinates = [12, 34];
@@ -621,32 +626,12 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe.skip('PUT /api/lots/:id/location', function() {
-            it('should set coordinates', function(done) {
-                var coords = [12, 21];
-                var lot = new Lot();
-                insert(lot, function() {
-                    request(app).put('/api/lots/' + lot.id + '/location')
-                    .send({coordinates: coords})
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
-                            app.db.lots.findById(lot.id, function(err, doc) {
-                                expect(err).to.not.be.ok;
-                                expect(doc.location.coordinates).to.deep.include.all.members(coords);
-                                done();
-                            });
-                        });
-                })
-            })
-        })
-        describe.skip('GET /api/lots/:id/spots', function() {
+        describe('GET /api/lots/:id/spots', function() {
             it('should return spot for the lot', function(done) {
-                var spot = new Spot();
-                var lot = new Lot({
-                    spots: [spot.id]
-                })
+                var lot = new Lot()
+                var spot = new Spot({
+                    lot: lot
+                });
                 insert(spot, lot, function() {
                     request(app).get('/api/lots/' + lot.id + '/spots')
                         .set('Authorization', 'JWT ' + token)
@@ -659,53 +644,6 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        // describe('PUT /api/lots/:id/spots', function(done) {
-        //     it('should set the spot for the lot', function(done) {
-        //         var spot = new Spot();
-        //         var lot = new Lot();
-        //         insert(spot, lot, function() {
-        //             request(app).put('/api/lots/' + lot.id + '/spots')
-        //                 .send({spots: [spot.id]})
-        //                 .set('Authorization', 'JWT ' + token)
-        //                 .end(function(err, res) {
-        //                     expect(err).to.not.be.ok;
-        //                     expect(res.status).to.equal(200);
-        //                     app.db.lots.findById(lot.id, function(err, doc) {
-        //                         expect(err).to.not.be.ok;
-        //                         expect(doc.spots).to.deep.include(spot.id);
-        //                         done();
-        //                     })
-        //                 })
-        //         })
-        //     })
-        // })
-        // describe('PUT /api/lots/:id/spots/remove', function(done) {
-        //     it('shouldremove the spot from the lot', function(done) {
-        //         var spot = new Spot();
-        //         var spot2 = new Spot();
-        //         var lot = new Lot({
-        //             spots: [spot.id, spot2.id]
-        //         })
-        //         insert(lot, spot, function() {
-        //             request(app).put('/api/lots/' + lot.id + '/spots/remove')
-        //                 .send({spots: [spot.id]})
-        //                 .set('Authorization', 'JWT ' + token)
-        //                 .end(function(err, res) {
-        //                     expect(err).to.not.be.ok;
-        //                     expect(res.status).to.equal(200);
-        //                     app.db.lots.findById(lot.id, function(err, doc) {
-        //                         expect(err).to.not.be.ok;
-        //                         expect(doc.spots).to.deep.include(spot2.id);
-        //                         expect(doc.spots).to.not.deep.include(spot.id);
-        //                         doc.addSpots(spot, function(err) {
-        //                             expect(err).to.not.be.ok;
-        //                             done();
-        //                         })
-        //                     })
-        //                 })
-        //         })
-        //     })
-        // })
     })
 
     describe('Spot Controller', function() {
@@ -764,7 +702,7 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe.skip('GET /api/spots/:id/location', function() {
+        describe('GET /api/spots/:id/location', function() {
             it('should return location for the spot', function(done) {
                 var spot = new Spot();
                 spot.location.coordinates = [12, 34];
@@ -776,26 +714,6 @@ _d('the entire app should not explode', function() {
                             expect(res.status).to.equal(200);
                             expect(res.text).to.contain(spot.location.coordinates.toString());
                             done();
-                        });
-                })
-            })
-        })
-        describe.skip('PUT /api/spots/:id/location', function() {
-            it('should set coordinates', function(done) {
-                var coords = [12, 21];
-                var spot = new Spot();
-                insert(spot, function() {
-                    request(app).post('/api/spots/' + spot.id + '/location')
-                    .send({coordinates: coords})
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
-                            app.db.spots.findById(spot.id, function(err, doc) {
-                                expect(err).to.not.be.ok;
-                                expect(doc.location.coordinates).to.deep.include.all.members(coords);
-                                done();
-                            });
                         });
                 })
             })
@@ -818,7 +736,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe.skip('PUT /api/spots/:id/bookings', function() {
+        describe('PUT /api/spots/:id/bookings', function() {
             it('should add bookings', function(done) {
                 var spot = new Spot();
                 spot.available.addRange(
@@ -826,20 +744,20 @@ _d('the entire app should not explode', function() {
                     new Date('2100/01/01')
                 );
                 spot.price.perHour = 123.45;
-                var booking = new Booking({
+                var booking = {
                     start: new Date('2040/01/01'),
                     end: new Date('2050/01/01')
-                });
-                insert(spot, booking, function() {
+                };
+                insert(spot, function() {
                     request(app).put('/api/spots/' + spot.id + '/bookings')
-                    .send({bookings: booking.id})
+                    .send({bookings: booking})
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
-                            app.db.spots.findById(spot.id, function(err, doc) {
+                            expect(res.status, res.body.errors).to.equal(200);
+                            app.db.bookings.find({spot: spot.id}, function(err, doc) {
                                 expect(err).to.not.be.ok;
-                                expect(doc.bookings).to.include(booking.id);
+                                expect(doc).to.be.ok;
                                 done();
                             })
                         })
