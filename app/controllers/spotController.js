@@ -186,32 +186,6 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    // SetLocationForSpot: function(req, res) {
-    //     var coords = req.body.coordinates;
-    //     if (!coords)
-    //         return res.sendBad('Cannot set location, you must supply coordinates');
-    //     var app = this.app;
-    //     app.db.spots.findById(req.params.id)
-    //     .exec()
-    //     .then(function(spot) {
-    //         if (coords instanceof Array)
-    //             coords = {long:coords[0], lat:coords[1]};
-    //         if (coords.lon == null)
-    //             coords.lon = coords.long;
-    //         if (coords.long !== undefined)
-    //             delete coords.long;
-    //         app.geocoder.reverse(coords, function(err, loc) {
-    //             spot.setLocation(coords, loc[0].formattedAddress, function(err) {
-    //                 if (err)
-    //                     return res.sendBad(err);
-    //                 else res.sendGood('Location set for spot');
-    //             });
-    //         })    
-    //     })
-    //     .catch(function (err) {
-    //         res.sendBad(err);
-    //     });
-    // },
     GetAllBookingsForSpot: function(req, res) {
         var app = this.app;
         app.db.bookings.find({spot: req.params.id})

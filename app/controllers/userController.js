@@ -2,16 +2,9 @@ var controller = function(app) {
     this.app = app;
     app.get('/api/users', app.checkAuth, app.checkAdmin, this.GetAllUsers.bind(this));
     app.get('/api/users/profile', app.checkAuth, this.GetProfileForSessionUser.bind(this));
-
     app.get('/api/users/:id/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetLotsForUser.bind(this));
-    // app.put('/api/users/:id/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddLotsToUser.bind(this));
-
     app.get('/api/users/:id/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetSpotsForUser.bind(this));
-    // app.put('/api/users/:id/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddSpotsToUser.bind(this));
-    
     app.get('/api/users/:id/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetBookingsForUser.bind(this));
-    // app.put('/api/users/:id/bookings', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddBookingsToUser.bind(this));
-    
     app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetProfileForUser.bind(this));
     app.patch('/api/users/:id/profile', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.UpdateProfileForfUser.bind(this));
 }

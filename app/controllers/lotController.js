@@ -87,32 +87,6 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    // SetLocationOfLot: function(req, res) {
-    //     var coords = req.body.coordinates;
-    //     var app = this.app;
-    //     app.db.lots.findById(req.params.id, function(err, lot) {
-    //         if (err) {
-    //             return res.sendBad(err);
-    //         }
-    //         else {
-    //             if (coords instanceof Array)
-    //                 coords = {lon:coords[0], lat:coords[1]};
-    //             if (coords.lon == null)
-    //                 coords.lon = coords.long;
-    //             if (coords.long !== undefined)
-    //                 delete coords.long;
-    //             app.geocoder.reverse(coords, function(err, loc) {
-    //                 if (err)
-    //                     return res.sendBad(err);
-    //                 lot.setLocation(coords, loc[0].formattedAddress, function(err) {
-    //                     if (err)
-    //                         return res.sendBad(err);
-    //                     else res.sendStatus(200);
-    //                 });
-    //             })    
-    //         }
-    //     });
-    // },
     GetSpotsForLot: function(req, res) {
         var app = this.app;
         app.db.spots.find({lot: req.params.id})

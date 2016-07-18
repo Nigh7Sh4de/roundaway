@@ -720,11 +720,6 @@ routeTest('spotController', [
             route: '/api/spots/:id/location',
             method: 'GetLocationForSpot'
         },
-        // {
-        //     verb: verbs.POST,
-        //     route: '/api/spots/:id/location',
-        //     method: 'SetLocationForSpot'
-        // },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/bookings',

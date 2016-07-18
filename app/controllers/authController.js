@@ -72,20 +72,6 @@ authController.prototype = {
             successRedirect: '/#/profile'
         })(req, res, next);
     }
-    // init: function(app) {
-    //     this.app = app;
-    //     app.get('/logout', this.Logout);
-
-    //     app.get('/login/google', this.Login('google'));
-    //     app.get('/login/google/return', this.LoginReturn('google'));
-    //     app.get('/connect/google', this.Connect('google'));
-    //     app.get('/connect/google/return', this.ConnectReturn('google'));
-
-    //     app.get('/login/facebook', this.Login('facebook'));
-    //     app.get('/login/facebook/return', this.LoginReturn('facebook'));
-    //     app.get('/connect/facebook', this.Connect('facebook'));
-    //     app.get('/connect/facebook/return', this.ConnectReturn('facebook'));
-    // }
 }
 
 

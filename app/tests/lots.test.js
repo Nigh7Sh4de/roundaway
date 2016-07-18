@@ -439,129 +439,6 @@ describe('Lot schema', function() {
             })
         })
     })
-    
-    // describe('unClaimSpotNumbers', function() {
-    //     it('should unclaim the specified array of spot numbers', function(done) {
-    //         var l = new Lot();
-    //         var nums = [1,2,3];
-    //         l.spotNumbers = nums;
-    //         l.unClaimSpotNumbers(nums, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.include.members(nums);
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should unclaim the specified spot number', function(done) {
-    //         var l = new Lot();
-    //         var num = 1;
-    //         l.spotNumbers.push(num);
-    //         l.unClaimSpotNumbers(num, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spotNumbers).to.not.include(num);
-    //             expect(l.spotNumbers).to.not.be.ok;
-    //             done();
-    //         })
-    //     })
-    // })
-    
-    // describe('claimSpotNumbers', function() {
-    //     it('should pass added numbers to callback', function(done) {
-    //         var l = new Lot();
-    //         var nums = [1,2,3];
-    //         expect(l.spotNumbers).to.not.be.ok;
-    //         l.claimSpotNumbers(nums, function(err, n) {
-    //             expect(err).to.not.be.ok;
-    //             expect(n).to.include.all.members(nums);
-    //             expect(l.spotNumbers).to.have.length(3);
-    //             done();
-    //         })
-    //     })
-    //     it('should claim next spot number given no input', function(done) {
-    //         var l =  new Lot();
-    //         expect(l.spotNumbers).to.not.be.ok;
-    //         l.claimSpotNumbers(null, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spotNumbers).to.have.length(1);
-    //             expect(l.spotNumbers[0]).to.equal(1);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should claim given spot number', function(done) {
-    //         var l =  new Lot();
-    //         var num = 666;
-    //         expect(l.spotNumbers).to.not.be.ok;
-    //         l.claimSpotNumbers(num, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spotNumbers).to.have.length(1);
-    //             expect(l.spotNumbers[0]).to.equal(num);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should error if trying to claim taken number', function(done) {
-    //         var l =  new Lot();
-    //         var num = 666;
-    //         l.spotNumbers.push(num);
-    //         expect(l.spotNumbers).to.have.length(1);
-    //         expect(l.spotNumbers[0]).to.equal(num);
-    //         l.claimSpotNumbers(num, function(err) {
-    //             expect(err).to.be.ok;
-    //             expect(l.spotNumbers).to.have.length(1);
-    //             expect(l.spotNumbers[0]).to.equal(num);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should claim multiple spot numbers given an array', function(done) {
-    //         var l =  new Lot();
-    //         var nums = [1, 2, 3, 4, 5];
-    //         expect(l.spotNumbers).to.not.be.ok;
-    //         l.claimSpotNumbers(nums, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(l.spotNumbers).to.have.length(nums.length);
-    //             nums.forEach(function(num, i) {
-    //                 expect(l.spotNumbers[i]).to.equal(num);
-    //             });
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should still save passing numbers and error failures', function(done) {
-    //         var l = new Lot();
-    //         var nums = [1, 2, 3, 4, 5, 5];
-    //         expect(l.spotNumbers).to.not.be.ok;
-    //         l.claimSpotNumbers(nums, function(err) {
-    //             expect(err).to.be.ok;
-    //             expect(err).to.have.length(1);
-    //             expect(l.spotNumbers).to.have.length(nums.length - 1);
-    //             for (var i = 0;i < nums.length - 1; i++)
-    //                 expect(l.spotNumbers[i]).to.equal(nums[i]);
-    //             done();
-    //         })
-    //     })
-        
-    //     it('should fail given bad input', function(done) {
-    //         var l = new Lot();
-    //         expect(l.spotNumbers).to.not.be.ok;
-    //         [
-    //             {},
-    //             'abc',
-    //             Lot.spotNumbersRange.min - 1,
-    //             Lot.spotNumbersRange.max + 1,
-    //             function(){expect.fail()}
-    //         ].forEach(function(input, i, arr) {
-    //             l.claimSpotNumbers(input, function(err) {
-    //                 expect(err).to.be.ok;
-    //                 expect(l.spotNumbers).to.not.be.ok;
-    //                 if (i >= arr.length - 1)
-    //                     done();
-    //             })
-    //         })
-    //     })
-    // })
 })
 
 routeTest('lotController', [
@@ -587,11 +464,6 @@ routeTest('lotController', [
         route: '/api/lots/:id/location',
         method: 'GetLocationOfLot'
     },
-    // {
-    //     verb: verbs.PUT,
-    //     route: '/api/lots/:id/location',
-    //     method: 'SetLocationOfLot'
-    // },
     {
         verb: verbs.GET,
         route: '/api/lots/:id/spots',
@@ -617,17 +489,6 @@ routeTest('lotController', [
         route: '/api/lots/:id/price',
         method: 'SetPriceOfLot'
     }
-    //,
-    // {
-    //     verb: verbs.PUT,
-    //     route: '/api/lots/:id/spots',
-    //     method: 'AddSpotsToLot'
-    // },
-    // {
-    //     verb: verbs.PUT,
-    //     route: '/api/lots/:id/spots/remove',
-    //     method: 'RemoveSpotsFromLot'
-    // }
 ])
 
 describe('lotController', function() {
@@ -894,60 +755,9 @@ describe('lotController', function() {
         })
     })
     
-    // describe('CreateLot', function() {
-    //     beforeEach(function() {
-    //         sinon.stub(Lot.prototype, 'setLocation', mockPromise(new Lot()));
-    //     })
 
-    //     afterEach(function() {
-    //         Lot.prototype.setLocation.restore();
-    //     })
-    //     it('should create a new lot with the given location', function(done) {
-    //         app.geocoder = {
-    //             reverse: mockPromise([{formattedAddress: '123 fake st'}])
-    //         }
-    //         res.sent = function() {
-    //             expect(Lot.prototype.setLocation.calledOnce).to.be.true;
-    //             done();
-    //         }
-    //         req.body.coordinates = {
-    //             lon: 12,
-    //             lat: 21
-    //         }
-    //         app.lotController.CreateLot(req, res);
-    //     })  
 
-    //     it('should fail if no location is provided', function(done) {
-    //         app.geocoder = {
-    //             reverse: mockPromise([{formattedAddress: '123 fake st'}])
-    //         }
-    //         res.sent = function() {
-    //             expect(res.sendBad.calledOnce).to.be.true;
-    //             done();
-    //         }
-    //         req.body.coordinates = {
-    //             badProp: 'some value'
-    //         }
-    //         app.lotController.CreateLot(req, res);
-    //     })  
 
-    //     it('should fail if lot could not set location', function(done) {
-    //         app.geocoder = {
-    //             reverse: mockPromise([{formattedAddress: '123 fake st'}])
-    //         }
-    //         Lot.prototype.setLocation.restore();
-    //         sinon.stub(Lot.prototype, 'setLocation', mockPromise(null, 'some error'));
-    //         res.sent = function() {
-    //             expect(res.sendBad.calledOnce).to.be.true;
-    //             done();
-    //         }
-    //         req.body.coordinates = {
-    //             lon: 12,
-    //             lat: 21
-    //         }
-    //         app.lotController.CreateLot(req, res);
-    //     })    
-    // })
     
     describe('GetLocationOfLot', function() {
         it('should return the lot\'s location', function(done) {

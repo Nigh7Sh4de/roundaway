@@ -5,7 +5,6 @@ var verbs = routeTest.verbs;
 var request = require('supertest');
 var sinon = require('sinon');
 var server = require('./../../server');
-// var inject = server.GetDefaultInjection();
 
 routeTest('authController', [
     {
@@ -108,8 +107,6 @@ describe('authController', function() {
         app = server(inject);
         req = expressExtensions.mockRequest();
         res = expressExtensions.mockResponse();
-        // inject = new server.GetDefaultInjection();
-        // inject.authController = Object.assign({}, inject.authController);
     });
     
     describe('Logout', function() {
