@@ -58,12 +58,18 @@ var exts = {
                     if (!body)
                         return false;
                     for (var prop in obj) {
-                        if (!deepEqual(body[prop], obj[prop]))
+                        var a = body[prop].toObject ? body[prop].toObject() : body[prop];
+                        var b = obj[prop].toObject ? obj[prop].toObject() : obj[prop];
+                        if (!deepEqual(a, b))
                             return false;
                     }
                     return true;
                 }
-                else return deepEqual(body.data, obj);
+                else {
+                    var a = body.data.toObject ? body.data.toObject() : body.data;
+                    var b = obj.toObject ? obj.toObject() : obj;
+                    return deepEqual(a, b);
+                }
             },
             status: sinon.spy(function(s) {
                 return this;
