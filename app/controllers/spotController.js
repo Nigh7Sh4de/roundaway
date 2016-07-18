@@ -227,6 +227,13 @@ controller.prototype = {
     AddBookingsToSpot: function(req, res) {
         var bookings = req.body.bookings || req.body;
         if (!(bookings instanceof Array)) bookings = [bookings];
+        for (var i=0; i<bookings.length; i++) {
+            var booking = bookings[i];
+            if (!booking.start || !booking.end ||
+                isNaN(new Date(booking.start).valueOf()) ||
+                isNaN(new Date(booking.end).valueOf()))
+                return res.sendBad('Could not create booking as valid start and end times were not provided') 
+        }
         var spot = req.params.id;
         this.app.db.spots.findById(spot)
         .exec()

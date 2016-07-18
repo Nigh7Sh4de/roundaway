@@ -1436,6 +1436,19 @@ describe('spotController', function() {
     })
     
     describe('AddBookingsToSpot', function() {
+        it('should fail if bookings do not have start and end times', function(done) {
+            var s = new Spot();
+            s.price.perHour = 123.45;
+            var b = new Booking();
+            req.params.id = s.id;
+            req.body = b;
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+        })
+
         it('should create booking object and add them', function(done) {
             var s = new Spot();
             s.price.perHour = 123.45;
