@@ -18,13 +18,14 @@ var controller = function(app) {
 
 controller.prototype = {
     GetAllUsers: function(req, res) {
-        this.app.db.users.find({}, function(err, docs) {
-            if (err)
-                return res.sendBad(err);
-            else {
-                return res.sendGood('Found users', docs);
-            }
-        });
+        this.app.db.users.find({})
+        .exec()
+        .then(function (users) {
+            return res.sendGood('Found users', users);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
     },
     GetProfileForSessionUser: function(req, res) {
         if (req.user == null)
@@ -34,180 +35,65 @@ controller.prototype = {
             )
     },
     GetLotsForUser: function(req, res) {
-        this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            if (doc == null)
-                return res.sendBad('Could not get lots for user because this user was not found');
-                                
-            res.sendGood('Found lots for user', doc.lotIds);
+        this.app.db.lots.find({
+            user: req.params.id
+        })
+        .exec()
+        .then(function(lots) {
+            res.sendGood('Found lots', lots);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         })
     },
-    // AddLotsToUser: function(req, res) {
-    //     if (req.body.lots == null)
-    //         return res.sendBad('Could not add lots as no lots were specified');
-    //     var count = 2;
-    //     var i = 0;
-    //     var next = function() {
-    //         if (++i >= count)
-    //             done();
-    //     }
-    //     var done = function() {
-    //         user.addLot(lots, function(err, count) {
-    //             var msg = count + ' lot' + (count != 1 ? 's' : '') + ' added to user';
-    //             if (err) {
-    //                 msg += '\nERRORS: \n'
-    //                 err.forEach(function (e) {
-    //                     msg += e + '\n';
-    //                 })
-    //                 return res.sendBad(msg);
-    //             }
-    //             res.sendGood(msg);
-    //         });
-    //     }
-    //     var user = null;
-    //     var lots = null;
-    //     this.app.db.users.findById(req.params.id, function(err, doc) {
-    //         if (err)
-    //             return res.sendBad(err);
-    //         if (doc == null)
-    //             return res.sendBad('Could not add lot because this user was not found');
-    //         user = doc;
-    //         next();
-    //     });
-    //     if (typeof req.body.lots == 'string')
-    //         req.body.lots = [req.body.lots];
-    //     this.app.db.lots.find({_id: {$in: req.body.lots}}, function(err, docs) {
-    //         if (err)
-    //             return res.sendBad(err);
-    //         if (docs.length == 0)
-    //             return res.sendBad('Could not add lot as this lot was not found');
-    //         lots = docs;
-    //         next();
-    //     })
-    // },
     GetSpotsForUser: function(req, res) {
-        this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            if (doc == null)
-                return res.sendBad('Could not get lots for user as this user was not found');
-                                
-            res.sendGood('Found spots', doc.spotIds);
+        this.app.db.spots.find({
+            user: req.params.id
+        })
+        .exec()
+        .then(function(spots) {
+            res.sendGood('Found spots', spots);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         })
     },
-    // AddSpotsToUser: function(req, res) {
-    //     if (req.body.spots == null)
-    //         return res.sendBad('Could not add spots as no spots were specified');
-    //     var count = 2;
-    //     var i = 0;
-    //     var next = function() {
-    //         if (++i >= count)
-    //             done();
-    //     }
-    //     var done = function() {
-    //         user.addSpot(spots, function(err, count) {
-    //             if (err)
-    //                 return res.sendBad(err);
-    //             res.sendGood();
-    //         });
-    //     }
-    //     var user = null;
-    //     var spots = null;
-    //     this.app.db.users.findById(req.params.id, function(err, doc) {
-    //         if (err)
-    //             return res.sendBad(err);
-    //         if (doc == null)
-    //             return res.sendBad('Could not add spot as this user was not found');
-    //         user = doc;
-    //         next();
-    //     });
-    //     if (typeof req.body.spots == 'string')
-    //         req.body.spots = [req.body.spots];
-    //     req.body.spots = req.body.spots.map(function(spot) {
-    //         return spot.id || spot._id || spot;
-    //     })
-    //     this.app.db.spots.find({_id: {$in: req.body.spots}}, function(err, docs) {
-    //         if (err)
-    //             return res.sendBad(err);
-    //         if (docs.length == 0)
-    //             return res.sendBad('Could not add spot as this spot was not found');
-    //         spots = docs;
-    //         next();
-    //     })
-    // },
     GetBookingsForUser: function(req, res) {
-        this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            if (doc == null)
-                return res.sendBad('Could not get lots for user as this user was not found');
-                                
-            res.sendGood('Fonud bookings', doc.bookingIds);
+        this.app.db.bookings.find({
+            user: req.params.id
+        })
+        .exec()
+        .then(function(bookings) {
+            res.sendGood('Found bookings', bookings);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         })
     },
-    // AddBookingsToUser: function(req, res) {
-    //     if (req.body.bookings == null)
-    //         return res.sendBad('Could not add bookings since no bookings were specified');
-    //     var count = 2;
-    //     var i = 0;
-    //     var next = function() {
-    //         if (++i >= count)
-    //             done();
-    //     }
-    //     var done = function() {
-    //         user.addBooking(bookings, function(err, count) {
-    //             if (err)
-    //                 return res.sendBad(err);
-    //             res.sendGood();
-    //         });
-    //     }
-    //     var user = null;
-    //     var bookings = null;
-    //     this.app.db.users.findById(req.params.id, function(err, doc) {
-    //         if (err)
-    //             return res.sendBad(err);
-    //         if (doc == null)
-    //             return res.sendBad('Could not add booking as this user was not found');
-    //         user = doc;
-    //         next();
-    //     });
-    //     if (typeof req.body.bookings == 'string')
-    //         req.body.bookings = [req.body.bookings];
-    //     req.body.bookings = req.body.bookings.map(function(booking) {
-    //         return booking.id || booking._id || booking;
-    //     })
-    //     this.app.db.bookings.find({_id: {$in: req.body.bookings}}, function(err, docs) {
-    //         if (err)
-    //             return res.sendBad(err);
-    //         if (docs.length == 0)
-    //             return res.sendBad('Could not add booking because this booking was not found');
-    //         bookings = docs;
-    //         next();
-    //     })
-    // },
     UpdateProfileForfUser: function(req, res) {
-        this.app.db.users.findById(req.params.id, function(err, user) {
-            if (err)
-                return res.sendBad(err);
-            if (user == null)
-                return res.sendBad('Could not update user as this user was not found');
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            if (!user) throw 'Could not update user as this user was not found';
 
-            user.updateProfile(req.body, function(err) {
-                if (err)
-                    return res.sendBad(err);
-                res.sendGood('Profile updated', user.profile)
-            });
+            return user.updateProfile(req.body);
+        })
+        .then(function(user) {
+            res.sendGood('Profile updated', user.profile)
+        })
+        .catch(function(err) {
+            res.sendBad(err);
         })
     },
     GetProfileForUser: function(req, res) {
-        this.app.db.users.findById(req.params.id, function(err, doc) {
-            if (err)
-                return res.sendBad(err);
-            if (doc == null)
-                return res.sendBad('Could not get profile for user as this user was not found');
-                                
-            res.sendGood('Found profile for user', doc.profile);
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            if (!user) throw 'Could not get profile for user as this user was not found';
+            res.sendGood('Found profilr for user', user.profile);
+        })
+        .then(function(err) {
+            res.sendBad(err);
         })
     }
 }

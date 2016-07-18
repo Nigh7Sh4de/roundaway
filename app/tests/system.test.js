@@ -120,17 +120,17 @@ _d('the entire app should not explode', function() {
 
             })
         })
-        describe.skip('GET /api/users/:id/lots', function() {
+        describe('GET /api/users/:id/lots', function() {
             it('should return lots for the user', function(done) {
-                var lot = new Lot();
-                var user = new User({
-                    lotIds: [lot.id]
+                var user = new User();
+                var lot = new Lot({
+                    user: user.id
                 });
-                insert(lot, user, function() {
+                insert(lot, function() {
                     request(app).get('/api/users/' + user.id + '/lots')
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
-                            expect(res.body.data).to.include(lot.id);
+                            expect(res.text).to.contain(lot.id);
                             expect(res.status).to.equal(200);
                             done();
                         })
@@ -155,17 +155,17 @@ _d('the entire app should not explode', function() {
         //         })
         //     })
         // })
-        describe.skip('GET /api/users/:id/spots', function() {
+        describe('GET /api/users/:id/spots', function() {
             it('should return spots for the user', function(done) {
-                var spot = new Spot();
-                var user = new User({
-                    spotIds: [spot.id]
+                var user = new User();
+                var spot = new Spot({
+                    user: user.id
                 });
-                insert(user, spot, function() {
+                insert(spot, function() {
                     request(app).get('/api/users/' + user.id + '/spots')
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
-                            expect(res.body.data).to.include(spot.id);
+                            expect(res.text).to.contain(spot.id);
                             expect(res.status).to.equal(200);
                             done();
                         })
@@ -190,21 +190,21 @@ _d('the entire app should not explode', function() {
         //         });
         //     })
         // })
-        describe.skip('GET /api/users/:id/bookings', function() {
+        describe('GET /api/users/:id/bookings', function() {
             it('should return bookings for the user', function(done) {
-                var booking = new Booking();
-                var user = new User({
-                    bookingIds: [booking.id]
-                })
-                insert(booking, user, function() {
+                var user = new User();
+                var booking = new Booking({
+                    user: user.id
+                });
+                insert(booking, function() {
                     request(app).get('/api/users/' + user.id + '/bookings')
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
-                            expect(res.body.data).to.include(booking.id);
+                            expect(res.text).to.contain(booking.id);
                             expect(res.status).to.equal(200);
                             done();
                         })
-                })
+                });
             })
         })
         // describe('PUT /api/users/:id/bookings', function() {

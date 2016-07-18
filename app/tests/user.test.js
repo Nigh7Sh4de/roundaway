@@ -3,6 +3,7 @@ var sinon = require('sinon');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var mockPromise = require('./mockPromise');
 var server = require('./../../server');
 var User = require('./../models/User');
 var Lot = require('./../models/Lot');
@@ -18,304 +19,21 @@ describe('User schema', function() {
     after(function() {
         User.prototype.save.restore();
     })
-    
-    // describe('addLot', function() {
-    //     it('should add the given lot array to the user', function(done) {
-    //         var lot = new Lot();
-    //         var user = new User();
-    //         expect(user.lotIds).to.be.empty;
-            
-    //         user.addLot([lot.id], function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(user.lotIds).to.have.length(1).and.to.contain(lot.id);
-    //             done();
-    //         });;
-    //     })
         
-    //     it('should add the given lotId to the user', function(done) {
-    //         var lot = new Lot();
-    //         var user = new User();
-    //         expect(user.lotIds).to.be.empty;
-            
-    //         user.addLot(lot.id, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(user.lotIds).to.have.length(1).and.to.contain(lot.id);
-    //             done();
-    //         });;
-    //     });
-        
-    //     it('should add the given lot object to the user', function(done) {
-    //         var lot = new Lot();
-    //         var user = new User();
-    //         expect(user.lotIds).to.be.empty;
-            
-    //         user.addLot(lot, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(user.lotIds).to.have.length(1).and.to.contain(lot.id);
-    //             done();
-    //         })
-    //     });
-        
-    //     it('should error on null input', function(done) {
-    //         var user = new User();
-    //         expect(user.lotIds).to.be.empty;
-    //         user.addLot(null, function(err) {
-    //             expect(user.lotIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-        
-    //     it('should error on null id', function(done) {
-    //         var user = new User();
-    //         var lot = {
-    //             someproperty: 'some value'
-    //         }
-    //         expect(user.lotIds).to.be.empty;
-    //         user.addLot(lot, function(err) {
-    //             expect(user.lotIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-        
-    //     it ('should error on improper id', function(done) {
-    //         var user = new User();
-    //         var lot = {
-    //             id: {}
-    //         }
-    //         expect(user.lotIds).to.be.empty;
-    //         user.addLot(lot, function(err) {
-    //             expect(user.lotIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-        
-    //     it('should error if user already has lot', function(done) {
-    //         var id = '123';
-    //         var user = new User();
-    //         user.lotIds.push(id)
-    //         var lot = {
-    //             id: id
-    //         }
-    //         expect(user.lotIds).to.have.length(1);
-    //         user.addLot(lot, function(err) {
-    //             expect(user.lotIds).to.have.length(1);
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     })
-        
-    //     it('should return the number of successful additions', function(done) {
-    //         var ids = ['123', '456', '789'];
-    //         var user = new User();
-    //         expect(user.lotIds).to.be.empty;
-    //         user.addLot(ids, function(err) {
-    //             expect(user.lotIds).to.have.length(ids.length);
-    //             expect(err).to.not.be.ok;
-    //             done();
-    //         });
-    //     })
-    // });
-    
-    // describe('addSpot', function() {
-    //     it('should handle arrays', function(done) {
-    //         var spot = new Spot();
-    //         var user = new User();
-    //         expect(user.spotIds).to.be.empty;
-            
-    //         user.addSpot([spot], function(err) {
-    //             expect(err, err).to.not.be.ok;
-    //             expect(user.spotIds).to.have.length(1).and.to.contain(spot.id);
-    //             done();
-    //         });;
-    //     })
-    //     it('should add the given spotId to the user', function(done) {
-    //         var spot = new Spot();
-    //         var user = new User();
-    //         expect(user.spotIds).to.be.empty;
-            
-    //         user.addSpot(spot.id, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(user.spotIds).to.have.length(1).and.to.contain(spot.id);
-    //             done();
-    //         });;
-    //     });
-        
-    //     it('should add the given spot object to the user', function(done) {
-    //         var spot = new Spot();
-    //         var user = new User();
-    //         expect(user.spotIds).to.be.empty;
-            
-    //         user.addSpot(spot, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(user.spotIds).to.have.length(1).and.to.contain(spot.id);
-    //             done();
-    //         })
-    //     });
-        
-    //     it('should error on null input', function(done) {
-    //         var user = new User();
-    //         expect(user.spotIds).to.be.empty;
-    //         user.addSpot(undefined, function(err) {
-    //             expect(user.spotIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-        
-    //     it('should error on null id', function(done) {
-    //         var user = new User();
-    //         var spot = {
-    //             someproperty: 'some value'
-    //         }
-    //         expect(user.spotIds).to.be.empty;
-    //         user.addSpot(spot, function(err) {
-    //             expect(user.spotIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-        
-    //     it ('should error on improper id', function(done) {
-    //         var user = new User();
-    //         var spot = {
-    //             id: {}
-    //         }
-    //         expect(user.spotIds).to.be.empty;
-    //         user.addSpot(spot, function(err) {
-    //             expect(user.spotIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-    // });
-    
-    // describe('addBooking', function() {
-    //     it('should add the given bookingId to the user', function(done) {
-    //         var booking = new Booking();
-    //         var user = new User();
-    //         expect(user.bookingIds).to.be.empty;
-            
-    //         user.addBooking(booking.id, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(user.bookingIds).to.have.length(1).and.to.contain(booking.id);
-    //             done();
-    //         });;
-    //     });
-        
-    //     it('should add the given booking object to the user', function(done) {
-    //         var booking = new Booking();
-    //         var user = new User();
-    //         expect(user.bookingIds).to.be.empty;
-            
-    //         user.addBooking(booking, function(err) {
-    //             expect(err).to.not.be.ok;
-    //             expect(user.bookingIds).to.have.length(1).and.to.contain(booking.id);
-    //             done();
-    //         })
-    //     });
-        
-    //     it('should error on null input', function(done) {
-    //         var user = new User();
-    //         expect(user.bookingIds).to.be.empty;
-    //         user.addBooking(undefined, function(err) {
-    //             expect(user.bookingIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-        
-    //     it('should error on null id', function(done) {
-    //         var user = new User();
-    //         var booking = {
-    //             someproperty: 'some value'
-    //         }
-    //         expect(user.bookingIds).to.be.empty;
-    //         user.addBooking(booking, function(err) {
-    //             expect(user.bookingIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-        
-    //     it ('should error on improper id', function(done) {
-    //         var user = new User();
-    //         var booking = {
-    //             id: {}
-    //         }
-    //         expect(user.bookingIds).to.be.empty;
-    //         user.addBooking(booking, function(err) {
-    //             expect(user.bookingIds).to.be.empty;
-    //             expect(err).to.be.ok;
-    //             done();
-    //         });
-    //     });
-    // });
-    
-    describe('setName', function() {
-        it('should set name given valid input', function(done) {
-            var name = "some name";
-            var user = new User();
-            
-            user.setName(name, function(err) {
-                expect(err).to.not.be.ok;
-                expect(user.profile.name).to.equal(name);
-                done();
-            });
-            
-        })
-        
-        it('should error given input of wrong type', function(done) {
-            var user = new User();
-            var oUser = user.toJSON();
-            var testInput = [null, undefined, false, 123];
-            var counter = 0;
-            function assertions(err) {
-                if (++counter >= testInput.length)
-                    done();
-                expect(err).to.be.ok;
-                expect(user.toJSON()).to.eql(oUser);
-            }
-            testInput.forEach(function (input) {
-                user.setName(input, assertions);
-            })
-            
-        })
-        
-        it('should error given empty input', function(done) {
-            var user = new User();
-            var oUser = user.toJSON();
-            var testInput = [''];
-            var counter = 0;
-            function assertions(err) {
-                if (++counter >= testInput.length)
-                    done();
-                expect(err).to.be.ok;
-                expect(user.toJSON()).to.eql(oUser);
-            }
-            testInput.forEach(function (input) {
-                user.setName(input, assertions);
-            })
-        })
-    });
-    
     describe('updateProfile', function() {
-        it('should update profile given good input', function(done) {
+        it('should update profile given good input', function() {
             var user = new User();
             var profile = {
                 name: 'some new value'
             };
             expect(user.profile.name).to.not.equal(profile.name);
-            user.updateProfile(profile, function(err) {
-                expect(err).to.not.be.ok;
+            return user.updateProfile(profile)
+            .then(function() {
                 expect(user.profile.name).to.equal(profile.name);
-                done();
             });
         });
         
-        it('should only update necessary fields', function(done) {
+        it('should only update necessary fields', function() {
             var user = new User();
             user.profile.someProp = 'some value';
             var profile = {
@@ -323,123 +41,118 @@ describe('User schema', function() {
             };
             expect(user.profile.name).to.not.equal(profile.name);
             expect(user.profile.someProp).to.equal('some value');
-            user.updateProfile(profile, function(err) {
-                expect(err).to.not.be.ok;
+            return user.updateProfile(profile)
+            .then(function() {
                 expect(user.profile.name).to.equal(profile.name);
                 expect(user.profile.someProp).to.equal('some value');
-                done();
             });
         })
         
-        it('should throw error when trying to update non-existent field', function(done) {
+        it('should throw error when trying to update non-existent field', function() {
             var user = new User();
             var profile = {
                 someBadProp: 'some bad value'
             };
-            user.updateProfile(profile, function(err) {
-                expect(err).to.be.ok;
+            return user.updateProfile(profile)
+            .then(function() {
+                expect.fail();
+            })
+            .catch(function(err) {
                 expect(err.indexOf('someBadProp')).to.be.at.least(0);
-                done();
             });
         })
     })
     
     describe('addAuth', function() {
-        it('should add auth property', function(done) {
+        it ('should populate new auth property when given input', function() {
+            var auth = 'some value'
             var user = new User();
-            user.addAuth('twitter', function(err) {
-                expect(err).to.not.be.ok;
+            return user.addAuth('twitter', auth)
+            .then(function() {
                 expect(user.authid.twitter).to.be.ok;
-                expect(user.authid.twitter).to.eql({});
-                done();
-            });
-        })
-        
-        it ('should populate new auth property when given input', function(done) {
-            var auth = {
-                someProp: 'some value'
-            }
-            var user = new User();
-            user.addAuth('twitter', auth, function(err) {
-                expect(err).to.not.be.ok;
-                expect(user.authid.twitter).to.be.ok;
-                expect(user.authid.twitter).to.eql(auth);
-                done();
+                expect(user.authid.twitter).to.deep.equal(auth);
             });
         });
         
-        it('should error on bad `strategy` input', function(done) {
+        it('should error on bad `strategy` input', function() {
             var user = new User();
             var oUser = user.toJSON();
-            [
+            return Promise.all([
                 null,
                 undefined,
                 '',
                 123,
                 function(){}
-            ].forEach(function (input, index, arr) {
-                user.addAuth(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(user.toJSON()).to.eql(oUser);
-                    if (index + 1 >= arr.length)
-                        done();
-                })
+            ].map(function (input) {
+                return user.addAuth(input)
+            }))
+            .then(function() {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(err).to.be.ok;
+                expect(user.toJSON()).to.deep.equal(oUser);
             })
         });
         
-        it('should error on adding existent strategy', function(done) {
+        it('should error on adding existent strategy', function() {
             var user = new User();
             var auth = 'twitter';
             user.authid[auth] = {};
             var oUser = user.toJSON();
-            user.addAuth(auth, function(err) {
-                expect(err).to.be.ok;
-                expect(user.toJSON()).to.eql(oUser);
-                done();
+            return user.addAuth(auth)
+            .then(function() {
+                expect.fail();
+            })
+            .catch(function() {
+                expect(user.toJSON()).to.deep.equal(oUser);
             });
         });
     });
     
     describe('removeAuth', function() {
-        it('should remove specified auth', function(done) {
+        it('should remove specified auth', function() {
             var user = new User();
             var auth = 'twitter';
             user.authid[auth] = {};
-            user.removeAuth(auth, function(err) {
-                expect(err).to.not.be.ok;
+            return user.removeAuth(auth)
+            .then(function() {
                 expect(user.authid[auth]).to.be.undefined;
-                done();
             });
         })
         
-        it('should error on bad input', function(done) {
+        it('should error on bad input', function() {
             var user = new User();
             var oUser = user.toJSON();
-            [
+            return Promise.all([
                 null,
                 undefined,
                 '',
                 123,
                 function(){}
-            ].forEach(function (input, i, arr) {
-                user.removeAuth(input, function(err) {
-                    expect(err).to.be.ok;
-                    expect(user.toJSON()).to.eql(oUser);
-                    if (i + 1 >= arr.length)
-                        done();    
-                });
+            ].map(function (input) {
+                return user.removeAuth(input);
+            })).then(function() {
+                expect.fail();
+            })
+            .catch(function(err) {
+                expect(err).to.be.ok;
+                expect(user.toJSON()).to.deep.equal(oUser);
             });
         })
         
-        it('should error if specified auth is not found', function(done) {
+        it('should error if specified auth is not found', function() {
             var user = new User();
             var oUser = user.toJSON();
             var auth = 'twitter';
             expect(user.authid[auth]).to.be.undefined;
-            user.removeAuth(auth, function(err) {
+            return user.removeAuth(auth)
+            .then(function() {
+                expect.fail();
+            })
+            .catch(function(err) {
                 expect(err).to.be.ok;
-                expect(user.toJSON()).to.eql(oUser);
-                done();
+                expect(user.toJSON()).to.deep.equal(oUser);
             });
         })
     })
@@ -688,7 +401,7 @@ routeTest('userController', [
         //     },
         //     lots: {
         //         find: function(search, cb) {
-        //             expect(search._id.$in).to.eql(['123']);
+        //             expect(search._id.$in).to.deep.equal(['123']);
         //             cb(null, [{
         //                 id: '123'
         //             }])
@@ -753,7 +466,7 @@ routeTest('userController', [
         //     },
         //     spots: {
         //         find: function(search, cb) {
-        //             expect(search._id.$in).to.eql(['123']);
+        //             expect(search._id.$in).to.deep.equal(['123']);
         //             cb(null, [{
         //                 id: '123'
         //             }])
@@ -818,7 +531,7 @@ routeTest('userController', [
         //     },
         //     bookings: {
         //         find: function(search, cb) {
-        //             expect(search._id.$in).to.eql(['123']);
+        //             expect(search._id.$in).to.deep.equal(['123']);
         //             cb(null, [{
         //                 id: '123'
         //             }])
@@ -871,7 +584,7 @@ routeTest('userController', [
         //             cb(null, {
         //                 profile: {},
         //                 updateProfile: function(obj, cb) {
-        //                     expect(obj).to.eql({someProp: 'some value'});
+        //                     expect(obj).to.deep.equal({someProp: 'some value'});
         //                     cb(null);
         //                 }
         //             })
@@ -901,14 +614,15 @@ describe('userController', function() {
     
     
     describe('GetAllUsers', function() {
-        it('should return all users', function() {
+        it('should return all users', function(done) {
             var users = [new User(), new User()];
-            app.db.users.find = function(obj, cb) {
-                cb(null, users);
+            app.db.users.find = mockPromise(users);
+            res.sent = function () {
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.sentWith(users)).to.be.true;
+                done();
             }
             app.userController.GetAllUsers(null, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(users)).to.be.true;
             
         })
     })
@@ -941,351 +655,6 @@ describe('userController', function() {
         })
     })
     
-    // describe('AddLotsToUser', function() {
-    //     it('should properly call schema method and return status when no errors', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addLot: sinon.spy(function(lots, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var lots = [{
-    //             id: '123'
-    //         }]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.lots = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.lots = lots; 
-    //         app.userController.AddLotsToUser(req, res);
-    //         expect(user.addLot.calledOnce).to.be.true;
-    //         expect(user.addLot.calledWith(lots)).to.be.true;
-    //         expect(res.status.calledOnce).to.be.true;
-    //         expect(res.status.calledWith(200)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no lots in request body', function() {
-    //         req.body = {};
-    //         app.userController.AddLotsToUser(req, res);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no user found', function() {
-    //         var count = 1;
-    //         var user = null;
-    //         var lots = [{
-    //             id: '123'
-    //         }]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.lots = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.lots = lots; 
-    //         app.userController.AddLotsToUser(req, res);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no lots found', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addLot: sinon.spy(function(lots, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var lots = [{
-    //             id: '123'
-    //         }]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.lots = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, []);
-    //             })    
-    //         } 
-    //         req.body.lots = lots; 
-    //         app.userController.AddLotsToUser(req, res);
-    //         expect(user.addLot.callCount).to.equal(0);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-    // })
-    
-    // describe('AddSpotsToUser', function() {
-    //     it('should work when given spot objects', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addSpot: sinon.spy(function(spots, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var spots = [new Spot()]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.spots = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.spots = spots; 
-    //         app.userController.AddSpotsToUser(req, res);
-    //         expect(user.addSpot.calledOnce).to.be.true;
-    //         expect(user.addSpot.calledWith([spots[0].id])).to.be.true;
-    //         expect(res.status.calledOnce).to.be.true;
-    //         expect(res.status.calledWith(200)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-    //     it('should properly call schema method and return status when no errors', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addSpot: sinon.spy(function(spots, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var spots = ['123']
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.spots = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.spots = spots; 
-    //         app.userController.AddSpotsToUser(req, res);
-    //         expect(user.addSpot.calledOnce).to.be.true;
-    //         expect(user.addSpot.calledWith(spots)).to.be.true;
-    //         expect(res.status.calledOnce).to.be.true;
-    //         expect(res.status.calledWith(200)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no spots in request body', function() {
-    //         req.body = {};
-    //         app.userController.AddSpotsToUser(req, res);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no user found', function() {
-    //         var count = 1;
-    //         var user = null;
-    //         var spots = [{
-    //             id: '123'
-    //         }]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.spots = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.spots = spots; 
-    //         app.userController.AddSpotsToUser(req, res);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no spots found', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addSpot: sinon.spy(function(spots, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var spots = [{
-    //             id: '123'
-    //         }]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.spots = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, []);
-    //             })    
-    //         } 
-    //         req.body.spots = spots; 
-    //         app.userController.AddSpotsToUser(req, res);
-    //         expect(user.addSpot.callCount).to.equal(0);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-    // })
-    
-    // describe('AddBookingsToUser', function() {
-    //     it('should work when given booking objects', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addBooking: sinon.spy(function(bookings, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var bookings = [new Booking()]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.bookings = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.bookings = bookings; 
-    //         app.userController.AddBookingsToUser(req, res);
-    //         expect(user.addBooking.calledOnce).to.be.true;
-    //         expect(user.addBooking.calledWith([bookings[0].id])).to.be.true;
-    //         expect(res.status.calledOnce).to.be.true;
-    //         expect(res.status.calledWith(200)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-    //     it('should properly call schema method and return status when no errors', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addBooking: sinon.spy(function(bookings, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var bookings = ['123'];
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.bookings = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.bookings = bookings; 
-    //         app.userController.AddBookingsToUser(req, res);
-    //         expect(user.addBooking.calledOnce).to.be.true;
-    //         expect(user.addBooking.calledWith(bookings)).to.be.true;
-    //         expect(res.status.calledOnce).to.be.true;
-    //         expect(res.status.calledWith(200)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no bookings in request body', function() {
-    //         app.userController.AddBookingsToUser(req, res);
-    //         expect(res.sendBad.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no user found', function() {
-    //         var count = 1;
-    //         var user = null;
-    //         var bookings = [{
-    //             id: '123'
-    //         }]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.bookings = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, x._id.$in);
-    //             })    
-    //         } 
-    //         req.body.bookings = bookings; 
-    //         app.userController.AddBookingsToUser(req, res);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-        
-    //     it('should error if no bookings found', function() {
-    //         var count = 1;
-    //         var user = {
-    //             addBooking: sinon.spy(function(bookings, cb) {
-    //                 cb(null, count);
-    //             }),
-    //             id: '1z2x3c4v'
-    //         }
-    //         var bookings = [{
-    //             id: '123'
-    //         }]
-    //         app.db.users = {
-    //             findById: sinon.spy(function(id, cb) {
-    //                 expect(id).to.be.ok;
-    //                 return cb(null, user);
-    //             })
-    //         }
-    //         app.db.bookings = {
-    //             find: sinon.spy(function(x, cb) {
-    //                 expect(x).to.be.ok;
-    //                 return cb(null, []);
-    //             })    
-    //         } 
-    //         req.body.bookings = bookings; 
-    //         app.userController.AddBookingsToUser(req, res);
-    //         expect(user.addBooking.callCount).to.equal(0);
-    //         expect(res.status.calledOnce);
-    //         expect(res.status.calledWith(500)).to.be.true;
-    //         expect(res.send.calledOnce).to.be.true;
-    //     })
-    // })
-    
     describe('UpdateProfileForfUser', function() {
         it('should call user updateProfile given good input', function(done) {
             var updateProfile = {
@@ -1296,21 +665,18 @@ describe('userController', function() {
                     name: 'some value'
                 },
                 updateProfile: sinon.spy(function(profile, cb) {
-                    expect(profile).to.eql(updateProfile);
+                    expect(profile).to.deep.equal(updateProfile);
                     done();
                 })
             }
             app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, user);
-                })
+                findById: mockPromise(user)
             }
             req.body = updateProfile;
             app.userController.UpdateProfileForfUser(req, res);
         })
         
-        it('should respond with an error if user updateProfile failed', function() {
+        it('should respond with an error if user updateProfile failed', function(done) {
             var updateProfile = {
                 name: 'some new value'
             }
@@ -1323,150 +689,111 @@ describe('userController', function() {
                 })
             }
             app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, user);
-                })
+                findById: mockPromise(user)
             }
             req.body = updateProfile;
-            app.userController.UpdateProfileForfUser(req, res);
-            expect(res.sendBad.calledOnce).to.be.true;
-        })
-        
-        it('should error if user is not found', function() {
-            app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, null);
-                })
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
             }
             app.userController.UpdateProfileForfUser(req, res);
-            expect(res.sendBad.calledOnce).to.be.true;
+        })
+        
+        it('should error if user is not found', function(done) {
+            app.db.users = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.userController.UpdateProfileForfUser(req, res);
         })
     })
     
     describe('GetProfileForUser', function() {
-        
-        it('should return user profile', function() {
+        it('should return user profile', function(done) {
             var user = {
                 profile: {
                     someProp: 'some value'
                 }
             }
             app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, user);
-                })
+                findById: mockPromise(user)
+            }
+            res.sent = function() {
+                expect(res.send.calledOnce).to.be.true;
+                expect(res.sentWith(user.profile)).to.be.true;
+                done();
             }
             app.userController.GetProfileForUser(req,res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(user.profile)).to.be.true;
         })
         
         it('should error on bad id', function() {
             app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, null);
-                })
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.status.calledOnce).to.be.true;
+                expect(res.status.calledWith(500)).to.be.true;
+                expect(res.send.calledOnce).to.be.true;
+                done();
             }
             app.userController.GetProfileForUser(req,res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
         })
     })
     
-    describe.skip('GetLotsForUser', function() {
-        
-        it('should return user\'s lots', function() {
+    describe('GetLotsForUser', function() {
+        it('should return user\'s lots', function(done) {
             var user = new User();
             var lot = new Lot({
                 user: user.id
             })
-            app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, user);
-                })
+            app.db.lots = {
+                find: mockPromise([lot])
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith([lot])).to.be.true;
+                done();
             }
             app.userController.GetLotsForUser(req, res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(user.lotIds)).to.be.true;
-        })
-        
-        it('should error on bad id', function() {
-            app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, null);
-                })
-            }
-            app.userController.GetLotsForUser(req,res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
         })
     })
     
-    describe.skip('GetSpotsForUser', function() {
-        
-        it('should return user\'s spots', function() {
-            var user = {
-                spotIds: [ '1', '2' ,'3' ]
+    describe('GetSpotsForUser', function() {
+        it('should return user\'s spots', function(done) {
+            var user = new User();
+            var spot = new Spot({
+                user: user.id
+            })
+            app.db.spots = {
+                find: mockPromise([spot])
             }
-            app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, user);
-                })
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith([spot])).to.be.true;
+                done();
             }
-            app.userController.GetSpotsForUser(req,res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(user.spotIds)).to.be.true;
-        })
-        
-        it('should error on bad id', function() {
-            app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, null);
-                })
-            }
-            app.userController.GetSpotsForUser(req,res);
-            expect(res.status.calledOnce).to.be.true;
-            expect(res.status.calledWith(500)).to.be.true;
-            expect(res.send.calledOnce).to.be.true;
+            app.userController.GetSpotsForUser(req, res);
         })
     })
     
-    describe.skip('GetBookingsForUser', function() {
-        
-        it('should return user\'s spots', function() {
-            var user = {
-                bookingIds: [ '1', '2' ,'3' ]
+    describe('GetBookingsForUser', function() {
+        it('should return user\'s bookings', function(done) {
+            var user = new User();
+            var booking = new Booking({
+                user: user.id
+            })
+            app.db.bookings = {
+                find: mockPromise([booking])
             }
-            app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, user);
-                })
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith([booking])).to.be.true;
+                done();
             }
-            app.userController.GetBookingsForUser(req,res);
-            expect(res.send.calledOnce).to.be.true;
-            expect(res.sentWith(user.bookingIds)).to.be.true;
-        })
-        
-        it('should error on bad id', function() {
-            app.db.users = {
-                findById: sinon.spy(function(id, cb) {
-                    expect(id).to.be.ok;
-                    return cb(null, null);
-                })
-            }
-            app.userController.GetBookingsForUser(req,res);
-            expect(res.sendBad.calledOnce).to.be.true;
+            app.userController.GetBookingsForUser(req, res);
         })
     })
 })

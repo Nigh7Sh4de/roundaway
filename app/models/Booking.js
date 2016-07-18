@@ -6,6 +6,10 @@ var Enum = require('./Enum');
 var statusEnum = new Enum(['unpaid', 'paid', 'archived']);
 
 var bookingSchema = new Schema({
+    user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    },
     spot: {
         type: Schema.Types.ObjectId,
         ref: 'Spot',
