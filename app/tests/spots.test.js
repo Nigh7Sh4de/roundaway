@@ -711,6 +711,11 @@ routeTest('spotController', [
             method: 'SetLotForSpot'
         },
         {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/lot/remove',
+            method: 'DisassociateLotFromSpot'
+        },
+        {
             verb: verbs.GET,
             route: '/api/spots/:id/location',
             method: 'GetLocationForSpot'
@@ -1229,6 +1234,51 @@ describe('spotController', function() {
                 done();
             }
             app.spotController.GetLotForSpot(req, res);
+        })
+    })
+
+    describe('DisassociateLotFromSpot', function() {
+        it('should set the lot of the spot', function(done) {
+            var s = new Spot({
+                lot: new Lot()
+            });
+            sinon.stub(s, 'removeLot');
+            app.db.spots = {
+                findById: mockPromise(s)
+            }
+            req.params.id = s.id;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(s.removeLot.calledOnce).to.be.true;
+                done();                
+            }
+            app.spotController.DisassociateLotFromSpot(req, res);
+        })
+        
+        it('should error if db encountered error', function(done) {
+            app.db.spots = {
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.DisassociateLotFromSpot(req, res);
+        })
+        
+        it('should return error if spot found is null', function(done) {
+            app.db.spots = {
+                findById: mockPromise(null)
+            }
+            app.db.lots = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.DisassociateLotFromSpot(req, res);
         })
     })
     

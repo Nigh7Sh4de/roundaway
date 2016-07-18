@@ -10,8 +10,8 @@ var controller = function(app) {
     app.get('/api/spots/:id', app.checkAuth, app.checkAdmin, this.GetSpot.bind(this));
     app.get('/api/spots/:id/lot', app.checkAuth, app.checkAdmin, this.GetLotForSpot.bind(this));
     app.put('/api/spots/:id/lot', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetLotForSpot.bind(this));
+    app.put('/api/spots/:id/lot/remove', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.DisassociateLotFromSpot.bind(this));
     app.get('/api/spots/:id/location', app.checkAuth, app.checkAdmin, this.GetLocationForSpot.bind(this));
-    // app.post('/api/spots/:id/location', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetLocationForSpot.bind(this));
     app.get('/api/spots/:id/price', app.checkAuth, app.checkAdmin, this.GetPriceForSpot.bind(this));
     app.put('/api/spots/:id/price', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetPriceForSpot.bind(this));
     app.get('/api/spots/:id/bookings', app.checkAuth, app.checkAdmin, this.GetAllBookingsForSpot.bind(this));
@@ -137,6 +137,19 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err)
         });
+    },
+    DisassociateLotFromSpot: function(req, res) {
+        this.app.db.spots.findById(req.params.id)
+        .exec()
+        .then(function(spot) {
+            return spot.removeLot()
+        })
+        .then(function(spot) {
+            res.sendGood('Disassociated lot from spot', spot);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
     },
     SetLotForSpot: function(req, res) {
         Promise.all([
