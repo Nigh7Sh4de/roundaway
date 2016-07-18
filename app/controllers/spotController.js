@@ -38,31 +38,46 @@ controller.prototype = {
         });
     },
     CreateSpot: function(req, res) {
+        var app = this.app;
         var newSpot = new Spot(req.body.spot).toJSON();
         delete newSpot._id;
-        var insert;
-        if (req.body.count != null) {
-            if (typeof req.body.count !== 'number' || req.body.count <= 0)
-                return res.sendBad('Could not create spot as the specified count was invalid');
-            var arr = [];
-            for (var i=0;i<req.body.count;i++)
-                arr.push(newSpot);
-            insert = this.app.db.spots.collection.insert(arr);
-            // , function(err, result) {
-            //     if (err)
-            //         return res.sendBad(err);
-            //     res.sendGood('Created spots', result);
-            // })
-        }
-        else {
-            insert = this.app.db.spots.create(newSpot);
-            // .then(function(result) {
-            //     if (err)
-            //         return res.sendBad(err);
-            //     res.sendGood('Created spot', result);
-            // })    
-        }
-        insert
+        var getLocationFromLot = null;
+        if (newSpot.lot)
+            getLocationFromLot = app.db.lots.findById(newSpot.lot.id || newSpot.lot._id || newSpot.lot);
+        else if (newSpot.location && newSpot.location.coordinates)
+            var coords = {
+                lon: newSpot.location.coordinates[0] || newSpot.location.coordinates.long || newSpot.location.coordinates.lon,
+                lat: newSpot.location.coordinates[1] || newSpot.location.coordinates.lat
+            }
+        else
+            return res.sendBad('Could not create spot because no coordinates were specified');
+        
+        (
+            !!getLocationFromLot ? getLocationFromLot.then(function(lot) {
+                return Promise.resolve(lot.location);
+            }) : app.geocoder.reverse(coords).then(function(loc) {
+                return Promise.resolve({
+                    coordinates: [loc[0].longitude, loc[0].latitude],
+                    address: loc[0].formattedAddress
+                })
+            })
+        )
+        .then(function(location) {
+            if (!location)
+                throw 'Cannot create a spot without a location';
+            newSpot.location = location;
+            if (req.body.count != null) {
+                if (typeof req.body.count !== 'number' || req.body.count <= 0)
+                    return res.sendBad('Could not create spot as the specified count was invalid');
+                var arr = [];
+                for (var i=0;i<req.body.count;i++)
+                    arr.push(newSpot);
+                return this.app.db.spots.collection.insert(arr);
+            }
+            else {
+                return this.app.db.spots.create(newSpot);
+            }
+        })
         .then(function(results) {
             res.sendGood('Created new spots', results.ops || results);
         })

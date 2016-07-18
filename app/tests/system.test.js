@@ -744,9 +744,14 @@ _d('the entire app should not explode', function() {
             it('should create a new spot', function(done) {
                 request(app).put('/api/spots')
                     .set('Authorization', 'JWT ' + token)
+                    .send({spot: {
+                        location: {
+                            coordinates: [12, 21]
+                        }
+                    }})
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
+                        expect(res.status, res.body.errors).to.equal(200);
                         expect(res.body.data).to.be.ok;
                         app.db.spots.findById(res.body.data._id, function(err, doc) {
                             expect(err).to.not.be.ok;

@@ -873,6 +873,50 @@ describe('spotController', function() {
             delete emptySpot.id;
             delete emptySpot._id;    
         })
+
+        it('should take location from lot', function(done) {
+            var spot = Object.assign({}, emptySpot);
+            var lot = new Lot();
+            lot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            spot.lot = lot._id;
+            req.body.spot = spot;
+            app.db.spots = {
+                create: function(obj) {
+                    delete obj.id;
+                    delete obj._id;
+                    expect(obj.location).to.deep.equal(lot.location);
+                    return mockPromise(obj)();
+                }
+            }
+            app.db.lots = {
+                findById: mockPromise(lot)
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.CreateSpot(req, res);
+        })
+
+        it('should error if no location was provided and no lot was specified', function(done) {
+            app.db.spots = {
+                create: function(obj) {
+                    delete obj.id;
+                    delete obj._id;
+                    expect(obj).to.deep.equal(emptySpot);
+                    return mockPromise(obj)();
+                }
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.CreateSpot(req, res);
+        })
         
         it('should send error if req count is invalid (and not null)', function(done) {
             [
@@ -927,14 +971,22 @@ describe('spotController', function() {
                 arr.push(spot);
             }
             spot.location = {
-                address: '123 fake st'
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            spot.price = {
+                perHour: 123.45
+            };
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
             }
             app.db.spots = {
                 collection: {
                     insert: function(obj) {
                         expect(obj).to.have.length(count);
-                        expect(obj[0]).to.have.deep.property('location.address');
-                        obj.forEach(function(o) {
+                        expect(obj[0]).to.have.deep.property('price.perHour');
+                        obj[0].price.perHour /= 100;
+                        obj.forEach(function(o, i) {
                             delete o.id;
                             delete o._id;
                         })
@@ -946,8 +998,7 @@ describe('spotController', function() {
             req.body.count = count;
             req.body.spot = spot;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+                expect(res.sendGood.calledOnce).to.be.true;
                 done();
             }
             app.spotController.CreateSpot(req, res);
@@ -956,47 +1007,69 @@ describe('spotController', function() {
         it('should create a spot with the given props', function(done) {
             var spot = Object.assign({}, emptySpot);
             spot.location = {
-                address: '123 fake st'
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            spot.price = {
+                perHour: 123.45
+            };
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
             }
             app.db.spots = {
                 create: function(obj) {
-                    expect(obj).to.have.deep.property('location.address');
+                    expect(obj).to.have.property('price');
                     return mockPromise(obj)();
                 }
             }
             req.body.spot = spot;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+                expect(res.sendGood.calledOnce).to.be.true;
                 done();    
             }
             app.spotController.CreateSpot(req, res);
         })
         
-        it('should create a blank spot given no params', function(done) {
+        it('should create a blank spot given no additional params', function(done) {
+            var spot = Object.assign({}, emptySpot);
+            spot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            req.body.spot = spot;
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
             app.db.spots = {
                 create: function(obj) {
                     delete obj.id;
                     delete obj._id;
-                    expect(obj).to.deep.equal(emptySpot);
+                    expect(obj).to.deep.equal(spot);
                     return mockPromise(obj)();
                 }
             }
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+                expect(res.sendGood.calledOnce).to.be.true;
                 done();
             }
             app.spotController.CreateSpot(req, res);
         })
         
-        it('should create n blank spots given a count n', function(done) {
+        it('should create n blank spots given a count n and no additional params', function(done) {
+            var spot = Object.assign({}, emptySpot);
+            spot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            delete spot.id;
+            delete spot._id;
             var count = 5;
             var arr = [];
             for (var i=0;i<count;i++) {
-                delete emptySpot.id;
-                delete emptySpot._id;
-                arr.push(emptySpot);
+                arr.push(spot);
+            }
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
             }
             app.db.spots = {
                 collection: {
@@ -1012,9 +1085,9 @@ describe('spotController', function() {
                 }
             }
             req.body.count = count;
+            req.body.spot = spot;
             res.sent = function() {
-                expect(res.send.calledOnce).to.be.true;
-                expect(res.send.firstCall.args[0].status).to.equal('SUCCESS');
+                expect(res.sendGood.calledOnce).to.be.true;
                 done();
             }
             app.spotController.CreateSpot(req, res);
@@ -1652,15 +1725,12 @@ describe('spotController', function() {
             }
             var schedules = [{someProp: 'somevalue'}];
             var error = 'some error';
-            sinon.stub(s, 'removeAvailability', function(sched, cb) {
-                expect(sched).to.equal(schedules);
-                cb(error);
-            })
+            sinon.stub(s, 'removeAvailability', mockPromise(null, error))
             req.params.id = s.id;
             req.body.schedules = schedules;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentWith({errors: [error]}));
+                expect(res.sentWith({errors: [error]}, true));
                 done();
             }
             app.spotController.RemoveAvailabilityFromSpot(req, res);
@@ -1812,7 +1882,7 @@ describe('spotController', function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
-            app.spotController.GetEntireScheduleForSpot(req, res);
+            app.spotController.GetPriceForSpot(req, res);
         })
         
         it('should return error if spot found is null', function(done) {
@@ -1823,7 +1893,7 @@ describe('spotController', function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
-            app.spotController.GetEntireScheduleForSpot(req, res);
+            app.spotController.GetPriceForSpot(req, res);
         })
     })
     
@@ -1855,7 +1925,7 @@ describe('spotController', function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
-            app.spotController.GetEntireScheduleForSpot(req, res);
+            app.spotController.SetPriceForSpot(req, res);
         })
         
         it('should return error if spot found is null', function(done) {
@@ -1866,7 +1936,7 @@ describe('spotController', function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
-            app.spotController.GetEntireScheduleForSpot(req, res);
+            app.spotController.SetPriceForSpot(req, res);
         })
     })
 })
