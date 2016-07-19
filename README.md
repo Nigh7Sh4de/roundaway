@@ -81,57 +81,71 @@ in the `system.test.js` file. This describe is `.skip()`ed on `dev` but allowed 
 All the test files are named `*.test.js` and are in the `/app/tests/` directory.
 Commits with breaking tests are allowed in topic branches and thus when merged into `dev` or `master` some commits will have failing changes, but **ENSURE THAT WHEN YOU MERGE BRANCHES THE `HEAD` IS PASSING ALL TESTS (INCLUDING INTEGRATION TESTS)**.
 
+## Backend Objects
+*These are object definitions used in the backend models*
+
+#### Location `{}`
+    address: String,
+    coordinates: [Number]
+
+#### Price `{}`
+    perHour: Number
+
+#### Range (Type) `{}`
+    start: Type,
+    end: Type
+
+#### Ranger `[]`
+    [Range(Date)]
+    next: Range(Date)
+
+#### BookingStatus `enum`
+    unpaid,
+    paid,
+    archived
+
+#### Profile `{}`
+    name: String
+
 ## Models
 *All models have a `createdAt` and `updatedAt` field*
 
 #### User
+The `User` object holds basic data about the user including `Profile` and authentication information. All other models reference their owner through a **user** property.
 
-    profile: {
-        name: String
-    },
+    profile: Profile,
     authid: {
         facebook: String,
         google: String
     },
-    admin: Boolean,
-    lotIds: [],
-    spotIds: [],
-    bookingIds: []
+    admin: Boolean
 
 #### Lot
+A `Lot` is simply a collection of `Spot`s that share a common **location**. The `Lot`'s **price**, **availability**, and **location** are used as defaults for new `Spot`s.
 
-    spots: [],
-    address: String,
-    location: {
-        coordinates: [Number]
-    },
-    spotNumbers: [Number]
+    User: User
+    location: Location,
+    price: Price,
+    available: Ranger
 
 #### Spot
+A `Spot` can be booked by users for a set period of time. Once a `Spot` is created you cannot modify the **location**. Modifying the **price** of a `Spot` will not modify existing `Booking`s. Associating a `Spot` with a `Lot` will overwrite the `Spot`'s **location** with the one in the `Lot`. 
     
-    address: String,
-    price: {
-        perHour: Price
-    },
-    location: {
-        coordinates: [Number]
-    },
-    available: {
-        ranges: [Range(Date)],
-        next: Range(Date)
-    },
-    booked: {
-        ranges: [Range(Date)],
-    },
-    bookings: [String],
-    lot: String,
-    number: Number
+    user: User
+    price: Price,
+    location: Location,
+    available: Ranger,
+    booked: Ranger,
+    lot: Lot,
+    description: String
 
 
 #### Booking
+A `Booking` is an immutable object that is used to track bookings on a `Spot`. Once a `Booking` is created you cannot modify the **spot**, **price**, **start**, nor **end** properties. The status defaults to `unpaid` and will change to `paid` once payment has been succesfuly processed. A `Booking`s price is calculated using it's duration (calculated using it's **start** and **end** properties) multiplied byt he price of the `Spot` that it is associated with.
 
-    status: ['unpaid', 'paid', 'archived'],
-    spot: String,
+    user: User,
+    status: BookingStatus,
+    spot: Spot,
     price: Price,
     start: Date,
     end: Date,
@@ -158,7 +172,7 @@ In order to make API calls that are auth protected use the following flow:
 <table>
   <tr>
     <td>status</td>
-    <td>One word status description. Usually <code>ERROR</code> or <code>SUCCESS</code></td>
+    <td>One word status description: <code>ERROR</code> or <code>SUCCESS</code>.</td>
   </tr>
   <tr>
     <td>message</td>
@@ -166,7 +180,7 @@ In order to make API calls that are auth protected use the following flow:
   </tr>
   <tr>
     <td>errors</td>
-    <td>Array of strings containing the different errors that occured. Sometimes present on <code>SUCCESS</code> responses as well when performing an action on a collection and some documents documents succeeded while others did not</td>
+    <td>Array of strings containing the different errors that occured. Sometimes present on <code>SUCCESS</code> responses as well when performing an action on a collection and some documents succeeded while others did not</td>
   </tr>
   <tr>
     <td>data</td>
@@ -182,6 +196,7 @@ In order to make API calls that are auth protected use the following flow:
 Clears the current user out of the session and redirects to `/home`
 
 ##### GET `/login/:strat`
+***CURRENTLY DEPRECATED***
 <table>
   <tr>
     <td>strat</td>
@@ -191,6 +206,7 @@ Clears the current user out of the session and redirects to `/home`
 Redirects to the social network's authentication page
 
 ##### GET `/login/:strat/return`
+***CURRENTLY DEPRECATED***
 <table>
   <tr>
     <td>strat</td>
@@ -216,6 +232,7 @@ A redirect callback that the social network will hit after authentication (succe
 If you have authenticated the user elsewhere (client-side or on another server), send the `access_token` here in order to authenticate with this server. Sends back a JWT for subsequent API requests.
 
 ##### GET `/connect/:strat`
+***CURRENTLY DEPRECATED***
 <table>
   <tr>
     <td>strat</td>
@@ -225,6 +242,7 @@ If you have authenticated the user elsewhere (client-side or on another server),
 Used to add an alternative social network after a use has already authenticated. Redirects to the social network's authentication page
 
 ##### GET `/connect/:strat/return`
+***CURRENTLY DEPRECATED***
 <table>
   <tr>
     <td>strat</td>
@@ -272,24 +290,7 @@ Returns the current session user.
     <td>True</td>
   </tr>
 </table>
-Returns the given user's lot ids.
-
-##### PUT `/api/users/:userid/lots`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>Lots</td>
-    <td>Array of lot id's as strings</td>
-  </tr>
-</table>
-Appends the given id's to the user's lots array if those lots exist. Responds with message containing count.
+Returns the given user's lots.
 
 ##### GET `/api/users/:userid/spots`
 <table>
@@ -302,24 +303,7 @@ Appends the given id's to the user's lots array if those lots exist. Responds wi
     <td>True</td>
   </tr>
 </table>
-Returns the given user's spot ids.
-
-##### PUT `/api/users/:userid/spots`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>Lots</td>
-    <td>Array of spot id's as strings</td>
-  </tr>
-</table>
-Appends the given id's to the user's spots array if those bookings exist. Responds with message containing count.
+Returns the given user's spots.
 
 ##### GET `/api/users/:userid/bookings`
 <table>
@@ -332,24 +316,7 @@ Appends the given id's to the user's spots array if those bookings exist. Respon
     <td>True</td>
   </tr>
 </table>
-Returns the given user's booking ids.
-
-##### PUT `/api/users/:userid/bookings`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>Lots</td>
-    <td>Array of booking id's as strings</td>
-  </tr>
-</table>
-Appends the given id's to the user's bookings array if those bookings exist. Responds with message containing count.
+Returns the given user's bookings.
 
 ##### GET `/api/users/:userid/profile`
 <table>
@@ -399,27 +366,6 @@ Updates the specified fields of the user's profile.
 </table>
 Returns the entire bookings collection.
 
-##### PUT `/api/bookings`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>count</td>
-    <td>Number of bookings to create (defaults to 1)</td>
-  </tr>
-  <tr>
-    <td><b>...</b></td>
-    <td>Any properties and values you would like the booking(s) to be initialized with </td>
-  </tr>
-</table>
-Create a new booking.
-
 ##### GET `/api/bookings/:id`
 <table>
   <tr>
@@ -444,24 +390,7 @@ Returns the booking with the specified id.
     <td>True</td>
   </tr>
 </table>
-Returns the spot object whose id is associated with the specified booking.
-
-##### PUT `/api/bookings/:id/spot`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>Id of the spot</td>
-  </tr>
-</table>
-Sets the specified id as the booking's spot if it exists.
+Returns the spot that is associated with this booking.
 
 ##### GET `/api/bookings/:id/start`
 <table>
@@ -476,23 +405,6 @@ Sets the specified id as the booking's spot if it exists.
 </table>
 Returns the start of the specified booking.
 
-##### PUT `/api/bookings/:id/start`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>start</td>
-    <td>JSON Date object to be set as the start</td>
-  </tr>
-</table>
-Sets the start of the booking.
-
 ##### GET `/api/bookings/:id/duration`
 <table>
   <tr>
@@ -505,23 +417,6 @@ Sets the start of the booking.
   </tr>
 </table>
 Returns the duration of the specified booking.
-
-##### PUT `/api/bookings/:id/duration`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>duration</td>
-    <td>Number of milliseconds of the bookings duration</td>
-  </tr>
-</table>
-Sets the duration of the booking.
 
 ##### GET `/api/bookings/:id/end`
 <table>
@@ -536,23 +431,6 @@ Sets the duration of the booking.
 </table>
 Returns the end of the specified booking.
 
-##### PUT `/api/bookings/:id/end`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>end</td>
-    <td>JSON Date object to be set as the end</td>
-  </tr>
-</table>
-Sets the end of the booking.
-
 ##### GET `/api/bookings/:id/time`
 <table>
   <tr>
@@ -565,27 +443,6 @@ Sets the end of the booking.
   </tr>
 </table>
 Returns the time `{start: Date, end: Date}` of the specified booking.
-
-##### PUT `/api/bookings/:id/time`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>start</td>
-    <td>JSON Date object to be set as the start</td>
-  </tr>
-  <tr>
-    <td>end</td>
-    <td>JSON Date object to be set as the end</td>
-  </tr>
-</table>
-Sets the time (start and end dates) of the booking.
 
 ##### GET `/api/bookings/:id/price`
 <table>
@@ -647,8 +504,18 @@ Returns the entire lots collection.
     <td>Number of lots to create (defaults to 1)</td>
   </tr>
   <tr>
-    <td><b>...</b></td>
-    <td>Any properties and values you would like the lot(s) to be initialized with </td>
+    <td>location</td>
+    <td>The coordinates of the location of the lot<br /> 
+    Can either be a number array of <code>[longitude, latitude]</code> or
+    an object containing <code>long</code> or <code>lon</code> and <code>lat</code> and properties</td>
+  </tr>
+  <tr>
+    <td><i>(optional)</i> price</td>
+    <td>A price object containing the price breakdown for the lot (to be used as a default for the lot's spots)</td>
+  </tr>
+  <tr>
+    <td>lot</td>
+    <td>An object containing the properties you want to intiate the lot(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
   </tr>
 </table>
 Create a new lot.
@@ -679,25 +546,6 @@ Returns the lot with the specified id.
 </table>
 Returns the location of the lot with the specified id.
 
-##### PUT `/api/lots/:id/location`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>coordinates</td>
-    <td>The coordinates of the location to set the lot to. 
-    Can either be a number array of <code>[longitude, latitude]</code> or
-    an object containing <code>long</code> and <code>lat</code> or <code>lon</code> properties</td>
-  </tr>
-</table>
-Adds EITHER the specified spots to the lot or generates `count` number of new spots and adds them to the lot.
-
 ##### GET `/api/lots/:id/spots`
 <table>
   <tr>
@@ -709,53 +557,7 @@ Adds EITHER the specified spots to the lot or generates `count` number of new sp
     <td>True</td>
   </tr>
 </table>
-Returns the spots in the lot with the specified id.
-
-##### PUT `/api/lots/:id/spots`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>spots</td>
-    <td>The <code>spot</code> object(s) to add, can be either id's or entire objects</td>
-  </tr>
-  <tr>
-    <td>count</td>
-    <td>Amount of new spots to create and add to lot</td>
-  </tr>
-</table>
-Adds EITHER the specified spots to the lot or generates `count` number of new spots and adds them to the lot.
-
-##### PUT `/api/lots/:id/spots/remove`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>spots</td>
-    <td>The <code>spot</code> object(s) to remove, can be either id's or entire objects</td>
-  </tr>
-  <tr>
-    <td>from</td>
-    <td>The spot number (inclusive) from which to start removing</td>
-  </tr>
-  <tr>
-    <td>to</td>
-    <td>The spot number (inclusive) up to which to remove</td>
-  </tr>
-</table>
-Removes EITHER the specified spots from the lot or the spots associated with the spot number in the range `[from, to]`.
+Returns the spots associated with the lot.
 
 #### Spot
 
@@ -815,8 +617,22 @@ Returns the required number of Spots based on the given filters
     <td>Number of spots to create (defaults to 1)</td>
   </tr>
   <tr>
-    <td><b>...</b></td>
-    <td>Any properties and values you would like the spot(s) to be initialized with </td>
+    <td><i><code>*</code></i> location</td>
+    <td>The coordinates of the location of the spot<br /> 
+    Can either be a number array of <code>[longitude, latitude]</code> or
+    an object containing <code>long</code> or <code>lon</code> and <code>lat</code> and properties</td>
+  </tr>
+  <tr>
+    <td><i><code>*</code></i> price</td>
+    <td>A price object containing the price breakdown for the spot (to be used as a default for the spot's spots)</td>
+  </tr>
+  <tr>
+    <td><i>(optional)</i> lot</td>
+    <td>Either the id or the entire <code>Lot</code> object of the lot to associate with this spot (<i><code>*</code></i> when this property is provided, price and location properties are attempted to be retrieved from the <code>Lot</code> object)</td>
+  </tr>
+  <tr>
+    <td>spot</td>
+    <td>An object containing the properties you want to intiate the spot(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
   </tr>
 </table>
 Create a new spot.
@@ -848,25 +664,6 @@ Returns the spot with the specified id.
 </table>
 Returns the location of the spot with the specified id.
 
-##### POST `/api/spots/:id/location`
-<table>
-  <tr>
-    <td><i>Requires auth</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>coordinates</td>
-    <td>The coordinates of the location to set the spot to. 
-    Can either be a number array of <code>[longitude, latitude]</code> or
-    an object containing <code>long</code> and <code>lat</code> or <code>lon</code> properties</td>
-  </tr>
-</table>
-Adds EITHER the specified spots to the spot or generates `count` number of new spots and adds them to the spot.
-
 ##### GET `/api/spots/:id/bookings`
 <table>
   <tr>
@@ -891,11 +688,19 @@ Returns the bookings associated with the spot with the given id.
     <td>True</td>
   </tr>
   <tr>
+    <td>start</td>
+    <td>The start of the booking</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the booking</td>
+  </tr>
+  <tr>
     <td>bookings</td>
-    <td>The <code>booking</code> object(s) to add, can be either id's or entire objects that must include properties <i>id</i>, <i>start</i>, and <i>end</i></td>
+    <td>The <code>booking</code> object(s) to add, can be either a single <code>Booking</code> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> (when this is used, the rest of the request body is ignored)
   </tr>
 </table>
-Associates the specified booking objects with the spot.
+Creates a new booking for the spot
 
 ##### PUT `/api/spots/:id/bookings/remove`
 <table>
@@ -908,11 +713,23 @@ Associates the specified booking objects with the spot.
     <td>True</td>
   </tr>
   <tr>
+    <td>id</td>
+    <td>The id of the booking</td>
+  </tr>
+  <tr>
+  <td><i>(used instead of id) start</td>
+    <td>The start of the booking</td>
+  </tr>
+  <tr>
+    <td><i>(used instead of id) end</td>
+    <td>The end of the booking</td>
+  </tr>
+  <tr>
     <td>bookings</td>
-    <td>The <code>booking</code> object(s) to remove, can be either id's or entire objects that must include properties <i>id</i>, <i>start</i>, and <i>end</i></td>
+    <td>The <code>booking</code> object(s) to remove, can be either a single <code>Booking</code> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> or an <b>id</b> (when this is used, the rest of the request body is ignored)
   </tr>
 </table>
-Disassociates the specified booking objects with the spot.
+Disassociates the specified booking objects from the spot and updates schedules.
 
 ##### GET `/api/spots/:id/available`
 <table>
@@ -962,7 +779,7 @@ Returns the ranges during which this spot is available in an array where each pa
     <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
   </tr>
 </table>
-Adds availability based on the supplied information. Either `count` (of reptitions) or `finish` (final upper limit) must be set if using a recuring range.
+Adds availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
 
 ##### PUT `/api/spots/:id/available/remove`
 <table>
@@ -999,7 +816,7 @@ Adds availability based on the supplied information. Either `count` (of reptitio
     <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
   </tr>
 </table>
-Removes availability based on the supplied information. Either `count` (of reptitions) or `finish` (final upper limit) must be set if using a recuring range.
+Removes availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
 
 ##### GET `/api/spots/:id/booked`
 <table>
@@ -1051,8 +868,8 @@ Returns an object which which contains details for each price type (such as per 
     <td>True</td>
   </tr>
   <tr>
-    <td>perHour</td>
-    <td>The price per hour for this spot</td>
+    <td>...</td>
+    <td>The <code>Price</code> properties you wish to update and their new values</td>
   </tr>
 </table>
-Set the price of a spot.
+Set the price of a spot. Does not modify existing bookings.
