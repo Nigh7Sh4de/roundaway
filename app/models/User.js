@@ -38,6 +38,8 @@ userSchema.methods.addAuth = function(strategy, obj) {
             cb = obj;
             obj = {};
         }
+        if (!strategy)
+            throw 'Failed to add auth because no strategy was chosen';
         if (typeof strategy !== 'string')
             throw 'Failed to add auth. "' + strategy + '" is not a valid auth.'; 
         if (this.authid[strategy] != null)

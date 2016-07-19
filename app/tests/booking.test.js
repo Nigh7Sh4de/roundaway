@@ -92,24 +92,26 @@ describe('Booking schema', function() {
             })
         })
         
-        it.only('should error if invalid spot', function() {
-            expect.fail();
+        it('should error if invalid spot', function(done) {
             var b = new Booking();
-            return Promise.all([
-                {id:'123', getPrice: function() {
-                    return {perHour: 123}
-                }},
+            var tests = 0;
+            [
                 undefined,
                 123,
                 true,
                 '',
                 {},
                 {someBadProp: 'some unimportant value'}
-            ].map(function (input) {
-                return b.setSpot(input);
-            }))
-            .catch(function(err) {
-                expect(b.spot).to.not.be.ok;
+            ].forEach(function (input, i, arr) {
+                b.setSpot(input)
+                .then(function() {
+                    done(input || 'empty');
+                })
+                .catch(function(err) {
+                    expect(b.spot).to.not.be.ok;
+                    if (++tests >= arr.length)
+                        done();
+                })
             })
         })
     })
@@ -149,18 +151,24 @@ describe('Booking schema', function() {
             })
         })
         
-        it('should error if invalid start time', function() {
+        it('should error if invalid start time', function(done) {
             var b = new Booking();
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 true,
                 ''
-            ].map(function (input) {
-                return b.setStart(input);
-            }))
-            .catch(function(err) {
-                expect(b.start).to.not.be.ok;
+            ].forEach(function (input, i, arr) {
+                b.setStart(input)
+                .then(function() {
+                    done(input || 'empty')
+                })
+                .catch(function(err) {
+                    expect(b.start).to.not.be.ok;
+                    if (++tests >= arr.length)
+                        done();
+                })
             })
         })
     })
@@ -225,27 +233,30 @@ describe('Booking schema', function() {
             });
         })
         
-        it('should error if invalid duration', function() {
+        it('should error if invalid duration', function(done) {
             var b = new Booking();
             var start = b.start = new Date('2016/01/01');
             var end = b.end = new Date();
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 -1,
                 true,
                 ''
-            ].map(function (input) {
-                return b.setDuration(input);
-            }))
-            .then(function() {
-                expect.fail();
-            })
-            .catch(function(err) {
-                expect(err).to.be.ok;
-                expect(b.start).to.deep.equal(start);
-                expect(b.end).to.deep.equal(end);
-            })
+            ].forEach(function (input, i, arr) {
+                b.setDuration(input)
+                .then(function() {
+                    done(input || 'empty');
+                })
+                .catch(function(err) {
+                    expect(err).to.be.ok;
+                    expect(b.start).to.deep.equal(start);
+                    expect(b.end).to.deep.equal(end);
+                    if (++tests >= arr.length)
+                        done();
+                })
+            });
         })
     })
     
@@ -282,23 +293,26 @@ describe('Booking schema', function() {
             })
         })
         
-        it('should error if invalid end time', function() {
+        it('should error if invalid end time', function(done) {
             var b = new Booking();
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 true,
                 ''
-            ].map(function (input) {
-                return b.setEnd(input);
-            }))
-            .then(function() {
-                expect.fail();
-            })
-            .catch(function(err) {
-                expect(err).to.be.ok;
-                expect(b.end).to.not.be.ok;
-            })
+            ].forEach(function (input, i, arr) {
+                b.setEnd(input)
+                .then(function() {
+                    done(input || 'empty')
+                })
+                .catch(function(err) {
+                    expect(err).to.be.ok;
+                    expect(b.end).to.not.be.ok;
+                    if (++tests >= arr.length)
+                        done();
+                })
+            });
         })
     })
 })

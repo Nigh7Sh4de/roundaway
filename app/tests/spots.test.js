@@ -128,19 +128,24 @@ describe('Spot schema', function() {
             var s = new Spot();
             expect(s.available.ranges).to.have.length(0);
             
-            return Promise.all([
+            var tests = 0;
+            [
                 null, 
                 undefined,
                 123,
                 'abc',
                 function(){expect.fail()}
-            ].map(function(input) {
-                return s.removeBookings(input);
-            })).then(function() {
-                expect.fail();
-            }).catch(function(err) {
-                expect(s.available.ranges).to.have.length(0);
-            })
+            ].forEach(function(input, i, arr) {
+                s.removeBookings(input)
+                .then(function() {
+                    done(input || 'empty');
+                })
+                .catch(function(err) {
+                    expect(s.available.ranges).to.have.length(0);
+                    if (++test >= arr.length)
+                        done();
+                })
+            });
         })
     })
     
@@ -238,7 +243,8 @@ describe('Spot schema', function() {
         it('should fail if array does not contain numbers', function() {
             var s = new Spot();
             expect(s.location.coordinates).to.not.be.ok;
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 function(){expect.fail()},
@@ -247,15 +253,17 @@ describe('Spot schema', function() {
                 {id:null},
                 {id:function(){expect.fail()}},
                 ''
-            ].map(function(input) {
-                return s.setLocation([input,input], 'some addres')
-            }))
-            .then(function(location) {
-                expect.fail();
-            })
-            .catch(function(err) {
-                expect(s.location.coordinates).to.not.be.ok;
-            })
+            ].forEach(function(input, i, arr) {
+                s.setLocation([input,input], 'some addres')
+                .then(function(location) {
+                    expect.fail();
+                })
+                .catch(function(err) {
+                    expect(s.location.coordinates).to.not.be.ok;
+                        if (++test >= arr.length)
+                            done();
+                })
+            });
         })
         
         it('should parse strings into numbers for arrays', function() {
@@ -288,7 +296,8 @@ describe('Spot schema', function() {
         it('should fail if not given good input', function() {
             var s = new Spot();
             expect(s.location.coordinates).to.not.be.ok;
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 '123',
@@ -297,21 +306,24 @@ describe('Spot schema', function() {
                 {id:123},
                 {id:null},
                 {id:function(){expect.fail()}}
-            ].map(function(input) {
-                return s.setLocation(input, 'some addres')
-            }))
-            .then(function(location) {
-                expect.fail();
-            })
-            .catch(function(err) {
-                expect(s.location.address).to.not.be.ok;
-            })
+            ].forEach(function(input, i, arr) {
+                s.setLocation(input, 'some addres')
+                .then(function(location) {
+                    done(input || 'empty')
+                })
+                .catch(function(err) {
+                    expect(s.location.address).to.not.be.ok;
+                    if (++test >= arr.length)
+                        done();
+                })
+            });
         })
         
         it('should fail if object does not have long lat props', function() {
             var s = new Spot();
             expect(s.location.coordinates).to.not.be.ok;
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 function(){expect.fail()},
@@ -320,14 +332,16 @@ describe('Spot schema', function() {
                 {id:null},
                 {id:function(){expect.fail()}},
                 ''
-            ].map(function(input) {
-                return s.setLocation({long:input,lat:input}, 'some addres')
-            }))
-            .then(function(location) {
-                expect.fail();
-            })
-            .catch(function(err) {
-                expect(s.location.address).to.not.be.ok;
+            ].forEach(function(input, i, arr) {
+                s.setLocation({long:input,lat:input}, 'some addres')
+                .then(function(location) {
+                    expect.fail();
+                })
+                .catch(function(err) {
+                    expect(s.location.address).to.not.be.ok;
+                    if (++test >= arr.length)
+                        done();
+                })
             })
         })
         
@@ -374,20 +388,23 @@ describe('Spot schema', function() {
         })
         it('should error if invalid lot id', function() {
             var s = new Spot();
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 123,
                 true
-            ].map(function (input) {
-                return s.setLot(input);
-            }))
-            .then(function(spot) {
-                expect.fail();
-            })
-            .catch(function(err) {
-                expect(s.lot).to.not.be.ok;
-            })
+            ].forEach(function (input) {
+                s.setLot(input)
+                .then(function(spot) {
+                    done(input || 'empty');
+                })
+                .catch(function(err) {
+                    expect(s.lot).to.not.be.ok;
+                    if (++test >= arr.length)
+                        done();
+                })
+            });
         })
         
         it('should set the lot id in the spot', function() {
@@ -511,7 +528,8 @@ describe('Spot schema', function() {
         
         it('should fail if given bad input', function() {
             var s = new Spot();
-            return Promise.all([
+            var tests = 0;
+            [
                 123,
                 'abc',
                 function(){expect.fail()},
@@ -520,14 +538,17 @@ describe('Spot schema', function() {
                 {},
                 {start: 456},
                 {start: function(){expect.fail()}, end: function(){expect.fail()}}
-            ].map(function(input) {
-                return s.addAvailability(input);
-            })).then(function() {
-                expect.fail();
-            }).catch(function(err) {
-                expect(err).to.be.ok;
-                expect(s.available.ranges).to.have.length(0);
-            })
+            ].forEach(function(input, i, arr) {
+                s.addAvailability(input)
+                .then(function() {
+                    expect.fail();
+                }).catch(function(err) {
+                    expect(err).to.be.ok;
+                    expect(s.available.ranges).to.have.length(0);
+                    if (++test >= arr.length)
+                        done();
+                })
+            });
         })
         
         it('should add the given time range object to the available array', function() {
@@ -608,7 +629,8 @@ describe('Spot schema', function() {
         
         it('should fail if given bad input', function() {
             var s = new Spot();
-            return Promise.all([
+            var tests = 0;
+            [
                 123,
                 'abc',
                 function(){expect.fail()},
@@ -617,13 +639,16 @@ describe('Spot schema', function() {
                 {},
                 {start: 456},
                 {start: function(){expect.fail()}, end: function(){expect.fail()}}
-            ].map(function(input) {
-                s.removeAvailability(input);
-            })).then(function(spot) {
-                expect.fail()
-            }).catch(function(err) {
-                expect(s.available.ranges).to.have.length(0);
-            })
+            ].forEach(function(input, i, arr) {
+                s.removeAvailability(input)
+                .then(function(spot) {
+                    done(input || 'empty')
+                }).catch(function(err) {
+                    expect(s.available.ranges).to.have.length(0);
+                    if (++test >= arr.length)
+                        done();
+                })
+            });
         })
         
         it('should remove the given time range object from the available array', function() {

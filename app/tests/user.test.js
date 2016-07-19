@@ -74,25 +74,29 @@ describe('User schema', function() {
             });
         });
         
-        it('should error on bad `strategy` input', function() {
+        it('should error on bad `strategy` input', function(done) {
             var user = new User();
             var oUser = user.toJSON();
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 '',
                 123,
                 function(){}
-            ].map(function (input) {
-                return user.addAuth(input)
-            }))
-            .then(function() {
-                expect.fail();
-            })
-            .catch(function(err) {
-                expect(err).to.be.ok;
-                expect(user.toJSON()).to.deep.equal(oUser);
-            })
+            ].forEach(function (input, i, arr) {
+                user.addAuth(input)
+                .then(function() {
+                    done(input || 'empty');
+                })
+                .catch(function(err) {
+                    console.log(err);
+                    expect(err).to.be.ok;
+                    expect(user.toJSON()).to.deep.equal(oUser);
+                    if (++tests >= arr.length)
+                        done();
+                })
+            });
         });
         
         it('should error on adding existent strategy', function() {
@@ -121,24 +125,28 @@ describe('User schema', function() {
             });
         })
         
-        it('should error on bad input', function() {
+        it('should error on bad input', function(done) {
             var user = new User();
             var oUser = user.toJSON();
-            return Promise.all([
+            var tests = 0;
+            [
                 null,
                 undefined,
                 '',
                 123,
                 function(){}
-            ].map(function (input) {
-                return user.removeAuth(input);
-            })).then(function() {
-                expect.fail();
+            ].forEach(function (input, i, arr) {
+                user.removeAuth(input)
+                .then(function() {
+                    done(input || 'empty');
+                })
+                .catch(function(err) {
+                    expect(err).to.be.ok;
+                    expect(user.toJSON()).to.deep.equal(oUser);
+                    if (++tests >= arr.length)
+                        done();
+                });
             })
-            .catch(function(err) {
-                expect(err).to.be.ok;
-                expect(user.toJSON()).to.deep.equal(oUser);
-            });
         })
         
         it('should error if specified auth is not found', function() {

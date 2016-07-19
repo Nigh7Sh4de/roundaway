@@ -101,9 +101,10 @@ describe('Lot schema', function() {
             
         })
         
-        it('should fail if given bad input', function() {
+        it('should fail if given bad input', function(done) {
             var l = new Lot();
-            return Promise.all([
+            var tests = 0;
+            [
                 123,
                 'abc',
                 function(){expect.fail()},
@@ -112,14 +113,17 @@ describe('Lot schema', function() {
                 {},
                 {start: 456},
                 {start: function(){expect.fail()}, end: function(){expect.fail()}}
-            ].map(function(input) {
-                return l.addAvailability(input);
-            })).then(function() {
-                expect.fail();
-            }).catch(function(err) {
-                expect(err).to.be.ok;
-                expect(l.available.ranges).to.have.length(0);
-            })
+            ].forEach(function(input, i, arr) {
+                l.addAvailability(input)
+                .then(function() {
+                    done(input || 'empty');
+                }).catch(function(err) {
+                    expect(err).to.be.ok;
+                    expect(l.available.ranges).to.have.length(0);
+                    if (++tests >= arr.length)
+                        done();
+                })
+            });
         })
         
         it('should add the given time range object to the available array', function() {
@@ -198,9 +202,10 @@ describe('Lot schema', function() {
             
         })
         
-        it('should fail if given bad input', function() {
+        it('should fail if given bad input', function(done) {
             var l = new Lot();
-            return Promise.all([
+            var tests = 0;
+            [
                 123,
                 'abc',
                 function(){expect.fail()},
@@ -209,14 +214,17 @@ describe('Lot schema', function() {
                 {},
                 {start: 456},
                 {start: function(){expect.fail()}, end: function(){expect.fail()}}
-            ].map(function(input) {
-                l.removeAvailability(input);
-            })).then(function(lot) {
-                expect.fail()
-            }).catch(function(err) {
-                expect(l.available.ranges).to.have.length(0);
+            ].forEach(function(input, i, arr) {
+                l.removeAvailability(input)
+                .then(function(lot) {
+                    done(input || 'empty');
+                }).catch(function(err) {
+                    expect(l.available.ranges).to.have.length(0);
+                    if (++tests >= arr.length)
+                        done();
+                })
             })
-        })
+        });
         
         it('should remove the given time range object from the available array', function() {
             var l = new Lot();
