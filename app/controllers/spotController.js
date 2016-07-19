@@ -39,11 +39,11 @@ controller.prototype = {
     },
     CreateSpot: function(req, res) {
         var app = this.app;
-        var newSpot = new Spot(req.body.spot || req.body).toJSON();
+        var newSpot = new Spot(req.body.spot || req.body).toJSON({getters: true});
         delete newSpot._id;
         var getLocationFromLot = null;
         if (newSpot.lot)
-            getLocationFromLot = app.db.lots.findById(newSpot.lot.id || newSpot.lot._id || newSpot.lot);
+            getLocationFromLot = app.db.lots.findById(newSpot.lot instanceof ObjectId ? newSpot.lot : newSpot.lot.id || newSpot.lot._id);
         else if (newSpot.location && newSpot.location.coordinates)
             var coords = {
                 lon: newSpot.location.coordinates[0] || newSpot.location.coordinates.long || newSpot.location.coordinates.lon,
@@ -55,6 +55,8 @@ controller.prototype = {
             newSpot.user = req.user.id;
         (
             !!getLocationFromLot ? getLocationFromLot.then(function(lot) {
+                if (lot.price)
+                    newSpot.price = lot.price;
                 return Promise.resolve(lot.location);
             }) : app.geocoder.reverse(coords).then(function(loc) {
                 return Promise.resolve({
@@ -67,6 +69,8 @@ controller.prototype = {
             if (!location)
                 throw 'Cannot create a spot without a location';
             newSpot.location = location;
+            if (!newSpot.price)
+                    throw 'Could not create spot because no price was specified';
             if (req.body.count != null) {
                 if (typeof req.body.count !== 'number' || req.body.count <= 0)
                     return res.sendBad('Could not create spot as the specified count was invalid');
