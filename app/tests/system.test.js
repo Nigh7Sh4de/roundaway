@@ -485,6 +485,9 @@ _d('the entire app should not explode', function() {
                     .send({spot: {
                         location: {
                             coordinates: [12, 21]
+                        },
+                        price: {
+                            perHour: 123.45
                         }
                     }})
                     .end(function(err, res) {
