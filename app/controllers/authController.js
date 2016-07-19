@@ -4,11 +4,11 @@ var authController = function(app) {
         this.app = app;
         app.get('/logout', this.Logout);
 
-        app.get('/login/:strat', this.Login.bind(this));
-        app.get('/login/:strat/return', this.LoginReturn.bind(this), this.GenerateToken.bind(this));
+        // app.get('/login/:strat', this.Login.bind(this));
+        // app.get('/login/:strat/return', this.LoginReturn.bind(this), this.GenerateToken.bind(this));
         app.post('/auth/:strat', app.bodyParser.json(), this.LoggedIn.bind(this));
-        app.get('/connect/:strat', this.Connect.bind(this));
-        app.get('/connect/:strat/return', this.ConnectReturn.bind(this));
+        // app.get('/connect/:strat', this.Connect.bind(this));
+        // app.get('/connect/:strat/return', this.ConnectReturn.bind(this));
 
     }
 
