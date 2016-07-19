@@ -896,6 +896,45 @@ describe('spotController', function() {
             delete emptySpot._id;    
         })
 
+        it('should try to get default available schedule from lot', function(done) {
+            var spot = Object.assign({}, emptySpot);
+            var lot = new Lot();
+            var avail = {
+                start: new Date('2016/01/01'),
+                end: new Date('2016/01/01')
+            }
+            lot.available.addRange(avail.start, avail.end);
+            spot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            spot.price = {
+                perHour: 123.45
+            }
+            spot.lot = lot._id;
+            req.body.spot = spot;
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
+            app.db.lots = {
+                findById: mockPromise(lot)
+            }
+            app.db.spots = {
+                create: function(obj) {
+                    delete obj.id;
+                    delete obj._id;
+                    expect(obj.available.ranges).to.deep.include.all.members(lot.toJSON({getters: true}).available.ranges);
+                    return mockPromise(obj)();
+                }
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.CreateSpot(req, res);
+        })
+
         it('should fail if price is not specified', function(done) {
             var spot = Object.assign({}, emptySpot);
             spot.location = {
@@ -915,7 +954,6 @@ describe('spotController', function() {
                 }
             }
             res.sent = function() {
-                if (res.send.callCount > 1) done('send');
                 expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
@@ -997,12 +1035,15 @@ describe('spotController', function() {
                 coordinates: [12,34]
             }
             spot.lot = lot._id;
+            spot.price = {
+                perHour: 123.45
+            }
             req.body.spot = spot;
             app.db.spots = {
                 create: function(obj) {
                     delete obj.id;
                     delete obj._id;
-                    expect(obj.location).to.deep.equal(lot.location);
+                    expect(obj.location).to.deep.equal(lot.toObject().location);
                     return mockPromise(obj)();
                 }
             }
