@@ -505,7 +505,7 @@ Returns the entire lots collection.
   </tr>
   <tr>
     <td>location</td>
-    <td>The coordinates of the location of the lot<br /> 
+    <td>An object containing a <code>coordinates</code> property with the coordinates of the location of the lot<br /> 
     Can either be a number array of <code>[longitude, latitude]</code> or
     an object containing <code>long</code> or <code>lon</code> and <code>lat</code> and properties</td>
   </tr>
@@ -618,7 +618,7 @@ Returns the required number of Spots based on the given filters
   </tr>
   <tr>
     <td><i><code>*</code></i> location</td>
-    <td>The coordinates of the location of the spot<br /> 
+    <td>An object containing a <code>coordinates</code> property with the coordinates of the location of the spot<br /> 
     Can either be a number array of <code>[longitude, latitude]</code> or
     an object containing <code>long</code> or <code>lon</code> and <code>lat</code> and properties</td>
   </tr>
