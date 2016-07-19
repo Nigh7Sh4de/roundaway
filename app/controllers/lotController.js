@@ -37,7 +37,7 @@ controller.prototype = {
     },
     CreateLot: function(req, res) {
         var app = this.app;
-        var newLot = new Lot(req.body.lot).toJSON();
+        var newLot = new Lot(req.body.lot || req.body).toJSON();
         delete newLot._id;
         if (newLot.location && newLot.location.coordinates)
             var coords = {

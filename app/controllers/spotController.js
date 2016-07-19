@@ -39,7 +39,7 @@ controller.prototype = {
     },
     CreateSpot: function(req, res) {
         var app = this.app;
-        var newSpot = new Spot(req.body.spot).toJSON();
+        var newSpot = new Spot(req.body.spot || req.body).toJSON();
         delete newSpot._id;
         var getLocationFromLot = null;
         if (newSpot.lot)
