@@ -9,6 +9,7 @@ var server = require('./../../server');
 var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
 var Booking = require('./../models/Booking');
+var User = require('./../models/User');
 
 describe('Spot schema', function() {
     before(function() {
@@ -895,6 +896,36 @@ describe('spotController', function() {
             delete emptySpot._id;    
         })
 
+        it('should set the spot\'s user', function(done) {
+            var spot = Object.assign({}, emptySpot);
+            var user = new User();
+            spot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            spot.user = user._id;
+            req.body.spot = spot;
+            req.user = {
+                id: user.id
+            }
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
+            app.db.spots = {
+                create: function(obj) {
+                    delete obj.id;
+                    delete obj._id;
+                    expect(obj).to.deep.equal(spot);
+                    return mockPromise(obj)();
+                }
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.CreateSpot(req, res);
+        })
+
         it('should take location from lot', function(done) {
             var spot = Object.assign({}, emptySpot);
             var lot = new Lot();
@@ -1460,6 +1491,39 @@ describe('spotController', function() {
             req.body = b;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+        })
+
+        it('should set the user', function(done) {
+            var s = new Spot();
+            var user = new User();
+            s.price.perHour = 123.45;
+            var b = new Booking();
+            b.start = b.end = new Date();
+            b.user = user._id;
+            sinon.stub(s, 'addBookings', function(_b) {
+                expect(_b).to.deep.include(b);
+                return mockPromise(s)();
+            })
+            sinon.stub(Booking.prototype, 'setSpot', function() {
+                expect(this.user).to.deep.equal(user._id);
+                return mockPromise(b)();
+            });
+            app.db.spots = {
+                findById: mockPromise(s)
+            }
+            req.params.id = s.id;
+            req.body = b;
+            req.user = {
+                id: user.id
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(b.setSpot.calledOnce).to.be.true;
+                Booking.prototype.setSpot.restore();
                 done();
             }
             app.spotController.AddBookingsToSpot(req, res);

@@ -47,6 +47,8 @@ controller.prototype = {
         else
             return res.sendBad('Could not create lot because no coordinates were specified');
         
+        if (req.user && !newLot.user)
+            newLot.user = req.user.id;
         app.geocoder.reverse(coords).then(function(loc) {
             return Promise.resolve({
                 coordinates: [loc[0].longitude, loc[0].latitude],

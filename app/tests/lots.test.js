@@ -7,6 +7,7 @@ var verbs = routeTest.verbs;
 var server = require('./../../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
+var User = require('./../models/User');
 
 describe('Lot schema', function() {
     before(function() {
@@ -569,6 +570,37 @@ describe('lotController', function() {
             emptyLot = new Lot().toJSON();
             delete emptyLot.id;
             delete emptyLot._id;    
+        })
+        
+        it('should set the user for the lot', function(done) {
+            var lot = Object.assign({}, emptyLot);
+            var user = new User();
+            lot.location = {
+                address: '123 fake st',
+                coordinates: [12,34]
+            }
+            lot.user = user._id;
+            req.body.lot = lot;
+            req.user = {
+                id: user.id
+            }
+            app.geocoder = {
+                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
+            }
+            res.sendBad = done;
+            app.db.lots = {
+                create: function(obj) {
+                    delete obj.id;
+                    delete obj._id;
+                    expect(obj).to.deep.equal(lot);
+                    return mockPromise(obj)();
+                }
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.lotController.CreateLot(req, res);
         })
 
         it('should error if no location was provided', function(done) {

@@ -51,7 +51,8 @@ controller.prototype = {
             }
         else
             return res.sendBad('Could not create spot because no coordinates were specified');
-        
+        if (req.user && !newSpot.user)
+            newSpot.user = req.user.id;
         (
             !!getLocationFromLot ? getLocationFromLot.then(function(lot) {
                 return Promise.resolve(lot.location);
@@ -216,6 +217,8 @@ controller.prototype = {
             if (!spot) throw 'Could not find spot';
             return Promise.all(bookings.map(function(booking) {
                 var b = new Booking(booking);
+                if (req.user && !b.user)
+                    b.user = req.user.id;
                 return b.setSpot(spot);
             }))
         }).then(function(results) {
