@@ -26,32 +26,41 @@ _d('the entire app should not explode', function() {
         facebook: 'facebook_auth'
     }
     var sessionUser;
+    var adminUser;
     var token = 'aaa.bbb.ccc';
+    var admin_token = 'aaa.bbb.ccc';
 
     before(function(done) {
         sessionUser = new User({
+            admin: false,
+            profile: userProfile,
+            authid: userAuth
+        });
+        adminUser = new User({
             admin: true,
             profile: userProfile,
             authid: userAuth
         });
         inject.config.DB_CONNECTION_STRING = testConnectionString;
         token = jwt.sign({id:sessionUser.id}, inject.config.JWT_SECRET_KEY);
+        admin_token = jwt.sign({id:adminUser.id}, inject.config.JWT_SECRET_KEY);
         app = server(inject);
-        app.stripe.charge = function(t,a,cb) {
-            cb(null, {});
+        app.stripe.charge = function(t, a) {
+            return Promise.resolve({
+                token: t,
+                amount: a
+            })
         }
-        var todo = 4;
-        var calls = 0;
         app.db.connection.on('error', function(err) {
             throw err;
         });
-        app.db.connection.once('open', done);
-    })
-
-    beforeEach(function(done) {
-        sessionUser.isNew = true;
-        sessionUser.save(function(err, user) {
-            done();
+        app.db.connection.once('open', function(err) {
+            expect(err).to.not.be.ok;
+            app.db.users.collection.insert(
+                [
+                    sessionUser.toJSON({getters: true}), 
+                    adminUser.toJSON({getters: true})
+                ], done);
         });
     })
 
@@ -70,11 +79,16 @@ _d('the entire app should not explode', function() {
             }
             names.forEach(function(collection_name) {
                 collection_name = collection_name.name;
-                if (collection_name.indexOf("system.") == -1) 
+                if (collection_name.indexOf("system.") < 0 &&
+                    collection_name.indexOf("users") < 0)
                     app.db.connection.db.collection(collection_name).drop(next);
                 else next();
             })
         });
+    })
+
+    after(function(done) {
+        app.db.connection.db.dropDatabase(done);
     })
 
     var insert = function() {
@@ -88,20 +102,22 @@ _d('the entire app should not explode', function() {
                 cb();
         }
         args.forEach(function(item) {
+            if (!item.user)
+                item.user = sessionUser.id;
             item.save(next);
         })
     }
 
     describe('User Controller', function() {
-        describe('GET `/api/users`', function() {
+        describe('GET /api/users', function() {
             it('should return users in db', function(done) {
                 var user = new User();
                 insert(user, function() {
                     request(app).get('/api/users')
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                         expect(res.text).to.contain(user.id);
-                        expect(res.status).to.equal(200);
+                        expect(res.status, res.body.errors).to.equal(200);
                         done();
                     })
                 });
@@ -113,7 +129,7 @@ _d('the entire app should not explode', function() {
                     .set('Authorization', 'JWT ' + token)
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
+                        expect(res.status, res.body.errors).to.equal(200);
                         expect(res.text).to.contain.all(userAuth.facebook, userProfile.name);
                         done();
                     })
@@ -122,16 +138,15 @@ _d('the entire app should not explode', function() {
         })
         describe('GET /api/users/:id/lots', function() {
             it('should return lots for the user', function(done) {
-                var user = new User();
                 var lot = new Lot({
-                    user: user.id
+                    user: sessionUser.id
                 });
                 insert(lot, function() {
-                    request(app).get('/api/users/' + user.id + '/lots')
+                    request(app).get('/api/users/' + sessionUser.id + '/lots')
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(lot.id);
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             done();
                         })
                 });
@@ -139,16 +154,15 @@ _d('the entire app should not explode', function() {
         })
         describe('GET /api/users/:id/spots', function() {
             it('should return spots for the user', function(done) {
-                var user = new User();
                 var spot = new Spot({
-                    user: user.id
+                    user: sessionUser.id
                 });
                 insert(spot, function() {
-                    request(app).get('/api/users/' + user.id + '/spots')
+                    request(app).get('/api/users/' + sessionUser.id + '/spots')
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(spot.id);
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             done();
                         })
                 });
@@ -156,16 +170,15 @@ _d('the entire app should not explode', function() {
         })
         describe('GET /api/users/:id/bookings', function() {
             it('should return bookings for the user', function(done) {
-                var user = new User();
                 var booking = new Booking({
-                    user: user.id
+                    user: sessionUser.id
                 });
                 insert(booking, function() {
-                    request(app).get('/api/users/' + user.id + '/bookings')
+                    request(app).get('/api/users/' + sessionUser.id + '/bookings')
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(booking.id);
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             done();
                         })
                 });
@@ -173,18 +186,13 @@ _d('the entire app should not explode', function() {
         })
         describe('GET /api/users/:id/profile', function() {
             it('should return profile for the user', function(done) {
-                var user = new User({
-                    profile: userProfile
-                });
-                insert(user, function() {
-                    request(app).get('/api/users/' + user.id + '/profile')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(res.body.data).to.deep.equal(userProfile);
-                            expect(res.status).to.equal(200);
-                            done();
-                        });
-                });
+                request(app).get('/api/users/' + sessionUser.id + '/profile')
+                    .set('Authorization', 'JWT ' + token)
+                    .end(function(err, res) {
+                        expect(res.body.data).to.deep.equal(userProfile);
+                        expect(res.status, res.body.errors).to.equal(200);
+                        done();
+                    });
             })
         })
         describe('PATCH /api/users/:id/profile', function() {
@@ -192,10 +200,11 @@ _d('the entire app should not explode', function() {
                 var user = new User({
                     profile: userProfile
                 })
+                var _token = jwt.sign({id:user.id}, inject.config.JWT_SECRET_KEY);
                 insert(user, function() {
                     request(app).patch('/api/users/' + user.id + '/profile')
                         .send({name: 'Sh4de'})
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + _token)
                         .end(function(err, res) {
                             expect(res.status, res.body.errors).to.equal(200);
                             app.db.users.findById(user.id, function(err, doc) {
@@ -215,10 +224,10 @@ _d('the entire app should not explode', function() {
                     booking2 = new Booking();
                 insert(booking, booking, function() {
                     request(app).get('/api/bookings')
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain.all(booking.id, booking2.id);
                             done();
                         })
@@ -233,7 +242,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain(booking.id);
                             done();
                         })
@@ -251,7 +260,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain(spot.id);
                             done();
                         });
@@ -269,7 +278,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.body.data).to.deep.equal(booking.start.toISOString());
                             done();
                         })
@@ -287,7 +296,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.body.data).to.deep.equal(booking.end.toISOString());
                             done();
                         })
@@ -305,7 +314,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.body.data).to.deep.equal(booking.getDuration());
                             done();
                         })
@@ -323,7 +332,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.body.data).to.be.ok;
                             expect(res.body.data.start).to.deep.equal(booking.start.toISOString());
                             expect(res.body.data.end).to.deep.equal(booking.end.toISOString());
@@ -345,8 +354,47 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.body.data).to.equal(price);
+                            done();
+                        })
+                });
+            })
+        })
+        describe('PUT /api/bookings/:id/pay', function() {
+            it('should pay the price of the booking', function(done) {
+                var price = 123.45;
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01'),
+                    price: price
+                })
+                insert(booking, function() {
+                    request(app).put('/api/bookings/' + booking.id + '/pay')
+                        .send({token: 'some token'})
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.text).to.deep.contain(price);
+                            done();
+                        })
+                });
+            })
+        })
+        describe('GET /api/bookings/:id/status', function() {
+            it('should get the status of the booking', function(done) {
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01')
+                })
+                insert(booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/status')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.body.data).to.equal('unpaid');
                             done();
                         })
                 });
@@ -361,10 +409,10 @@ _d('the entire app should not explode', function() {
                     lot2 = new Lot();
                 insert(lot, lot2, function() {
                     request(app).get('/api/lots')
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain.all(lot.id, lot2.id);
                             done();
                         })
@@ -379,7 +427,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain(lot.id);
                             done();
                         })
@@ -389,7 +437,7 @@ _d('the entire app should not explode', function() {
         describe('PUT /api/lots', function() {
             it('should create a new lot', function(done) {
                 request(app).put('/api/lots')
-                    .set('Authorization', 'JWT ' + token)
+                    .set('Authorization', 'JWT ' + admin_token)
                     .send({lot: {
                         location: {
                             coordinates: [12, 21]
@@ -397,7 +445,7 @@ _d('the entire app should not explode', function() {
                     }})
                     .end(function(err, res) {
                         expect(err).to.not.be.ok;
-                        expect(res.status).to.equal(200);
+                        expect(res.status, res.body.errors).to.equal(200);
                         expect(res.body.data).to.be.ok;
                         app.db.lots.findById(res.body.data._id, function(err, doc) {
                             expect(err).to.not.be.ok;
@@ -419,7 +467,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain(lot.location.coordinates.toString());
                             done();
                         });
@@ -437,10 +485,93 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain.all(spot.id, spot.id);
                             done();
                         });
+                })
+            })
+        })
+        describe('GET /api/lots/:id/available', function() {
+            it('should get availability', function(done) {
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2030/01/01')
+                }
+                var lot = new Lot({
+                    available: [_av]
+                });
+                insert(lot, function() {
+                    request(app).get('/api/lots/' + lot.id + '/available')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.text).to.contain.all(_av.start.toISOString(), 
+                                                            _av.end.toISOString());
+                            done();
+                        })
+                })
+            })
+        })
+        describe('PUT /api/lots/:id/available', function() {
+            it('should add availability', function(done) {
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2030/01/01')
+                }
+                var lot = new Lot();
+                var spot = new Spot({
+                    lot: lot.id
+                });
+                insert(lot, spot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/available')
+                        .send(_av)
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            app.db.lots.findById(lot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.available.checkRange(_av.start, _av.end)).to.be.true;
+                                app.db.spots.findById(spot.id, function(err, spot) {
+                                    expect(spot.available.checkRange(_av.start, _av.end)).to.be.true;
+                                    done();
+                                })
+                            })
+                        })
+                })
+            })
+        })
+        describe('PUT /api/lots/:id/available/remove', function() {
+            it('should remove availability', function(done) {
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2030/01/01')
+                }
+                var lot = new Lot({
+                    available: [_av]
+                });
+                var spot = new Spot({
+                    lot: lot.id,
+                    available: [_av]
+                })
+                insert(lot, spot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/available/remove')
+                    .send(_av)
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            app.db.lots.findById(lot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc.available.checkRange(_av.start, _av.end)).to.be.false;
+                                app.db.spots.findById(spot.id, function(err, spot) {
+                                    expect(spot.available.checkRange(_av.start, _av.end)).to.be.false;
+                                    done();
+                                })
+                            })
+                        })
                 })
             })
         })
@@ -453,10 +584,10 @@ _d('the entire app should not explode', function() {
                     spot2 = new Spot();
                 insert(spot, spot2, function() {
                     request(app).get('/api/spots')
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain.all(spot.id, spot2.id);
                             done();
                         })
@@ -471,7 +602,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain(spot.id);
                             done();
                         })
@@ -481,7 +612,7 @@ _d('the entire app should not explode', function() {
         describe('PUT /api/spots', function() {
             it('should create a new spot', function(done) {
                 request(app).put('/api/spots')
-                    .set('Authorization', 'JWT ' + token)
+                    .set('Authorization', 'JWT ' + admin_token)
                     .send({spot: {
                         location: {
                             coordinates: [12, 21]
@@ -514,7 +645,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain(spot.location.coordinates.toString());
                             done();
                         });
@@ -527,12 +658,12 @@ _d('the entire app should not explode', function() {
                 var booking = new Booking({
                     spot: spot._id
                 });
-                insert(booking, function() {
+                insert(booking, spot, function() {
                     request(app).get('/api/spots/' + spot.id + '/bookings')
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain(booking.id);
                             done();
                         })
@@ -581,7 +712,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             Promise.all([
                                 app.db.spots.findById(spot.id).exec(),
                                 app.db.bookings.findById(booking.id).exec()
@@ -611,7 +742,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain.all(_av.start.toISOString(), 
                                                             _av.end.toISOString());
                             done();
@@ -632,7 +763,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             app.db.spots.findById(spot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
                                 expect(doc.available.checkRange(_av.start, _av.end)).to.be.true;
@@ -657,7 +788,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             app.db.spots.findById(spot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
                                 expect(doc.available.checkRange(_av.start, _av.end)).to.be.false;
@@ -681,7 +812,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.contain.all(
                                 _bk.start.toISOString(), 
                                 _bk.end.toISOString());
@@ -709,7 +840,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.body.data.booked).to.be.ok;
                             expect(res.body.data.available).to.be.ok;
                             expect(res.text).to.contain.all(
@@ -733,7 +864,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             expect(res.body.data).to.deep.equal({
                                 perHour: pricePerHour
                             });
@@ -755,7 +886,7 @@ _d('the entire app should not explode', function() {
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
-                            expect(res.status).to.equal(200);
+                            expect(res.status, res.body.errors).to.equal(200);
                             app.db.spots.findById(spot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
                                 expect(doc).to.be.ok;
