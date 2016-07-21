@@ -5,13 +5,14 @@ var controller = function(app) {
     this.app = app;
     app.get('/api/lots', app.checkAuth, app.checkAdmin, this.GetAllLots.bind(this));
     app.put('/api/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateLot.bind(this));
-    app.get('/api/lots/:id', app.checkAuth, app.checkAdmin, this.GetLot.bind(this));
-    app.get('/api/lots/:id/location', app.checkAuth, app.checkAdmin, this.GetLocationOfLot.bind(this));
-    app.get('/api/lots/:id/spots', app.checkAuth, app.checkAdmin, this.GetSpotsForLot.bind(this));
-    app.put('/api/lots/:id/available', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
-    app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
-    app.get('/api/lots/:id/price', app.checkAuth, app.checkAdmin, this.GetPriceOfLot.bind(this));
-    app.put('/api/lots/:id/price', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.SetPriceOfLot.bind(this));
+    app.get('/api/lots/:id', app.checkAuth, app.checkOwner, this.GetLot.bind(this));
+    app.get('/api/lots/:id/location', app.checkAuth, app.checkOwner, this.GetLocationOfLot.bind(this));
+    app.get('/api/lots/:id/spots', app.checkAuth, app.checkOwner, this.GetSpotsForLot.bind(this));
+    app.get('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetAllAvailabilityForLot.bind(this));
+    app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
+    app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
+    app.get('/api/lots/:id/price', app.checkAuth, app.checkOwner, this.GetPriceOfLot.bind(this));
+    app.put('/api/lots/:id/price', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetPriceOfLot.bind(this));
 }
 
 controller.prototype = {
@@ -26,14 +27,7 @@ controller.prototype = {
         })
     },
     GetLot: function(req, res) {
-        this.app.db.lots.findById(req.params.id)
-        .exec()
-        .then(function(lot) {
-            return res.sendGood('Lot found', lot);
-        })
-        .catch(function(err) {
-            return res.sendBad(err);
-        })
+        res.sendGood('Found lot', req.doc);
     },
     CreateLot: function(req, res) {
         var app = this.app;
@@ -79,19 +73,20 @@ controller.prototype = {
         })
     },
     GetLocationOfLot: function(req, res) {
-        this.app.db.lots.findById(req.params.id)
-        .exec()
-        .then(function(lot) {
-            if (!lot) throw 'Lot not found';
-            return res.sendGood('Found location of lot', JSON.parse(JSON.stringify(lot.location)));
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        })
+        return res.sendGood('Found location of lot', JSON.parse(JSON.stringify(req.doc.location)));
+        // this.app.db.lots.findById(req.params.id)
+        // .exec()
+        // .then(function(lot) {
+        //     if (!lot) throw 'Lot not found';
+        //     return res.sendGood('Found location of lot', JSON.parse(JSON.stringify(lot.location)));
+        // })
+        // .catch(function(err) {
+        //     res.sendBad(err);
+        // })
     },
     GetSpotsForLot: function(req, res) {
         var app = this.app;
-        app.db.spots.find({lot: req.params.id})
+        app.db.spots.find({lot: req.doc.id})
         .exec()
         .then(function(spots) {
             if (!spots) throw 'This lot has no spots';
@@ -100,6 +95,9 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err);
         })
+    },
+    GetAllAvailabilityForLot: function(req, res) {
+        res.sendGood('Found availability for lot', {available: req.doc.available.ranges});
     },
     AddAvailabilityToLot: function(req, res) {
         if (!req.body ||
@@ -110,14 +108,12 @@ controller.prototype = {
         req.body.end = new Date(req.body.end);
         if (isNaN(req.body.start.valueOf()) || isNaN(req.body.end.valueOf()))
             return res.sendBad('Could not add availability because invalid dates were provided');
-        Promise.all([
-            this.app.db.lots.findById(req.params.id),
-            this.app.db.spots.find({lot: req.params.id})
-        ])
-        .then(function(results) {
+
+        this.app.db.spots.find({lot: req.params.id})
+        .then(function(spots) {
             return Promise.all([
-                results[0].addAvailability(req.body)
-            ].concat(results[1].map(function(spot) {
+                req.doc.addAvailability(req.body)
+            ].concat(spots.map(function(spot) {
                 return spot.addAvailability(req.body);
             })))
         })
@@ -140,14 +136,12 @@ controller.prototype = {
         req.body.end = new Date(req.body.end);
         if (isNaN(req.body.start.valueOf()) || isNaN(req.body.end.valueOf()))
             return res.sendBad('Could not remove availability because invalid dates were provided');
-        Promise.all([
-            this.app.db.lots.findById(req.params.id),
-            this.app.db.spots.find({lot: req.params.id})
-        ])
-        .then(function(results) {
+
+        this.app.db.spots.find({lot: req.params.id})
+        .then(function(spots) {
             return Promise.all([
-                results[0].removeAvailability(req.body)
-            ].concat(results[1].map(function(spot) {
+                req.doc.removeAvailability(req.body)
+            ].concat(spots.map(function(spot) {
                 return spot.removeAvailability(req.body);
             })))
         })
@@ -162,29 +156,26 @@ controller.prototype = {
         })
     },
     GetPriceOfLot: function(req, res) {
-        var app = this.app;
-        app.db.lots.findById(req.params.id)
-        .exec()
-        .then(function(lot) {
-            if (!lot) throw 'lot not found';
-            var price = lot.getPrice();
-            if (!price) throw 'Price is not set for this lot';;
-            res.sendGood('Found price for lot', price);
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
+        var price = req.doc.getPrice();
+        if (!price) return res.sendBad('Price is not set for this lot');
+        res.sendGood('Found price for lot', price);
     },
     SetPriceOfLot: function(req, res) {
         var app = this.app;
-        app.db.lots.findById(req.params.id)
+        app.db.spots.find({lot: req.doc.id})
         .exec()
-        .then(function(lot) {
-            if (!lot) throw 'lot not found';
-            return lot.setPrice(req.body);
+        .then(function(spots) {
+            return Promise.all([
+                req.doc.setPrice(req.body)
+            ].concat(spots.map(function(spot) {
+                return spot.setPrice(req.body);
+            })))
         })
         .then(function(lot) {
-            res.sendGood('Set price for lot', spot);
+            res.sendGood('Set price for lot and all of the lot\'s spots', {
+                lot: results.shift(),
+                spots: results
+            })
         })
         .catch(function(err) {
             res.sendBad(err)
