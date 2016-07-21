@@ -18,7 +18,7 @@ Roundaway
    <td>master</td>
    <td>8080</td>
    <td>http://roundaway.com</td>
-   <td>0.1</td>
+   <td>0.2</td>
    <td>production</td>
   </tr>
   <tr>
