@@ -153,7 +153,7 @@ A `Booking` is an immutable object that is used to track bookings on a `Spot`. O
 
 ## Authentication
 
-Certain API routes requre the user to be authenticated (have a JWT) and/or have certain privelages. The specific requirements for each route are listed below.
+Certain API routes requre a JWT and/or the associated user to have certain privelages. The specific requirements for each route are listed below.
 In order to make API calls that are auth protected use the following flow:
 1. Hit `POST /auth/:strat` with an **access_token** as supplied by the social network you are authenticating with.
 2. You will receieve a **JWT** in the response if authentication was successful
@@ -166,6 +166,23 @@ In order to make API calls that are auth protected use the following flow:
 ## API
 
 *All api calls are on the `/api` route*
+
+### Authorization
+Each route has security policy with the following three properties:
+<table>
+  <tr>
+    <td><i>Requires JWT</i></td>
+    <td>A valid JWT must be provided</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
+    <td>You must be the associated user or be an admin</td>
+  </tr>
+  <tr>
+    <td><i>Requires admin</i></td>
+    <td>You must be an admin</td>
+  </tr>
+</table>
 
 ### Responses
 
@@ -256,7 +273,11 @@ A redirect callback that the social network will hit after authentication (succe
 ##### GET `/api/users`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
@@ -269,7 +290,11 @@ Returns the entire `users` collection.
 ##### GET `/api/users/profile`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
@@ -282,12 +307,16 @@ Returns the current session user.
 ##### GET `/api/users/:userid/lots`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the given user's lots.
@@ -295,12 +324,16 @@ Returns the given user's lots.
 ##### GET `/api/users/:userid/spots`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the given user's spots.
@@ -308,12 +341,16 @@ Returns the given user's spots.
 ##### GET `/api/users/:userid/bookings`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the given user's bookings.
@@ -321,12 +358,16 @@ Returns the given user's bookings.
 ##### GET `/api/users/:userid/profile`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the given user's profile.
@@ -334,12 +375,16 @@ Returns the given user's profile.
 ##### PATCH `/api/users/:userid/profile`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td colspan="2">Profile properties</td>
@@ -356,7 +401,11 @@ Updates the specified fields of the user's profile.
 ##### GET `/api/bookings`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
@@ -369,12 +418,16 @@ Returns the entire bookings collection.
 ##### GET `/api/bookings/:id`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the booking with the specified id.
@@ -382,12 +435,16 @@ Returns the booking with the specified id.
 ##### GET `/api/bookings/:id/spot`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the spot that is associated with this booking.
@@ -395,12 +452,16 @@ Returns the spot that is associated with this booking.
 ##### GET `/api/bookings/:id/start`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the start of the specified booking.
@@ -408,12 +469,16 @@ Returns the start of the specified booking.
 ##### GET `/api/bookings/:id/duration`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the duration of the specified booking.
@@ -421,12 +486,16 @@ Returns the duration of the specified booking.
 ##### GET `/api/bookings/:id/end`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the end of the specified booking.
@@ -434,12 +503,16 @@ Returns the end of the specified booking.
 ##### GET `/api/bookings/:id/time`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the time `{start: Date, end: Date}` of the specified booking.
@@ -447,12 +520,16 @@ Returns the time `{start: Date, end: Date}` of the specified booking.
 ##### GET `/api/bookings/:id/price`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the price of the booking of the specified booking.
@@ -460,12 +537,16 @@ Returns the price of the booking of the specified booking.
 ##### PUT `/api/bookings/:id/pay`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td>token</td>
@@ -479,7 +560,11 @@ Pay for a booking.
 ##### GET `/api/lots`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
@@ -492,7 +577,11 @@ Returns the entire lots collection.
 ##### PUT `/api/lots`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
@@ -523,12 +612,16 @@ Create a new lot.
 ##### GET `/api/lots/:id`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the lot with the specified id.
@@ -536,12 +629,16 @@ Returns the lot with the specified id.
 ##### GET `/api/lots/:id/location`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the location of the lot with the specified id.
@@ -549,12 +646,16 @@ Returns the location of the lot with the specified id.
 ##### GET `/api/lots/:id/spots`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the spots associated with the lot.
@@ -564,12 +665,16 @@ Returns the spots associated with the lot.
 ##### GET `/api/spots`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the entire spots collection.
@@ -577,7 +682,11 @@ Returns the entire spots collection.
 ##### GET `/api/spots/near?long=LONGITUDE&lat=LATITUDE&available=DATE&count=COUNT`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>False</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>False</td>
   </tr>
   <tr>
@@ -605,7 +714,11 @@ Returns the required number of Spots based on the given filters
 ##### PUT `/api/spots`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
@@ -640,12 +753,16 @@ Create a new spot.
 ##### GET `/api/spots/:id`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the spot with the specified id.
@@ -654,12 +771,16 @@ Returns the spot with the specified id.
 ##### GET `/api/spots/:id/location`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the location of the spot with the specified id.
@@ -667,12 +788,16 @@ Returns the location of the spot with the specified id.
 ##### GET `/api/spots/:id/bookings`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the bookings associated with the spot with the given id.
@@ -680,12 +805,16 @@ Returns the bookings associated with the spot with the given id.
 ##### PUT `/api/spots/:id/bookings`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td>start</td>
@@ -705,12 +834,16 @@ Creates a new booking for the spot
 ##### PUT `/api/spots/:id/bookings/remove`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td>id</td>
@@ -734,12 +867,16 @@ Disassociates the specified booking objects from the spot and updates schedules.
 ##### GET `/api/spots/:id/available`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the ranges during which this spot is available in an array where each pair of indices is a start and end time. 
@@ -747,12 +884,16 @@ Returns the ranges during which this spot is available in an array where each pa
 ##### PUT `/api/spots/:id/available`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td>start</td>
@@ -784,12 +925,16 @@ Adds availability based on the supplied information. Either <code>count</code> (
 ##### PUT `/api/spots/:id/available/remove`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td>start</td>
@@ -821,12 +966,16 @@ Removes availability based on the supplied information. Either <code>count</code
 ##### GET `/api/spots/:id/booked`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns the ranges during which this spot is booked in an array where each pair of indices is a start and end time. 
@@ -834,12 +983,16 @@ Returns the ranges during which this spot is booked in an array where each pair 
 ##### GET `/api/spots/:id/schedules`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns an object which contains 2 propertes: `booked` and `available` each of which are arrays where each pair of indices is a start and end time.
@@ -847,12 +1000,16 @@ Returns an object which contains 2 propertes: `booked` and `available` each of w
 ##### GET `/api/spots/:id/price`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
 </table>
 Returns an object which which contains details for each price type (such as per hour, etc).
@@ -860,12 +1017,16 @@ Returns an object which which contains details for each price type (such as per 
 ##### GET `/api/spots/:id/price`
 <table>
   <tr>
-    <td><i>Requires auth</i></td>
+    <td><i>Requires JWT</i></td>
+    <td>True</td>
+  </tr>
+  <tr>
+    <td><i>Requires authorization</i></td>
     <td>True</td>
   </tr>
   <tr>
     <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td>False</td>
   </tr>
   <tr>
     <td>...</td>
