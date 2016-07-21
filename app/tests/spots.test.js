@@ -705,13 +705,15 @@ routeTest('spotController', [
             verb: verbs.GET,
             route: '/api/spots',
             method: 'GetAllSpots',
-            ignoreId: true
+            ignoreId: true,
+            ignoreOwner: true
         },
         {
             verb: verbs.PUT,
             route: '/api/spots',
             method: 'CreateSpot',
-            ignoreId: true
+            ignoreId: true,
+            ignoreOwner: true
         },
         {
             verb: verbs.GET,
@@ -719,7 +721,8 @@ routeTest('spotController', [
             method: 'GetNearestSpot',
             ignoreId: true,
             ignoreAuth: true,
-            ignoreAdmin: true
+            ignoreAdmin: true,
+            ignoreOwner: true
         },
         {
             verb: verbs.GET,
@@ -836,9 +839,7 @@ describe('spotController', function() {
             var range = { start: start, end: end };
             spot.available.addRange(start, end);
             var simpleSpot = spot.toJSON({getters: true});
-            app.db.spots = {
-                findById: mockPromise(spot)
-            }
+            req.doc = spot;
             req.params.id = spot.id;
             res.sent = function() {
                 expect(simpleSpot).to.have.deep.property('available.next');
@@ -852,9 +853,7 @@ describe('spotController', function() {
         it('should get spot with specified id', function(done) {
             var spot = new Spot();
             var simpleSpot = spot.toJSON({getters: true});
-            app.db.spots = {
-                findById: mockPromise(spot)
-            }
+            req.doc = spot;
             req.params.id = spot.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -864,27 +863,7 @@ describe('spotController', function() {
             app.spotController.GetSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetSpot(req, res);
-        })
     })
     
     describe('CreateSpot', function() {
@@ -1329,26 +1308,12 @@ describe('spotController', function() {
             app.spotController.GetNearestSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            req.query.long = req.query.lat = 123;
-            app.db.spots = {
-                find: sinon.spy(mockPromise(null, 'some error'))
-            }
-            res.sent = function() {
-                expect(app.db.spots.find.calledOnce).to.be.true;
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetNearestSpot(req, res);
-        })
     })
     
     describe('GetLotForSpot', function() {
         it('should error if lot is not set', function(done) {
             var s = new Spot();
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
@@ -1361,9 +1326,10 @@ describe('spotController', function() {
             var s = new Spot();
             var l = new Lot();
             s.lot = l;
-            app.db.spots = {
-                findById: mockPromise(s)
+            app.db.lots = {
+                findById: mockPromise(l)
             }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -1372,70 +1338,21 @@ describe('spotController', function() {
             }
             app.spotController.GetLotForSpot(req, res);
         })
-        
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetLotForSpot(req, res);
-        })
-        
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetLotForSpot(req, res);
-        })
     })
 
     describe('DisassociateLotFromSpot', function() {
-        it('should set the lot of the spot', function(done) {
+        it('shouldremove the lot from the spot', function(done) {
             var s = new Spot({
                 lot: new Lot()
             });
-            sinon.stub(s, 'removeLot');
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            sinon.stub(s, 'removeLot', mockPromise());
+            req.doc = s;
             req.params.id = s.id;
             res.sendBad = done;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(s.removeLot.calledOnce).to.be.true;
                 done();                
-            }
-            app.spotController.DisassociateLotFromSpot(req, res);
-        })
-        
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.DisassociateLotFromSpot(req, res);
-        })
-        
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
             }
             app.spotController.DisassociateLotFromSpot(req, res);
         })
@@ -1446,9 +1363,7 @@ describe('spotController', function() {
             var s = new Spot();
             var l = new Lot();
             sinon.stub(s, 'setLot');
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             app.db.lots = {
                 findById: mockPromise(l)
             }
@@ -1460,31 +1375,6 @@ describe('spotController', function() {
                 expect(s.setLot.calledOnce).to.be.true;
                 expect(s.setLot.calledWith(l)).to.be.true;
                 done();                
-            }
-            app.spotController.SetLotForSpot(req, res);
-        })
-        
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.SetLotForSpot(req, res);
-        })
-        
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
             }
             app.spotController.SetLotForSpot(req, res);
         })
@@ -1501,9 +1391,7 @@ describe('spotController', function() {
                 address: s.getAddress(),
                 coordinates: s.getLocation()
             }
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -1512,32 +1400,11 @@ describe('spotController', function() {
             }
             app.spotController.GetLocationForSpot(req, res);
         });
-        
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetLocationForSpot(req, res);
-        })
-        
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetLocationForSpot(req, res);
-        })
     })
     
     describe('GetAllBookingsForSpot', function() {
         it('should return an empty array if no bookings are assigned', function(done) {
+            req.doc = new Spot();
             app.db.bookings = {
                 find: mockPromise([])
             }
@@ -1552,6 +1419,7 @@ describe('spotController', function() {
         
         it('should return the spot\'s bookings', function(done) {
             var s = new Spot();
+            req.doc = s;
             var expected = [
                 new Booking(),
                 new Booking()
@@ -1571,27 +1439,7 @@ describe('spotController', function() {
             app.spotController.GetAllBookingsForSpot(req, res);
         });
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetAllBookingsForSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetAllBookingsForSpot(req, res);
-        })
     })
     
     describe('AddBookingsToSpot', function() {
@@ -1623,9 +1471,7 @@ describe('spotController', function() {
                 expect(this.user).to.deep.equal(user._id);
                 return mockPromise(b)();
             });
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             req.body = b;
             req.user = {
@@ -1651,9 +1497,7 @@ describe('spotController', function() {
                 return mockPromise(s)();
             })
             sinon.stub(Booking.prototype, 'setSpot', mockPromise(b));
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             req.body = b;
             res.sendBad = done;
@@ -1670,9 +1514,7 @@ describe('spotController', function() {
             var s = new Spot();
             sinon.stub(Booking.prototype, 'setSpot', mockPromise(new Booking()));
             sinon.stub(s, 'addBookings', mockPromise(null, 'some error with adding'));
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             req.body.bookings = new Booking();
             res.sent = function() {
@@ -1702,27 +1544,7 @@ describe('spotController', function() {
             })
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.AddBookingsToSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.AddBookingsToSpot(req, res);
-        })
     })
     
     describe('RemoveBookingsFromSpot', function() {
@@ -1732,9 +1554,7 @@ describe('spotController', function() {
             b.start = b.end = new Date();
             sinon.stub(s, 'removeBookings');
             sinon.stub(b, 'remove');
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             app.db.bookings = {
                 find: mockPromise([b])
             }
@@ -1753,9 +1573,7 @@ describe('spotController', function() {
             b.start = b.end = new Date();
             sinon.stub(s, 'removeBookings');
             sinon.stub(b, 'remove');
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             app.db.bookings = {
                 find: mockPromise([b])
             }
@@ -1770,10 +1588,8 @@ describe('spotController', function() {
         
         it('should fail if removeBookings failed', function(done) {
             var s = new Spot();
+            req.doc = s;
             sinon.stub(s, 'removeBookings', mockPromise(null, 'some error'));
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
             app.db.bookings = {
                 find: mockPromise([])
             }
@@ -1806,36 +1622,14 @@ describe('spotController', function() {
             })
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.RemoveBookingsFromSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.RemoveBookingsFromSpot(req, res);
-        })
     })
     
     describe('GetAllAvailabilityForSpot', function() {
         it('should return the available ranges for the spot', function(done) {
             var s = new Spot();
             s.available.addRange(new Date('2016/01/01'), new Date());
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -1845,37 +1639,15 @@ describe('spotController', function() {
             app.spotController.GetAllAvailabilityForSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetAllAvailabilityForSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetAllAvailabilityForSpot(req, res);
-        })
     })
     
     describe('AddAvailabilityToSpot', function() {
         it('should add the entire request body as a schedule if no shedules are specified', function(done) {
             var s = new Spot();
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             var schedule = {someProp: 'somevalue'};
-            sinon.stub(s, 'addAvailability');
+            sinon.stub(s, 'addAvailability', mockPromise());
             req.params.id = s.id;
             req.body = schedule;
             res.sent = function() {
@@ -1886,11 +1658,9 @@ describe('spotController', function() {
         })
         it('should add the given schedules to the spot\'s availability', function(done) {
             var s = new Spot();
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             var schedules = [{someProp: 'somevalue'}];
-            sinon.stub(s, 'addAvailability');
+            sinon.stub(s, 'addAvailability', mockPromise());
             req.params.id = s.id;
             req.body.schedules = schedules;
             res.sent = function() {
@@ -1902,9 +1672,7 @@ describe('spotController', function() {
         
         it('should fail if addAvailability failed', function(done) {
             var s = new Spot();
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             var schedules = [{someProp: 'somevalue'}];
             var error = 'some error';
             sinon.stub(s, 'addAvailability', mockPromise(null, 'some error'));
@@ -1918,36 +1686,14 @@ describe('spotController', function() {
             app.spotController.AddAvailabilityToSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.AddAvailabilityToSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.AddAvailabilityToSpot(req, res);
-        })
     })
     
     describe('RemoveAvailabilityFromSpot', function() {
         it('should remove the entire request body as a schedule if no shedules are specified', function(done) {
             var s = new Spot();
-            sinon.stub(s, 'removeAvailability')
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            sinon.stub(s, 'removeAvailability', mockPromise());
+            req.doc = s;
             var schedule = {someProp: 'somevalue'};
             req.params.id = s.id;
             req.body = schedule;
@@ -1959,11 +1705,9 @@ describe('spotController', function() {
         })
         it('should remove the given schedules to the spot\'s availability', function(done) {
             var s = new Spot();
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             var schedules = [{someProp: 'somevalue'}];
-            sinon.stub(s, 'removeAvailability')
+            sinon.stub(s, 'removeAvailability', mockPromise());
             req.params.id = s.id;
             req.body.schedules = schedules;
             res.sent = function() {
@@ -1975,9 +1719,7 @@ describe('spotController', function() {
         
         it('should fail if removeAvailability failed', function(done) {
             var s = new Spot();
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             var schedules = [{someProp: 'somevalue'}];
             var error = 'some error';
             sinon.stub(s, 'removeAvailability', mockPromise(null, error))
@@ -1991,36 +1733,14 @@ describe('spotController', function() {
             app.spotController.RemoveAvailabilityFromSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();                
-            }
-            app.spotController.RemoveAvailabilityFromSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.RemoveAvailabilityFromSpot(req, res);
-        })
     })
     
     describe('GetAllBookedTimeForSpot', function() {
         it('should return the available ranges for the spot', function(done) {
             var s = new Spot();
             s.booked.addRange(new Date('2016/01/01'), new Date());
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -2030,27 +1750,7 @@ describe('spotController', function() {
             app.spotController.GetAllBookedTimeForSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetAllBookedTimeForSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetAllBookedTimeForSpot(req, res);
-        })
     })
     
     describe('GetEntireScheduleForSpot', function() {
@@ -2058,9 +1758,7 @@ describe('spotController', function() {
             var s = new Spot();
             s.booked.addRange(new Date('2016/01/01'), new Date());
             s.available.addRange(new Date('2016/01/01'), new Date());
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -2073,36 +1771,14 @@ describe('spotController', function() {
             app.spotController.GetEntireScheduleForSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetEntireScheduleForSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetEntireScheduleForSpot(req, res);
-        })
     })
     
     describe('GetPriceForSpot', function() {
         it('should error if price is not set', function(done) {
             var s = new Spot();
             var price = 123.45;
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
@@ -2115,9 +1791,7 @@ describe('spotController', function() {
             var s = new Spot();
             var price = 123.45;
             s.price.perHour = price;
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            req.doc = s;
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -2129,40 +1803,15 @@ describe('spotController', function() {
             app.spotController.GetPriceForSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetPriceForSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.GetPriceForSpot(req, res);
-        })
     })
     
     describe('SetPriceForSpot', function() {
         it('should set the price of the spot', function(done) {
             var s = new Spot();
             var pricePerHour = 123.45;
-            sinon.stub(s, 'setPrice', function(price, cb) {
-                expect(price.perHour).to.equal(pricePerHour);
-                cb(null, this);
-            })
-            app.db.spots = {
-                findById: mockPromise(s)
-            }
+            sinon.stub(s, 'setPrice', mockPromise());
+            req.doc = s;
             req.params.id = s.id;
             req.body.perHour = pricePerHour;
             res.sent = function() {
@@ -2172,26 +1821,6 @@ describe('spotController', function() {
             app.spotController.SetPriceForSpot(req, res);
         })
         
-        it('should error if db encountered error', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.SetPriceForSpot(req, res);
-        })
         
-        it('should return error if spot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.SetPriceForSpot(req, res);
-        })
     })
 })
