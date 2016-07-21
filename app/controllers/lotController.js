@@ -73,16 +73,7 @@ controller.prototype = {
         })
     },
     GetLocationOfLot: function(req, res) {
-        return res.sendGood('Found location of lot', JSON.parse(JSON.stringify(req.doc.location)));
-        // this.app.db.lots.findById(req.params.id)
-        // .exec()
-        // .then(function(lot) {
-        //     if (!lot) throw 'Lot not found';
-        //     return res.sendGood('Found location of lot', JSON.parse(JSON.stringify(lot.location)));
-        // })
-        // .catch(function(err) {
-        //     res.sendBad(err);
-        // })
+        res.sendGood('Found location of lot', JSON.parse(JSON.stringify(req.doc.location)));
     },
     GetSpotsForLot: function(req, res) {
         var app = this.app;
