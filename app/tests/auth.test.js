@@ -14,6 +14,7 @@ routeTest('authController', [
         ignoreAdmin: true,
         ignoreAuth: true,
         ignoreId: true,
+        ignoreOwner: true
     },
     // {
     //     verb: verbs.GET,
@@ -38,6 +39,7 @@ routeTest('authController', [
         ignoreAdmin: true,
         ignoreAuth: true,
         ignoreId: true,
+        ignoreOwner: true
     },
     // {
     //     verb: verbs.GET,
@@ -62,6 +64,7 @@ routeTest('authController', [
         ignoreAdmin: true,
         ignoreAuth: true,
         ignoreId: true,
+        ignoreOwner: true
     }
     //,
     // {
