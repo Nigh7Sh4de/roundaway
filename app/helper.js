@@ -44,6 +44,28 @@ helper.prototype = {
         if (req.user.admin)
             return next();
         res.sendBad('You do not have the required privelages to access this resource', null, {status: 401});
+    },
+
+    checkOwner: function(req, res, next) {
+        var slash_api = '/api/'.length;
+        var slash = req.url.indexOf('/', slash_api);
+        var collection = req.url.substring(slash_api, slash);
+        var id = req.url.substr(slash+1, 24);
+        app.db[collection].findById(id).then(function(doc) {
+            if (!doc)
+                throw 'Could not find document with id ' + id + ' in collection ' + collection;
+            else if (req.user.admin ||
+                     collection === 'users' && doc.id == req.user.id ||
+                     doc.user == req.user.id) 
+            {
+                req.doc = doc;
+                next();
+            }
+            else
+                return res.sendBad('You do not have the required privelages to access this resource', null, { status: 401});
+        }).catch(function(err) {
+            res.sendBad(err);
+        })
     }
 }
 

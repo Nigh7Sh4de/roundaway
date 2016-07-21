@@ -91,6 +91,7 @@ var exts = {
             params: {
                 id: 'user.id'
             },
+            doc: null,
             logout: sinon.spy()
         }
     }
