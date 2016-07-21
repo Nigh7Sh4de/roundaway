@@ -93,13 +93,16 @@ function SadPathRouteTest(verb, route, ignoreAdmin, ignoreAuth, reqMock, dbInjec
     });
 }
 
-function RouteTest(ctrl, verb, route, ignoreId, ignoreAdmin, ignoreAuth, method, methodParams, done) {
+function RouteTest(ctrl, verb, route, ignoreId, ignoreAdmin, ignoreAuth, ignoreOwner, method, methodParams, done) {
     if (!ignoreAuth)
         funcs.push(sinon.stub(inject.helper, 'checkAuth', function(q,s,n) { n(); }));
     
-    if (!ignoreAdmin)
+    if (!ignoreAdmin && ignoreOwner)
         funcs.push(sinon.stub(inject.helper, 'checkAdmin', function(q,s,n) { n(); }));
-            
+
+    if (!ignoreOwner)
+        funcs.push(sinon.stub(inject.helper, 'checkOwner', function(q,s,n) { n(); }))
+
     var func, _func;
     if (!methodParams)
         func = sinon.stub(inject[ctrl].prototype, method, function(q,s) { s.sendStatus(200) });
@@ -162,7 +165,7 @@ var RouteTestBase = function(controller, tests, only, skip) {
         _describe = describe.only;
     if (skip)
         _describe = describe.skip;
-    _describe(controller + 'route', function() {
+    _describe(controller + ' route', function() {
         tests.forEach(function(test) {
             var route = test.route.replace(':id', id);
             describe(test.verb + ' ' + test.route, function() {
@@ -180,7 +183,7 @@ var RouteTestBase = function(controller, tests, only, skip) {
                 })
                 
                 it('should call correct method', function(done) {
-                    RouteTest(controller, test.verb, route, test.ignoreId, test.ignoreAdmin, test.ignoreAuth, test.method, test.methodParams, done);
+                    RouteTest(controller, test.verb, route, test.ignoreId, test.ignoreAdmin, test.ignoreAuth, test.ignoreOwner, test.method, test.methodParams, done);
                 })
                 
                 // if (!test.ignoreHappyPath)

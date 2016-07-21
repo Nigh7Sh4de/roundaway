@@ -208,13 +208,15 @@ routeTest('userController', [
         verb: verbs.GET,
         route: '/api/users',
         method: 'GetAllUsers',
-        ignoreId: true
+        ignoreId: true,
+        ignoreOwner: true
     }, {
         verb: verbs.GET,
         route: '/api/users/profile',
         method: 'GetProfileForSessionUser',
         ignoreId: true,
-        ignoreAdmin: true
+        ignoreAdmin: true,
+        ignoreOwner: true
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/lots',

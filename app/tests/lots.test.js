@@ -455,7 +455,8 @@ routeTest('lotController', [
         verb: verbs.GET,
         route: '/api/lots',
         method: 'GetAllLots',
-        ignoreId: true
+        ignoreId: true,
+        ignoreOwner: true
     },
     {
         verb: verbs.GET,
@@ -466,7 +467,8 @@ routeTest('lotController', [
         verb: verbs.PUT,
         route: '/api/lots',
         method: 'CreateLot',
-        ignoreId: true
+        ignoreId: true,
+        ignoreOwner: true
     },
     {
         verb: verbs.GET,
@@ -528,35 +530,11 @@ describe('lotController', function() {
     describe('GetLot', function() {
         it('should get lot with specified id', function(done) {
             var lot = new Lot();
-            app.db.lots = {
-                findById: mockPromise(lot)
-            }
+            req.doc = lot;
             req.params.id = lot.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(lot)).to.be.true;
-                done();
-            }
-            app.lotController.GetLot(req, res);
-        })
-        
-        it('should error if db encountered error', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.GetLot(req, res);
-        })
-        
-        it('should return error if lot found is null', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.lotController.GetLot(req, res);
@@ -804,9 +782,7 @@ describe('lotController', function() {
             var l = new Lot();
             l.location.address = '123 fake st';
             l.location.coordinates = [123, 456];
-            app.db.lots = {
-                findById: mockPromise(l)
-            }
+            req.doc = l;
             req.params.id = l.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -815,33 +791,12 @@ describe('lotController', function() {
             }
             app.lotController.GetLocationOfLot(req, res);
         });
-        
-        it('should error if db encountered error', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.GetLocationOfLot(req, res);
-        })
-        
-        it('should return error if lot found is null', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.GetLocationOfLot(req, res);
-        })
     })
     
     describe('GetSpotsForLot', function(done) {
         it('should return an empty array if no spots are assigned', function(done) {
             var l = new Lot();
+            req.doc = l;
             app.db.spots = {
                 find: mockPromise([])
             }
@@ -856,6 +811,7 @@ describe('lotController', function() {
         
         it('should return the lot\'s spots', function(done) {
             var l = new Lot();
+            req.doc = l;
             var _spot = {
                 lot: l
             }
@@ -874,28 +830,6 @@ describe('lotController', function() {
             }
             app.lotController.GetSpotsForLot(req, res);
         });
-        
-        it('should error if db encountered error', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.GetSpotsForLot(req, res);
-        })
-        
-        it('should return error if lot found is null', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.GetSpotsForLot(req, res);
-        })          
     })
 
     describe('AddAvailabilityToLot', function() {
@@ -926,9 +860,7 @@ describe('lotController', function() {
             })
             sinon.stub(l, 'addAvailability')
             sinon.stub(s, 'addAvailability')
-            app.db.lots = {
-                findById: mockPromise(l)
-            }
+            req.doc = l;
             app.db.spots = {
                 find: mockPromise([s])
             }
@@ -996,9 +928,7 @@ describe('lotController', function() {
             })
             sinon.stub(l, 'removeAvailability')
             sinon.stub(s, 'removeAvailability')
-            app.db.lots = {
-                findById: mockPromise(l)
-            }
+            req.doc = l;
             app.db.spots = {
                 find: mockPromise([s])
             }
@@ -1042,9 +972,7 @@ describe('lotController', function() {
         it('should error if price is not set', function(done) {
             var l = new Lot();
             var price = 123.45;
-            app.db.lots = {
-                findById: mockPromise(l)
-            }
+            req.doc = l;
             req.params.id = l.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
@@ -1053,13 +981,11 @@ describe('lotController', function() {
             app.lotController.GetPriceOfLot(req, res);
         })
 
-        it('should return the price of the spot', function(done) {
+        it('should return the price of the lot', function(done) {
             var l = new Lot();
             var price = 123.45;
             l.price.perHour = price;
-            app.db.lots = {
-                findById: mockPromise(l)
-            }
+            req.doc = l;
             req.params.id = l.id;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -1070,67 +996,21 @@ describe('lotController', function() {
             }
             app.lotController.GetPriceOfLot(req, res);
         })
-        
-        it('should error if db encountered error', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.GetPriceOfLot(req, res);
-        })
-        
-        it('should return error if spot found is null', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.GetPriceOfLot(req, res);
-        })
     })
     
     describe('SetPriceOfLot', function() {
         it('should set the price of the lot', function(done) {
             var l = new Lot();
             var pricePerHour = 123.45;
-            sinon.stub(l, 'setPrice', function(price, cb) {
-                expect(price.perHour).to.equal(pricePerHour);
-                cb(null, this);
-            })
-            app.db.lots = {
-                findById: mockPromise(l)
+            sinon.stub(l, 'setPrice', mockPromise());
+            app.db.spots = {
+                find: mockPromise([])
             }
+            req.doc = l;
             req.params.id = l.id;
             req.body.perHour = pricePerHour;
             res.sent = function() {
                 expect(l.setPrice.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.SetPriceOfLot(req, res);
-        })
-        
-        it('should error if db encountered error', function(done) {
-            app.db.lots = {
-                findById: mockPromise(null, 'some error')
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.SetPriceOfLot(req, res);
-        })
-        
-        it('should return error if lot found is null', function(done) {
-            app.db.spots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.lotController.SetPriceOfLot(req, res);
