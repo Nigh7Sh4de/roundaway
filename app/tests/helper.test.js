@@ -12,7 +12,8 @@ describe('helper', function() {
         beforeEach(function() {
             _app = global.app;
             req = {
-                url: '/api/collection/123456789012345678901234'
+                url: '/api/collection/123456789012345678901234',
+                user: {}
             },
             res = {};
         })
@@ -46,7 +47,8 @@ describe('helper', function() {
                 user: userId
             })
             req.user = {
-                id: userId
+                id: userId,
+                admin: false
             }
             new helper().checkOwner(req, res, done);
         })
