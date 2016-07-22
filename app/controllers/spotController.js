@@ -1,3 +1,4 @@
+var Errors = require('./../errors');
 var ObjectId = require('mongoose').Types.ObjectId;
 var Booking = require('./../models/Booking');
 var Spot = require('./../models/Spot');
@@ -127,7 +128,7 @@ controller.prototype = {
     },
     GetLotForSpot: function(req, res) {
         if (!req.doc.lot)
-            return res.sendBad('This spot does not have a lot associated with it')
+            return res.sendBad(new Errors.MissingProperty(req.doc, 'lot'));
         this.app.db.lots.findById(req.doc.lot)
         .exec()
         .then(function(lot) {
@@ -172,7 +173,7 @@ controller.prototype = {
         this.app.db.bookings.find({spot: req.doc.id})
         .exec()
         .then(function(bookings) {
-            if (!bookings) throw 'This spot has no bookings';
+            if (!bookings) throw new Errors.MissingProperty(req.doc, 'bookings', false);
             res.sendGood('Found bookings', bookings);
         })
         .catch(function(err) {

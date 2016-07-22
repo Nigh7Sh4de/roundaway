@@ -1,3 +1,4 @@
+var Errors = require('./../errors');
 var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
 
@@ -80,7 +81,7 @@ controller.prototype = {
         app.db.spots.find({lot: req.doc.id})
         .exec()
         .then(function(spots) {
-            if (!spots) throw 'This lot has no spots';
+            if (!spots) throw new Errors.MissingProperty(req.doc, 'spots', false);
             res.sendGood('Found spots', spots);
         })
         .catch(function(err) {

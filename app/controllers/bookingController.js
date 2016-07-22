@@ -1,4 +1,5 @@
 var Booking = require('./../models/Booking');
+var Errors = require('./../errors');
 var ObjectId = require('mongoose').Types.ObjectId;
 
 var controller = function(app) {
@@ -33,7 +34,7 @@ controller.prototype = {
     },
     GetSpotForBooking: function(req, res) {
         if (!req.doc.spot)
-            return res.sendBad('This booking does not have a spot associated with it')
+            return res.sendBad(new Errors.MissingProperty(req.doc, 'spot'));
         this.app.db.spots.findById(req.doc.spot)
         .exec()
         .then(function(spot) {
@@ -50,7 +51,7 @@ controller.prototype = {
     GetDurationForBooking: function(req, res) {
         var dur = req.doc.getDuration();
         if (!dur)
-            return res.sendBad('This booking does not have valid start and/or end dates. Start: ' + req.doc.getStart() + ', End: ' + req.doc.getEnd());
+            return res.sendBad(new Errors.MissingProperty(req.doc, 'start and/or end dates set', {start: req.doc.getStart(), end: req.doc.getEnd()}));
         res.sendGood('Found duration', dur);
     },
     GetEndOfBooking: function(req, res) {
@@ -63,9 +64,7 @@ controller.prototype = {
         })
     },
     GetPriceOfBooking: function(req, res) {
-        var price = req.doc.getPrice();
-        if (!price) throw 'Could not set price for this booking';
-        return res.sendGood('Found price', price);
+        res.sendGood('Found price', req.doc.getPrice());
     },
     PayForBooking: function(req, res) {
         if (!req.body.token)
