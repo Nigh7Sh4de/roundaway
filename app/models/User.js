@@ -3,8 +3,7 @@ var Schema = mongoose.Schema;
 
 var userSchema = new Schema({
     profile: {
-        name: String,
-        someProp: String
+        name: String
     },
     authid: {
         facebook: String,
