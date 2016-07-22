@@ -47,6 +47,8 @@ helper.prototype = {
     },
 
     checkOwner: function(req, res, next) {
+        if (!req.user)
+            return res.sendBad('Could not get session user')
         var slash_api = '/api/'.length;
         var slash = req.url.indexOf('/', slash_api);
         var collection = req.url.substring(slash_api, slash);
