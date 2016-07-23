@@ -309,13 +309,18 @@ describe('userController', function() {
                 },
                 updateProfile: sinon.spy(function(profile, cb) {
                     expect(profile).to.deep.equal(updateProfile);
-                    done();
+                    return mockPromise(user)();
                 })
             }
+            req.doc = user;
             app.db.users = {
                 findById: mockPromise(user)
             }
             req.body = updateProfile;
+            res.sent = function() {
+                expect(user.updateProfile.calledOnce).to.be.true;
+                done();
+            }
             app.userController.UpdateProfileForfUser(req, res);
         })
         
@@ -327,25 +332,13 @@ describe('userController', function() {
                 profile: {
                     name: 'some value'
                 },
-                updateProfile: sinon.spy(function(profile, cb) {
-                    cb('some error');
-                })
+                updateProfile: sinon.spy(mockPromise(user))
             }
             app.db.users = {
                 findById: mockPromise(user)
             }
+            req.doc = user;
             req.body = updateProfile;
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                done();
-            }
-            app.userController.UpdateProfileForfUser(req, res);
-        })
-        
-        it('should error if user is not found', function(done) {
-            app.db.users = {
-                findById: mockPromise(null)
-            }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 done();
@@ -361,23 +354,10 @@ describe('userController', function() {
                     someProp: 'some value'
                 }
             }
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(user.profile)).to.be.true;
-                done();
-            }
-            app.userController.GetProfileForUser(req,res);
-        })
-        
-        it('should error on bad id', function() {
-            app.db.users = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
                 done();
             }
             app.userController.GetProfileForUser(req,res);

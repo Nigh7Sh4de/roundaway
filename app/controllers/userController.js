@@ -64,7 +64,7 @@ controller.prototype = {
         })
     },
     UpdateProfileForfUser: function(req, res) {
-        user.updateProfile(req.body)
+        req.doc.updateProfile(req.body)
         .then(function(user) {
             res.sendGood('Profile updated', user.profile)
         })
