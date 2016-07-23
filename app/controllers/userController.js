@@ -64,13 +64,7 @@ controller.prototype = {
         })
     },
     UpdateProfileForfUser: function(req, res) {
-        this.app.db.users.findById(req.params.id)
-        .exec()
-        .then(function(user) {
-            if (!user) throw 'Could not update user as this user was not found';
-
-            return user.updateProfile(req.body);
-        })
+        user.updateProfile(req.body)
         .then(function(user) {
             res.sendGood('Profile updated', user.profile)
         })
@@ -79,15 +73,7 @@ controller.prototype = {
         })
     },
     GetProfileForUser: function(req, res) {
-        this.app.db.users.findById(req.params.id)
-        .exec()
-        .then(function(user) {
-            if (!user) throw 'Could not get profile for user as this user was not found';
-            res.sendGood('Found profilr for user', user.profile);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        })
+        res.sendGood('Found profile for user', req.doc.profile);
     }
 }
 
