@@ -38,7 +38,7 @@ controller.prototype = {
         this.app.db.spots.findById(req.doc.spot)
         .exec()
         .then(function(spot) {
-            if (!spot) throw 'Could not find associated spot';
+            if (!spot) throw new Errors.NotFound('Spot', req.doc.spot);
             res.sendGood('Found spot', spot.toJSON({getters: true}));
         })
         .catch(function(err) {

@@ -1,3 +1,5 @@
+var ObjectId = require('mongoose').Types.ObjectId;
+
 var errors = {
     MissingProperty: function(obj, propText, propValue) {
         this.stack = (new Error()).stack;
@@ -8,7 +10,21 @@ var errors = {
         var value = propValue === false ? undefined :
             propValue || obj[propText];
         this.missingProperty = value;
-    }    
+    },
+
+    NotFound: function(collection, search) {
+        this.stack = new Error().stack;
+        
+        if (typeof search === 'string')
+            search = { id: search }        
+        else if (search instanceof ObjectId)
+            search = { _id: search }
+
+        this.message = 'Could not find ' + collection + ': ' +
+            JSON.stringify(search);
+        this.search = search;
+        this.collection = collection;
+    }
 }
 
 for (var error in errors) {

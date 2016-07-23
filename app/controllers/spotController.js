@@ -132,7 +132,7 @@ controller.prototype = {
         this.app.db.lots.findById(req.doc.lot)
         .exec()
         .then(function(lot) {
-            if (!lot) throw 'Could not find associated lot';
+            if (!lot) throw new Errors.NotFound('Lot', req.doc.lot);
             res.sendGood('Found lot', lot.toJSON({getters: true}));
         })
         .catch(function(err) {
@@ -152,7 +152,7 @@ controller.prototype = {
         this.app.db.lots.findById(req.body.id)
         .exec()
         .then(function(lot) {
-            if (!lot) throw 'Could not find lot';
+            if (!lot) throw new Errors.NotFound('Lot', req.body.id);
             return req.doc.setLot(lot);
         })
         .then(function(b) {
@@ -231,7 +231,7 @@ controller.prototype = {
         if (errs.length)
             return res.sendBad(errs);
         if (!search.length)
-            return res.sendBad('Could not remove bookings as no bookings were found');
+            return res.sendBad('BAD INPUT Could not remove bookings as no bookings were found');
 
         this.app.db.bookings.find().where({spot: req.doc.id}).and([{$or: search}]).exec()
         .then(function(docs) {

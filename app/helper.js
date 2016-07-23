@@ -1,3 +1,5 @@
+var Errors = require('./errors')
+
 var helper = function() {}
 
 helper.prototype = {
@@ -55,7 +57,7 @@ helper.prototype = {
         var id = req.url.substr(slash+1, 24);
         app.db[collection].findById(id).then(function(doc) {
             if (!doc)
-                throw 'Could not find document with id ' + id + ' in collection ' + collection;
+                throw new Errors.NotFound(collection, id);
             else if (req.user.admin ||
                      collection === 'users' && doc.id == req.user.id ||
                      doc.user == req.user.id) 
