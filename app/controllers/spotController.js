@@ -51,7 +51,7 @@ controller.prototype = {
                 lat: newSpot.location.coordinates[1] || newSpot.location.coordinates.lat
             }
         else
-            return res.sendBad('Could not create spot because no coordinates were specified');
+            return res.sendBad(new Errors.BadInput('location.coordinates', 'create spot'));
         if (req.user && !newSpot.user)
             newSpot.user = req.user.id;
         (
@@ -70,14 +70,14 @@ controller.prototype = {
         )
         .then(function(location) {
             if (!location)
-                throw 'Cannot create a spot without a location';
+                throw new Errors.BadInput('location', 'create spot');
             newSpot.location = location;
             if (!newSpot.getPrice())
-                    throw 'Could not create spot because no price was specified';
+                throw new Errors.BadInput('price', 'create spot');
             newSpot = newSpot.toJSON({getters: true})
             if (req.body.count != null) {
                 if (typeof req.body.count !== 'number' || req.body.count <= 0)
-                    return res.sendBad('Could not create spot as the specified count was invalid');
+                    throw new Errors.BadInput('count', 'create spot');
                 var arr = [];
                 for (var i=0;i<req.body.count;i++)
                     arr.push(newSpot);
@@ -96,7 +96,7 @@ controller.prototype = {
     },
     GetNearestSpot: function(req, res) {
         if (isNaN(req.query.long) || isNaN(req.query.lat))
-            return res.sendBad('Cannot find nearest spots, you must specify valid long and lat');
+            return res.sendBad(new Errors.BadInput(['longitude', 'latitude'], 'find nearest spots'));
 
         var coordinates = [
             parseFloat(req.query.long),
@@ -188,7 +188,7 @@ controller.prototype = {
             if (!booking.start || !booking.end ||
                 isNaN(new Date(booking.start).valueOf()) ||
                 isNaN(new Date(booking.end).valueOf()))
-                return res.sendBad('Could not create booking as valid start and end times were not provided') 
+                return res.sendBad(new Errors.BadInput(['start', 'end'], 'create booking')); 
         }
         spot = req.doc;
         Promise.all(bookings.map(function(booking) {

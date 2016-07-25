@@ -40,7 +40,7 @@ controller.prototype = {
                 lat: newLot.location.coordinates[1] || newLot.location.coordinates.lat
             }
         else
-            return res.sendBad('Could not create lot because no coordinates were specified');
+            return res.sendBad(new Errors.BadInput('location.coordaintes', 'create lot'));
         
         if (req.user && !newLot.user)
             newLot.user = req.user.id;
@@ -52,11 +52,11 @@ controller.prototype = {
         })
         .then(function(location) {
             if (!location)
-                throw 'Cannot create a lot without a location';
+                throw new Errors.BadInput('location.coordaintes', 'create lot');
             newLot.location = location;
             if (req.body.count != null) {
                 if (typeof req.body.count !== 'number' || req.body.count <= 0)
-                    return res.sendBad('Could not create lot as the specified count was invalid');
+                    throw new Errors.BadInput('count', 'create lot');
                 var arr = [];
                 for (var i=0;i<req.body.count;i++)
                     arr.push(newLot);
@@ -95,11 +95,11 @@ controller.prototype = {
         if (!req.body ||
             !req.body.start ||
             !req.body.end)
-            return res.sendBad('Could not add availability because start and end times were not specified for the availability');
+            return res.sendBad(new Errors.BadInput(['start', 'end'], 'add availability'));
         req.body.start = new Date(req.body.start);
         req.body.end = new Date(req.body.end);
         if (isNaN(req.body.start.valueOf()) || isNaN(req.body.end.valueOf()))
-            return res.sendBad('Could not add availability because invalid dates were provided');
+            return res.sendBad(new Errors.BadInput('dates', 'add availability'));
 
         this.app.db.spots.find({lot: req.params.id})
         .then(function(spots) {
@@ -123,11 +123,11 @@ controller.prototype = {
         if (!req.body ||
             !req.body.start ||
             !req.body.end)
-            return res.sendBad('Could not remove availability because start and end times were not specified for the availability');
+            return res.sendBad(new Errors.BadInput(['start', 'end'], 'remove availability'));
         req.body.start = new Date(req.body.start);
         req.body.end = new Date(req.body.end);
         if (isNaN(req.body.start.valueOf()) || isNaN(req.body.end.valueOf()))
-            return res.sendBad('Could not remove availability because invalid dates were provided');
+            return res.sendBad(new Errors.BadInput('dates', 'remove availability'));   
 
         this.app.db.spots.find({lot: req.params.id})
         .then(function(spots) {

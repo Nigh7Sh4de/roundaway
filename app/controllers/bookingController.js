@@ -68,11 +68,11 @@ controller.prototype = {
     },
     PayForBooking: function(req, res) {
         if (!req.body.token)
-            return res.sendBad('Could not create a charge because no source token was provided');
+            return res.sendBad(new Errors.BadInput('token', 'create a charge'));
 
         var _charge;
         if (!req.doc.getPrice())
-            return res.sendBad('Could not create a charge because this booking does not have a price set');
+            return res.sendBad(new Errors.MissingProperty(req.doc, 'price', req.doc.getPrice()));
         
         app.stripe.charge(req.body.token, req.doc.getPrice())
         .then(function(charge) {

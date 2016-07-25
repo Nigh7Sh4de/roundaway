@@ -24,6 +24,17 @@ var errors = {
             JSON.stringify(search);
         this.search = search;
         this.collection = collection;
+    },
+
+    BadInput: function(props, operation, input) {
+        this.stack = new Error().stack;
+        var message = "Could not " + (operation || "complete operation") + " as valid ";
+        if (props instanceof Array)
+            message += props.toString() + " were not provided.";
+        else
+            message += props + " was not privded.";
+        this.message = message;
+        this.input = input;
     }
 }
 
