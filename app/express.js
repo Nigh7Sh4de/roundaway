@@ -71,6 +71,29 @@ var exts = {
                     return deepEqual(a, b);
                 }
             },
+            sentError: function(error) {
+                var args = Array.prototype.slice.call(arguments);
+                if (!this.sendBad.calledOnce)
+                    return false;
+                if (args.length === 0)
+                    return true;
+                error = args.length > 1 ? args : [error];
+                error = error.map(function(e) {
+                    if (e instanceof Error)
+                        return e.name;
+                    if (typeof e === 'function')
+                        return e.prototype.name;
+                    return e;
+                })
+                var errorsCalled = this.send.firstCall.args[0].errors;
+                for (var i=0; i<errorsCalled.length; i++) {
+                    var _error = errorsCalled[0];
+                    var type = _error.substring(0, _error.indexOf(':'));
+                    if (error.indexOf(type) >= 0)
+                        error.splice(error.indexOf(type), 1);
+                }
+                return error.length === 0 ? true : error;
+            },
             status: sinon.spy(function(s) {
                 return this;
             }),

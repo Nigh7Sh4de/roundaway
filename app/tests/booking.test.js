@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var Errors = require('./../errors');
 var expressExtensions = require('./../express');
 var mockPromise = require('./mockPromise');
 var routeTest = require('./routeTestBase');
@@ -422,6 +423,7 @@ describe('bookingController', function() {
             req.doc = new Booking();
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
@@ -450,6 +452,7 @@ describe('bookingController', function() {
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
@@ -462,6 +465,7 @@ describe('bookingController', function() {
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.NotFound)).to.be.true;
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
@@ -501,17 +505,13 @@ describe('bookingController', function() {
             app.bookingController.GetDurationForBooking(req, res);
         });
         
-        it('should return error if schema getDuration returned error', function(done) {
+        it('should return error if no duration is set', function(done) {
             var b = new Booking();
-            sinon.stub(b, 'setDuration', function() {
-                return new Promise(function(s,e) {
-                    e('some error');
-                })
-            });
             req.doc = b;
             req.params.id = b.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 done();
             }
             app.bookingController.GetDurationForBooking(req, res);
@@ -543,7 +543,6 @@ describe('bookingController', function() {
             b.start = start;
             req.doc = b;
             req.params.id = b.id;
-            res.sendBad = done;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({start: start, end: end})).to.be.true;
@@ -626,6 +625,7 @@ describe('bookingController', function() {
             req.body.token = 'sometoken';
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 expect(charge.callCount).to.equal(0);
                 done();
             }
@@ -639,6 +639,7 @@ describe('bookingController', function() {
             req.params.id = b.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.BadInput)).to.be.true;
                 expect(charge.callCount).to.equal(0);
                 done();
             }

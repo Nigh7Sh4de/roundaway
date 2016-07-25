@@ -1,6 +1,10 @@
 var ObjectId = require('mongoose').Types.ObjectId;
 
 var errors = {
+    TestError: function(text) {
+        this.stack = new Error().stack;
+        this.message = text || 'test error';
+    },
     MissingProperty: function(obj, propText, propValue) {
         this.stack = (new Error()).stack;
         var name = obj.constructor.modelName;
