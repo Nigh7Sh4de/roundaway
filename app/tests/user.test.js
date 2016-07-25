@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var Errors = require('./../errors');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
@@ -328,12 +329,12 @@ describe('userController', function() {
             var updateProfile = {
                 name: 'some new value'
             }
-            var user = {
+            var user = new User({
                 profile: {
                     name: 'some value'
-                },
-                updateProfile: sinon.spy(mockPromise(user))
-            }
+                }
+            });
+            sinon.stub(user, 'updateProfile', mockPromise(null, new Errors.TestError()));
             app.db.users = {
                 findById: mockPromise(user)
             }
@@ -341,6 +342,7 @@ describe('userController', function() {
             req.body = updateProfile;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             }
             app.userController.UpdateProfileForfUser(req, res);

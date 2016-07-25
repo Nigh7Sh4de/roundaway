@@ -802,7 +802,7 @@ routeTest('spotController', [
         }
     ])
 
-describe.only('spotController', function() {
+describe('spotController', function() {
     var app,
         req = {},
         res = {};
