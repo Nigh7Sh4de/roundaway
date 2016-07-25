@@ -282,7 +282,7 @@ controller.prototype = {
     },
     GetPriceForSpot: function(req, res) {
         var price = req.doc.getPrice();
-        if (!price) return res.sendBad('Price is not set for this spot');
+        if (!price) return res.sendBad(new Errors.MissingProperty(req.doc, 'price', req.doc.getPrice()));
         res.sendGood('Found price for spot', price);
     },
     SetPriceForSpot: function(req, res) {

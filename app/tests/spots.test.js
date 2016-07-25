@@ -1,6 +1,7 @@
 var expect = require('chai').expect;
 var ObjectId = require('mongoose').Types.ObjectId;
 var sinon = require('sinon');
+var Errors = require('./../errors');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var mockPromise = require('./mockPromise');
@@ -801,7 +802,7 @@ routeTest('spotController', [
         }
     ])
 
-describe('spotController', function() {
+describe.only('spotController', function() {
     var app,
         req = {},
         res = {};
@@ -934,6 +935,7 @@ describe('spotController', function() {
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.BadInput)).to.be.true;
                 done();
             }
             app.spotController.CreateSpot(req, res);
@@ -1048,6 +1050,7 @@ describe('spotController', function() {
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.BadInput)).to.be.true;
                 done();
             }
             app.spotController.CreateSpot(req, res);
@@ -1073,10 +1076,22 @@ describe('spotController', function() {
         
         it('if couldnt create spot should send error', function(done) {
             app.db.spots = {
-                create: mockPromise(null, 'some error')
+                create: mockPromise(null, new Errors.TestError())
+            }
+            app.geocoder = {
+                reverse: mockPromise([{}])
+            }
+            req.body = {
+                location: {
+                    coordinates: [12, 21]
+                },
+                price: {
+                    perHour: 123.45
+                }
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             }
             app.spotController.CreateSpot(req, res);
@@ -1085,12 +1100,21 @@ describe('spotController', function() {
         it('if couldnt insert entire collection should send error', function(done) {
             app.db.spots = {
                 collection: {
-                    insert: mockPromise(null, 'some error')
+                    insert: mockPromise(null, new Errors.TestError())
                 }
             }
-            req.body.count = 5;
+            req.body = {
+                location: {
+                    coordinates: [12, 21]
+                },
+                price: {
+                    perHour: 123.45
+                },
+                count: 5
+            }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             }
             app.spotController.CreateSpot(req, res);
@@ -1303,6 +1327,7 @@ describe('spotController', function() {
         it('should error if long and lat are not specified', function(done) {
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.BadInput)).to.be.true;
                 done();
             }
             app.spotController.GetNearestSpot(req, res);
@@ -1317,6 +1342,7 @@ describe('spotController', function() {
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 done();            
             }
             app.spotController.GetLotForSpot(req, res);
@@ -1451,6 +1477,7 @@ describe('spotController', function() {
             req.body = b;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.BadInput)).to.be.true;
                 done();
             }
             app.spotController.AddBookingsToSpot(req, res);
@@ -1513,12 +1540,16 @@ describe('spotController', function() {
         it('should fail if addBookings failed', function(done) {
             var s = new Spot();
             sinon.stub(Booking.prototype, 'setSpot', mockPromise(new Booking()));
-            sinon.stub(s, 'addBookings', mockPromise(null, 'some error with adding'));
+            sinon.stub(s, 'addBookings', mockPromise(null, new Errors.TestError()));
             req.doc = s;
             req.params.id = s.id;
-            req.body.bookings = new Booking();
+            req.body.bookings = new Booking({
+                start: new Date(),
+                end: new Date()
+            });
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 Booking.prototype.setSpot.restore();
                 done();
             };
@@ -1589,7 +1620,7 @@ describe('spotController', function() {
         it('should fail if removeBookings failed', function(done) {
             var s = new Spot();
             req.doc = s;
-            sinon.stub(s, 'removeBookings', mockPromise(null, 'some error'));
+            sinon.stub(s, 'removeBookings', mockPromise(null, new Errors.TestError()));
             app.db.bookings = {
                 find: mockPromise([])
             }
@@ -1597,7 +1628,7 @@ describe('spotController', function() {
             req.body.bookings = new Booking();
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sendBad.calledWith('some error')).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             };
             app.spotController.RemoveBookingsFromSpot(req, res);
@@ -1674,13 +1705,12 @@ describe('spotController', function() {
             var s = new Spot();
             req.doc = s;
             var schedules = [{someProp: 'somevalue'}];
-            var error = 'some error';
-            sinon.stub(s, 'addAvailability', mockPromise(null, 'some error'));
+            sinon.stub(s, 'addAvailability', mockPromise(null, new Errors.TestError()));
             req.params.id = s.id;
             req.body.schedules = schedules;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentWith({errors: [error]}, true)).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();    
             }
             app.spotController.AddAvailabilityToSpot(req, res);
@@ -1721,13 +1751,12 @@ describe('spotController', function() {
             var s = new Spot();
             req.doc = s;
             var schedules = [{someProp: 'somevalue'}];
-            var error = 'some error';
-            sinon.stub(s, 'removeAvailability', mockPromise(null, error))
+            sinon.stub(s, 'removeAvailability', mockPromise(null, new Errors.TestError()))
             req.params.id = s.id;
             req.body.schedules = schedules;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentWith({errors: [error]}, true));
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             }
             app.spotController.RemoveAvailabilityFromSpot(req, res);
@@ -1782,6 +1811,7 @@ describe('spotController', function() {
             req.params.id = s.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 done();
             }
             app.spotController.GetPriceForSpot(req, res);

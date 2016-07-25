@@ -151,7 +151,7 @@ controller.prototype = {
     },
     GetPriceOfLot: function(req, res) {
         var price = req.doc.getPrice();
-        if (!price) return res.sendBad(new Errors.MissingProperty(req.doc, 'lot', req.doc.getPrice()));
+        if (!price) return res.sendBad(new Errors.MissingProperty(req.doc, 'price', req.doc.getPrice()));
         res.sendGood('Found price for lot', price);
     },
     SetPriceOfLot: function(req, res) {
