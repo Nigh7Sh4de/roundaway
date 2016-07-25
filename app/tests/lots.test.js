@@ -1,5 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
+var Errors = require('./../errors');
 var mockPromise = require('./mockPromise');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
@@ -592,6 +593,7 @@ describe('lotController', function() {
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.BadInput)).to.be.true;
                 done();
             }
             app.lotController.CreateLot(req, res);
@@ -617,10 +619,16 @@ describe('lotController', function() {
         
         it('if couldnt create lot should send error', function(done) {
             app.db.lots = {
-                create: mockPromise(null, 'some error')
+                create: mockPromise(null, new Errors.TestError())
+            }
+            req.body = {
+                location: {
+                    coordinates: [12, 21]
+                }
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             }
             app.lotController.CreateLot(req, res);
@@ -629,12 +637,18 @@ describe('lotController', function() {
         it('if couldnt insert entire collection should send error', function(done) {
             app.db.lots = {
                 collection: {
-                    insert: mockPromise(null, 'some error')
+                    insert: mockPromise(null, new Errors.TestError())
                 }
             }
-            req.body.count = 5;
+            req.body = {
+                location: {
+                    coordinates: [12, 21]
+                },
+                count: 5
+            }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             }
             app.lotController.CreateLot(req, res);
@@ -879,25 +893,21 @@ describe('lotController', function() {
             app.lotController.AddAvailabilityToLot(req, res);
         })
         
-        it('should error if db encountered error', function() {
-            app.db.lots = {
-                findById: mockPromise(null, 'some error')
+        it('should error if db encountered error', function(done) {
+            app.db.spots = {
+                find: mockPromise(null, new Errors.TestError())
+            }
+            req.body = {
+                start: new Date(),
+                end: new Date()
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
+                done();
             }
             app.lotController.AddAvailabilityToLot(req, res);
         })
-        
-        it('should return error if lot found is null', function() {
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-            }
-            app.lotController.AddAvailabilityToLot(req, res);
-        })          
     })
     
     describe('RemoveAvailabilityFromLot', function() {
@@ -947,25 +957,21 @@ describe('lotController', function() {
             app.lotController.RemoveAvailabilityFromLot(req, res);
         })
         
-        it('should error if db encountered error', function() {
-            app.db.lots = {
-                findById: mockPromise(null, 'some error')
+        it('should error if db encountered error', function(done) {
+            app.db.spots = {
+                find: mockPromise(null, new Errors.TestError())
+            }
+            req.body = {
+                start: new Date(),
+                end: new Date()
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
+                done();
             }
             app.lotController.RemoveAvailabilityFromLot(req, res);
         })
-        
-        it('should return error if lot found is null', function() {
-            app.db.lots = {
-                findById: mockPromise(null)
-            }
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-            }
-            app.lotController.RemoveAvailabilityFromLot(req, res);
-        })          
     })
 
     describe('GetPriceOfLot', function() {
@@ -976,6 +982,7 @@ describe('lotController', function() {
             req.params.id = l.id;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 done();
             }
             app.lotController.GetPriceOfLot(req, res);

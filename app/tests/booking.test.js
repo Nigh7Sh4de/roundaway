@@ -459,7 +459,9 @@ describe('bookingController', function() {
         })
         
         it('should return error if spot found is null', function(done) {
-            req.doc = new Booking();
+            req.doc = new Booking({
+                spot: '123456789012345678901234'
+            });
             app.db.spots = {
                 findById: mockPromise(null)
             }

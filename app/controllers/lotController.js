@@ -105,9 +105,11 @@ controller.prototype = {
         .then(function(spots) {
             return Promise.all([
                 req.doc.addAvailability(req.body)
-            ].concat(spots.map(function(spot) {
-                return spot.addAvailability(req.body);
-            })))
+            ].concat(!spots.length ? [] :
+                spots.map(function(spot) {
+                    return spot.addAvailability(req.body);
+                })
+            ))
         })
         .then(function(results) {
             res.sendGood('Added availability to lot and all of the lot\'s spots', {
@@ -149,7 +151,7 @@ controller.prototype = {
     },
     GetPriceOfLot: function(req, res) {
         var price = req.doc.getPrice();
-        if (!price) return res.sendBad('Price is not set for this lot');
+        if (!price) return res.sendBad(new Errors.MissingProperty(req.doc, 'lot', req.doc.getPrice()));
         res.sendGood('Found price for lot', price);
     },
     SetPriceOfLot: function(req, res) {
