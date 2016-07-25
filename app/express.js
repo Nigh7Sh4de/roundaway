@@ -49,6 +49,9 @@ var exts = {
 
     mockResponse: function() {
         return {
+            print: function() {
+                console.log(this.send.firstCall.args[0]);
+            },
             sent: function() {
 
             },
