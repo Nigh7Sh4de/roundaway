@@ -862,7 +862,7 @@ Creates a new booking for the spot
     <td>The <code>booking</code> object(s) to remove, can be either a single <code>Booking</code> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> or an <b>id</b> (when this is used, the rest of the request body is ignored)
   </tr>
 </table>
-Disassociates the specified booking objects from the spot and updates schedules.
+Removes the specified booking objects from the spot and updates schedules.
 
 ##### GET `/api/spots/:id/available`
 <table>

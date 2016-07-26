@@ -743,12 +743,12 @@ routeTest('spotController', [
         {
             verb: verbs.PUT,
             route: '/api/spots/:id/lot/remove',
-            method: 'DisassociateLotFromSpot'
+            method: 'RemoveLotFromSpot'
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/location',
-            method: 'GetLocationForSpot'
+            method: 'GetLocationOfSpot'
         },
         {
             verb: verbs.GET,
@@ -768,7 +768,7 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id/available',
-            method: 'GetAllAvailabilityForSpot'
+            method: 'GetAllAvailabilityOfSpot'
         },
         {
             verb: verbs.PUT,
@@ -783,22 +783,22 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id/booked',
-            method: 'GetAllBookedTimeForSpot'
+            method: 'GetAllBookedTimeOfSpot'
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/schedule',
-            method: 'GetEntireScheduleForSpot'
+            method: 'GetEntireScheduleOfSpot'
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/price',
-            method: 'GetPriceForSpot'
+            method: 'GetPriceOfSpot'
         },
         {
             verb: verbs.PUT,
             route: '/api/spots/:id/price',
-            method: 'SetPriceForSpot'
+            method: 'SetPriceOfSpot'
         }
     ])
 
@@ -1366,7 +1366,7 @@ describe('spotController', function() {
         })
     })
 
-    describe('DisassociateLotFromSpot', function() {
+    describe('RemoveLotFromSpot', function() {
         it('shouldremove the lot from the spot', function(done) {
             var s = new Spot({
                 lot: new Lot()
@@ -1380,7 +1380,7 @@ describe('spotController', function() {
                 expect(s.removeLot.calledOnce).to.be.true;
                 done();                
             }
-            app.spotController.DisassociateLotFromSpot(req, res);
+            app.spotController.RemoveLotFromSpot(req, res);
         })
     })
     
@@ -1406,7 +1406,7 @@ describe('spotController', function() {
         })
     })
     
-    describe('GetLocationForSpot', function() {
+    describe('GetLocationOfSpot', function() {
         it('should return the spot\'s location', function(done) {
             var s = new Spot();
             s.location = {
@@ -1424,7 +1424,7 @@ describe('spotController', function() {
                 expect(res.sentWith({location: expected}), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
                 done();
             }
-            app.spotController.GetLocationForSpot(req, res);
+            app.spotController.GetLocationOfSpot(req, res);
         });
     })
     
@@ -1656,7 +1656,7 @@ describe('spotController', function() {
         
     })
     
-    describe('GetAllAvailabilityForSpot', function() {
+    describe('GetAllAvailabilityOfSpot', function() {
         it('should return the available ranges for the spot', function(done) {
             var s = new Spot();
             s.available.addRange(new Date('2016/01/01'), new Date());
@@ -1667,7 +1667,7 @@ describe('spotController', function() {
                 expect(res.sentWith({available: s.available.ranges})).to.be.true;
                 done();
             }
-            app.spotController.GetAllAvailabilityForSpot(req, res);
+            app.spotController.GetAllAvailabilityOfSpot(req, res);
         })
         
         
@@ -1765,7 +1765,7 @@ describe('spotController', function() {
         
     })
     
-    describe('GetAllBookedTimeForSpot', function() {
+    describe('GetAllBookedTimeOfSpot', function() {
         it('should return the available ranges for the spot', function(done) {
             var s = new Spot();
             s.booked.addRange(new Date('2016/01/01'), new Date());
@@ -1776,13 +1776,13 @@ describe('spotController', function() {
                 expect(res.sentWith({booked: s.booked.ranges})).to.be.true;
                 done();
             }
-            app.spotController.GetAllBookedTimeForSpot(req, res);
+            app.spotController.GetAllBookedTimeOfSpot(req, res);
         })
         
         
     })
     
-    describe('GetEntireScheduleForSpot', function() {
+    describe('GetEntireScheduleOfSpot', function() {
         it('should return the available ranges for the spot', function(done) {
             var s = new Spot();
             s.booked.addRange(new Date('2016/01/01'), new Date());
@@ -1797,13 +1797,13 @@ describe('spotController', function() {
                     })).to.be.true;
                 done();
             }
-            app.spotController.GetEntireScheduleForSpot(req, res);
+            app.spotController.GetEntireScheduleOfSpot(req, res);
         })
         
         
     })
     
-    describe('GetPriceForSpot', function() {
+    describe('GetPriceOfSpot', function() {
         it('should error if price is not set', function(done) {
             var s = new Spot();
             var price = 123.45;
@@ -1814,7 +1814,7 @@ describe('spotController', function() {
                 expect(res.sentError(Errors.MissingProperty)).to.be.true;
                 done();
             }
-            app.spotController.GetPriceForSpot(req, res);
+            app.spotController.GetPriceOfSpot(req, res);
         })
 
         it('should return the price of the spot', function(done) {
@@ -1830,13 +1830,13 @@ describe('spotController', function() {
                 })).to.be.true;
                 done();
             }
-            app.spotController.GetPriceForSpot(req, res);
+            app.spotController.GetPriceOfSpot(req, res);
         })
         
         
     })
     
-    describe('SetPriceForSpot', function() {
+    describe('SetPriceOfSpot', function() {
         it('should set the price of the spot', function(done) {
             var s = new Spot();
             var pricePerHour = 123.45;
@@ -1848,7 +1848,7 @@ describe('spotController', function() {
                 expect(s.setPrice.calledOnce).to.be.true;
                 done();
             }
-            app.spotController.SetPriceForSpot(req, res);
+            app.spotController.SetPriceOfSpot(req, res);
         })
         
         

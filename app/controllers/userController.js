@@ -1,12 +1,12 @@
 var controller = function(app) {
     this.app = app;
     app.get('/api/users', app.checkAuth, app.checkAdmin, this.GetAllUsers.bind(this));
-    app.get('/api/users/profile', app.checkAuth, this.GetProfileForSessionUser.bind(this));
+    app.get('/api/users/profile', app.checkAuth, this.GetProfileOfSessionUser.bind(this));
     app.get('/api/users/:id/lots', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetLotsForUser.bind(this));
     app.get('/api/users/:id/spots', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetSpotsForUser.bind(this));
     app.get('/api/users/:id/bookings', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetBookingsForUser.bind(this));
-    app.get('/api/users/:id/profile', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetProfileForUser.bind(this));
-    app.patch('/api/users/:id/profile', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.UpdateProfileForfUser.bind(this));
+    app.get('/api/users/:id/profile', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetProfileOfUser.bind(this));
+    app.patch('/api/users/:id/profile', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.UpdateProfileOfUser.bind(this));
 }
 
 controller.prototype = {
@@ -20,7 +20,7 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    GetProfileForSessionUser: function(req, res) {
+    GetProfileOfSessionUser: function(req, res) {
         if (req.user == null)
             return res.sendBad('Could not get session user');
         return res.sendGood('Found profile for current session user', 
@@ -63,7 +63,7 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    UpdateProfileForfUser: function(req, res) {
+    UpdateProfileOfUser: function(req, res) {
         req.doc.updateProfile(req.body)
         .then(function(user) {
             res.sendGood('Profile updated', user.profile)
@@ -72,7 +72,7 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    GetProfileForUser: function(req, res) {
+    GetProfileOfUser: function(req, res) {
         res.sendGood('Found profile for user', req.doc.profile);
     }
 }

@@ -9,7 +9,7 @@ var controller = function(app) {
     app.get('/api/lots/:id', app.checkAuth, app.checkOwner, this.GetLot.bind(this));
     app.get('/api/lots/:id/location', app.checkAuth, app.checkOwner, this.GetLocationOfLot.bind(this));
     app.get('/api/lots/:id/spots', app.checkAuth, app.checkOwner, this.GetSpotsForLot.bind(this));
-    app.get('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetAllAvailabilityForLot.bind(this));
+    app.get('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetAllAvailabilityOfLot.bind(this));
     app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
     app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
     app.get('/api/lots/:id/price', app.checkAuth, app.checkOwner, this.GetPriceOfLot.bind(this));
@@ -88,7 +88,7 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    GetAllAvailabilityForLot: function(req, res) {
+    GetAllAvailabilityOfLot: function(req, res) {
         res.sendGood('Found availability for lot', {available: req.doc.available.ranges});
     },
     AddAvailabilityToLot: function(req, res) {

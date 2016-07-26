@@ -214,7 +214,7 @@ routeTest('userController', [
     }, {
         verb: verbs.GET,
         route: '/api/users/profile',
-        method: 'GetProfileForSessionUser',
+        method: 'GetProfileOfSessionUser',
         ignoreId: true,
         ignoreAdmin: true,
         ignoreOwner: true
@@ -233,11 +233,11 @@ routeTest('userController', [
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/profile',
-        method: 'GetProfileForUser',
+        method: 'GetProfileOfUser',
     }, {
         verb: verbs.PATCH,
         route: '/api/users/:id/profile',
-        method: 'UpdateProfileForfUser',
+        method: 'UpdateProfileOfUser',
     }
 ]);
 
@@ -271,7 +271,7 @@ describe('userController', function() {
         })
     })
     
-    describe('GetProfileForSessionUser', function() {
+    describe('GetProfileOfSessionUser', function() {
         it('should return session user profile and authid', function() {
             var user = {
                 profile: {
@@ -291,7 +291,7 @@ describe('userController', function() {
                 return user.authid;
             }
             req.user = user;
-            app.userController.GetProfileForSessionUser(req, res);
+            app.userController.GetProfileOfSessionUser(req, res);
             expect(res.sendGood.calledOnce).to.be.true;
             var args = res.send.firstCall.args[0].data;
             expect(args.name).to.equal(user.profile.name);
@@ -299,7 +299,7 @@ describe('userController', function() {
         })
     })
     
-    describe('UpdateProfileForfUser', function() {
+    describe('UpdateProfileOfUser', function() {
         it('should call user updateProfile given good input', function(done) {
             var updateProfile = {
                 name: 'some new value'
@@ -322,7 +322,7 @@ describe('userController', function() {
                 expect(user.updateProfile.calledOnce).to.be.true;
                 done();
             }
-            app.userController.UpdateProfileForfUser(req, res);
+            app.userController.UpdateProfileOfUser(req, res);
         })
         
         it('should respond with an error if user updateProfile failed', function(done) {
@@ -345,11 +345,11 @@ describe('userController', function() {
                 expect(res.sentError(Errors.TestError)).to.be.true;
                 done();
             }
-            app.userController.UpdateProfileForfUser(req, res);
+            app.userController.UpdateProfileOfUser(req, res);
         })
     })
     
-    describe('GetProfileForUser', function() {
+    describe('GetProfileOfUser', function() {
         it('should return user profile', function(done) {
             var user = {
                 profile: {
@@ -362,7 +362,7 @@ describe('userController', function() {
                 expect(res.sentWith(user.profile)).to.be.true;
                 done();
             }
-            app.userController.GetProfileForUser(req,res);
+            app.userController.GetProfileOfUser(req,res);
         })
     })
     
