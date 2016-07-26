@@ -155,12 +155,16 @@ A `Booking` is an immutable object that is used to track bookings on a `Spot`. O
 
 Certain API routes requre a JWT and/or the associated user to have certain privelages. The specific requirements for each route are listed below.
 In order to make API calls that are auth protected use the following flow:
-1. Hit `POST /auth/:strat` with an **access_token** as supplied by the social network you are authenticating with.
-2. You will receieve a **JWT** in the response if authentication was successful
+
+1. Authenticate with a 3rd party authentication server of your choice. Currently supported options:
+  - Facebook
+  - Google 
+2. Hit `POST /auth/:strat` with an **access_token** as supplied by the social network you are authenticating with
+3. You will receieve a **JWT** in the response if authentication was successful after one of the following operations has completed:
   - A user was found in db
   - A new user was created
-3. Set an `Authorizaton` header with the `JWT` scheme (as in: `Authorization: JWT JWT_STRING...`) in all subsequent requests
-4. If a certain user requires elevated privelages (such as *admin*) the db admin must set the appropriate flag in the user collection manually (*note*: changing privelages does not require generating a new JWT, so changing privelages can be done on the fly)
+4. Set an `Authorizaton` header with the `JWT` scheme (as in: `Authorization: JWT JWT_STRING...`) in all subsequent requests
+5. If a certain user requires elevated privelages (such as *admin*) the db admin must set the appropriate flag in the user collection manually (*note*: changing privelages does not require generating a new JWT, so changing privelages can be done on the fly)
 
 
 ## API
@@ -209,64 +213,17 @@ Each route has security policy with the following three properties:
 
 #### Authentication
 
-##### GET `/logout`
-Clears the current user out of the session and redirects to `/home`
-
-##### GET `/login/:strat`
-***CURRENTLY DEPRECATED***
+##### GET `/auth/:strat?access_token`
 <table>
   <tr>
     <td>strat</td>
     <td>The social network with which to authenticate. Can be one of: ['facebook', 'google'].</td>
-  </tr>
-</table>
-Redirects to the social network's authentication page
-
-##### GET `/login/:strat/return`
-***CURRENTLY DEPRECATED***
-<table>
-  <tr>
-    <td>strat</td>
-    <td>The social network with which to authenticate. Can be one of: ['facebook', 'google'].</td>
-  </tr>
-</table>
-A redirect callback that the social network will hit after authentication (successful or failed)
-
-##### GET `/auth/:strat?noredirect&access_token`
-<table>
-  <tr>
-    <td>strat</td>
-    <td>The social network with which to authenticate. Can be one of: ['facebook', 'google'].</td>
-  </tr>
-  <tr>
-    <td>noredirect</td>
-    <td>Include this query parameter to receive a <code>User</code> object instead of being redirected</td>
   </tr>
   <tr>
     <td>access_token</td>
     <td>The access token as provided by the social network</td>
 </table>
-If you have authenticated the user elsewhere (client-side or on another server), send the `access_token` here in order to authenticate with this server. Sends back a JWT for subsequent API requests.
-
-##### GET `/connect/:strat`
-***CURRENTLY DEPRECATED***
-<table>
-  <tr>
-    <td>strat</td>
-    <td>The social network with which to authenticate. Can be one of: ['facebook', 'google'].</td>
-  </tr>
-</table>
-Used to add an alternative social network after a use has already authenticated. Redirects to the social network's authentication page
-
-##### GET `/connect/:strat/return`
-***CURRENTLY DEPRECATED***
-<table>
-  <tr>
-    <td>strat</td>
-    <td>The social network with which to authenticate. Can be one of: ['facebook', 'google'].</td>
-  </tr>
-</table>
-A redirect callback that the social network will hit after authentication (successful or failed)
+Once you have authenticated the user elsewhere (client-side or on another server), send the `access_token` here in order to authenticate with this server. Sends back a JWT for subsequent API requests.
 
 #### User
 
