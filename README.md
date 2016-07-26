@@ -18,14 +18,14 @@ Roundaway
    <td>master</td>
    <td>8080</td>
    <td>http://roundaway.com</td>
-   <td>0.2</td>
+   <td>0.3</td>
    <td>production</td>
   </tr>
   <tr>
    <td>dev</td>
    <td>8081</td>
    <td>http://roundaway.com:8081</th>
-   <td>0.2.3</td>
+   <td>0.3.0</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
