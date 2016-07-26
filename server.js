@@ -31,11 +31,8 @@ var app = function(inject) {
     inject.helper.init(app);
     inject.expressExtensions.init(express);
 
-    app.use(require('cookie-parser')());
     app.use(app.bodyParser.urlencoded({ extended: true }));
-    app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
     app.use(app.passport.initialize());
-    app.use(app.passport.session());
     app.use(express.static('public'));
 
     app.userController = new inject.userController(app);
