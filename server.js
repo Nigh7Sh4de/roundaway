@@ -31,6 +31,7 @@ var app = function(inject) {
     inject.helper.init(app);
     inject.expressExtensions.init(express);
 
+    app.use(require('cors')());
     app.use(app.bodyParser.urlencoded({ extended: true }));
     app.use(app.passport.initialize());
     app.use(express.static('public'));
