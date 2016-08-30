@@ -15,6 +15,7 @@ var spotSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Lot'
     },
+    name: String,
     location: Location,
     price: {
         perHour: Price
@@ -35,6 +36,21 @@ var spotSchema = new Schema({
 spotSchema.virtual('available.next').get(function() {
     return this.available.nextRange(new Date());
 })
+
+spotSchema.methods.setName = function(name) {
+    return new Promise(function(resolve, reject) {
+        this.name = name;
+        this.save(function(err, spot) {
+            if (err)
+                return reject(err);
+            return resolve(spot);
+        });
+    }.bind(this));
+}
+
+spotSchema.methods.getName = function() {
+    return this.name || null;
+}
 
 spotSchema.methods.addBookings = function(bookings) {
     return new Promise(function(resolve, reject) {

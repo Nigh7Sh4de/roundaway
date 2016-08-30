@@ -21,6 +21,27 @@ describe('Spot schema', function() {
         Spot.prototype.save.restore();
     })
 
+    describe('setName', function() {
+        it('should set the name of the spot', function() {
+            var s = new Spot();
+            var name = 'some name';
+            expect(s.name).to.not.be.ok;
+            return s.setName(name)
+            .then(function() {
+                expect(s.name).to.deep.equal(name);
+            })
+        })
+    })
+
+    describe('getName', function() {
+        it('should get the name of the spot', function() {
+            var s = new Spot();
+            var name = 'some name';
+            s.name = name;
+            expect(s.getName()).to.deep.equal(name);
+        })
+    })
+
     describe('addBookings', function() {
         it('should fail if not available', function() {
             var s = new Spot();
@@ -799,6 +820,16 @@ routeTest('spotController', [
             verb: verbs.PUT,
             route: '/api/spots/:id/price',
             method: 'SetPriceOfSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/name',
+            method: 'GetNameOfSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/name',
+            method: 'SetNameOfSpot'
         }
     ])
 
@@ -1850,7 +1881,38 @@ describe('spotController', function() {
             }
             app.spotController.SetPriceOfSpot(req, res);
         })
-        
-        
+    })
+
+    describe('GetNameOfSpot', function() {
+        it('should get the name of the spot', function(done) {
+            var s = new Spot();
+            var name = s.name = 'some name';
+            req.doc = s;
+            req.params.id = s.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(name)).to.be.true;
+                done();
+            }
+            app.spotController.GetNameOfSpot(req, res);
+        });
+    })
+
+    describe('SetNameOfSpot', function() {
+        it('should set the name of the spot', function(done) {
+            var s = new Spot();
+            sinon.stub(s, 'setName', mockPromise());
+            var name = 'some name';
+            req.doc = s;
+            req.params.id = s.id;
+            req.body.name = name;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(s.setName.calledOnce).to.be.true;
+                expect(s.setName.calledWith(name)).to.be.true;
+                done();
+            }
+            app.spotController.SetNameOfSpot(req, res);
+        });
     })
 })
