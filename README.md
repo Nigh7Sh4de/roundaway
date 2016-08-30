@@ -9,7 +9,8 @@ Roundaway
    <th>Branch name</th>
    <th>Port</th>
    <th>URL</th>
-   <th>Version</th>
+   <th>Backend Version</th>
+   <th>Frontend Version</th>
    <th>Purpose</th>
   </tr>
  </thead>
@@ -19,6 +20,7 @@ Roundaway
    <td>8080</td>
    <td>http://roundaway.com</td>
    <td>0.3</td>
+   <td>0.0</td>
    <td>production</td>
   </tr>
   <tr>
@@ -26,11 +28,12 @@ Roundaway
    <td>8081</td>
    <td>http://roundaway.com:8081</th>
    <td>0.3.2</td>
+   <td>b: 1-table</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
    <td><i>#-topic</i></td>
-   <td colspan="3">LOCAL</td>
+   <td colspan="4">LOCAL</td>
    <td>development (tasks in progress)</td>
   </tr>
  </tbody>
