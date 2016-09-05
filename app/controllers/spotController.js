@@ -47,13 +47,10 @@ controller.prototype = {
         var getLocationFromLot = null;
         if (newSpot.lot)
             getLocationFromLot = app.db.lots.findById(newSpot.lot instanceof ObjectId ? newSpot.lot : newSpot.lot.id || newSpot.lot._id);
-        else if (newSpot.location && newSpot.location.coordinates)
-            var coords = {
-                lon: newSpot.location.coordinates[0] || newSpot.location.coordinates.long || newSpot.location.coordinates.lon,
-                lat: newSpot.location.coordinates[1] || newSpot.location.coordinates.lat
-            }
+        else if (newSpot.location && newSpot.location.address)
+            var address = newSpot.location.address;
         else
-            return res.sendBad(new Errors.BadInput('location.coordinates', 'create spot'));
+            return res.sendBad(new Errors.BadInput('location.address', 'create spot'));
         if (req.user && !newSpot.user)
             newSpot.user = req.user.id;
         (
@@ -63,7 +60,7 @@ controller.prototype = {
                 if (lot.available.ranges.length)
                     newSpot.available = lot.available.ranges;
                 return Promise.resolve(lot.location);
-            }) : app.geocoder.reverse(coords).then(function(loc) {
+            }) : app.geocoder.geocode(address).then(function(loc) {
                 return Promise.resolve({
                     coordinates: [loc[0].longitude, loc[0].latitude],
                     address: loc[0].formattedAddress
@@ -83,14 +80,17 @@ controller.prototype = {
                 var arr = [];
                 for (var i=0;i<req.body.count;i++)
                     arr.push(newSpot);
-                return this.app.db.spots.collection.insert(arr);
+                return app.db.spots.collection.insert(arr);
             }
             else {
-                return this.app.db.spots.create(newSpot);
+                return app.db.spots.create(newSpot);
             }
         })
         .then(function(results) {
-            res.sendGood('Created new spots', results.ops || results);
+            results = results.ops || results;
+            if (results.toJSON)
+                results = results.toJSON({getters: true});
+            res.sendGood('Created new spots', results);
         })
         .catch(function(err) {
             res.sendBad(err);

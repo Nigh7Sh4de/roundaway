@@ -34,17 +34,14 @@ controller.prototype = {
         var app = this.app;
         var newLot = new Lot(req.body.lot || req.body).toJSON();
         delete newLot._id;
-        if (newLot.location && newLot.location.coordinates)
-            var coords = {
-                lon: newLot.location.coordinates[0] || newLot.location.coordinates.long || newLot.location.coordinates.lon,
-                lat: newLot.location.coordinates[1] || newLot.location.coordinates.lat
-            }
+        if (newLot.location && newLot.location.address)
+            var address = newLot.location.address;
         else
-            return res.sendBad(new Errors.BadInput('location.coordaintes', 'create lot'));
+            return res.sendBad(new Errors.BadInput('location.address', 'create lot'));
         
         if (req.user && !newLot.user)
             newLot.user = req.user.id;
-        app.geocoder.reverse(coords).then(function(loc) {
+        app.geocoder.geocode(address).then(function(loc) {
             return Promise.resolve({
                 coordinates: [loc[0].longitude, loc[0].latitude],
                 address: loc[0].formattedAddress
@@ -52,7 +49,7 @@ controller.prototype = {
         })
         .then(function(location) {
             if (!location)
-                throw new Errors.BadInput('location.coordaintes', 'create lot');
+                throw new Errors.BadInput('location', 'create lot');
             newLot.location = location;
             if (req.body.count != null) {
                 if (typeof req.body.count !== 'number' || req.body.count <= 0)
@@ -60,14 +57,17 @@ controller.prototype = {
                 var arr = [];
                 for (var i=0;i<req.body.count;i++)
                     arr.push(newLot);
-                return this.app.db.lots.collection.insert(arr);
+                return app.db.lots.collection.insert(arr);
             }
             else {
-                return this.app.db.lots.create(newLot);
+                return app.db.lots.create(newLot);
             }
         })
         .then(function(results) {
-            res.sendGood('Created new lots', results.ops || results);
+            results = results.ops || results;
+            if (results.toJSON)
+                results = results.toJSON({getters: true});
+            res.sendGood('Created new lots', results);
         })
         .catch(function(err) {
             res.sendBad(err);
