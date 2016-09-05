@@ -7,6 +7,8 @@ var utilController = function(app) {
 
 utilController.prototype = {
     Geocode: function(req, res, next) {
+        if (!req.body.address || typeof req.body.address !== 'string')
+            return res.sendBad(new Errors.BadInput('address'));
         app.geocoder.geocode(req.body.address)
         .then(function(result) {
             if (result.length < 1)
