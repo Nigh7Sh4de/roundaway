@@ -8,7 +8,7 @@
     "deep-equal": "1.0.1",
     "express": "4.13.4",
     "jsonwebtoken": "7.0.1",
-    "mocha": "2.4.5",
+    "mocha": "3.0.2",
     "mongoose": "4.4.6",
     "node-geocoder": "3.14.0",
     "passport": "0.3.2",
