@@ -214,6 +214,17 @@ Each route has security policy with the following three properties:
 
 ### Requests
 
+#### Util
+
+##### POST `/api/util/location/geocode`
+<table>
+  <tr>
+    <td>address</td>
+    <td>The address you wish to geocode</td>
+  </tr>
+</table>
+Retrieve the proper formatted address for a location (as it would be saved in the database)
+
 #### Authentication
 
 ##### GET `/auth/:strat?access_token`
