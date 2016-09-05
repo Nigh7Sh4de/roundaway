@@ -697,17 +697,11 @@ Returns the required number of Spots based on the given filters
     <td>True</td>
   </tr>
   <tr>
-    <td>count</td>
-    <td>Number of spots to create (defaults to 1)</td>
+    <td>location</td>
+    <td>An object containing an <code>address: String</code> property with the address of the spot; this address will be geocoded again to retrieve a uniform formattedAddress and coordinates 
   </tr>
   <tr>
-    <td><i><code>*</code></i> location</td>
-    <td>An object containing a <code>coordinates</code> property with the coordinates of the location of the spot<br /> 
-    Can either be a number array of <code>[longitude, latitude]</code> or
-    an object containing <code>long</code> or <code>lon</code> and <code>lat</code> and properties</td>
-  </tr>
-  <tr>
-    <td><i><code>*</code></i> price</td>
+    <td>price</td>
     <td>A price object containing the price breakdown for the spot (to be used as a default for the spot's spots)</td>
   </tr>
   <tr>
@@ -715,8 +709,12 @@ Returns the required number of Spots based on the given filters
     <td>Either the id or the entire <code>Lot</code> object of the lot to associate with this spot (<i><code>*</code></i> when this property is provided, price and location properties are attempted to be retrieved from the <code>Lot</code> object)</td>
   </tr>
   <tr>
-    <td>spot</td>
+    <td><i>(optional</i> spot</td>
     <td>An object containing the properties you want to intiate the spot(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
+  </tr>
+  <tr>
+    <td>i>(optional)</i> count</td>
+    <td>Number of spots to create (defaults to 1)</td>
   </tr>
 </table>
 Create a new spot.

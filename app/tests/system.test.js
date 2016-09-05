@@ -456,7 +456,7 @@ _d('the entire app should not explode', function() {
                     .set('Authorization', 'JWT ' + admin_token)
                     .send({lot: {
                         location: {
-                            coordinates: [12, 21]
+                            address: "1 Yonge St, Toronto ON"
                         }
                     }})
                     .end(function(err, res) {
@@ -631,7 +631,7 @@ _d('the entire app should not explode', function() {
                     .set('Authorization', 'JWT ' + admin_token)
                     .send({spot: {
                         location: {
-                            coordinates: [12, 21]
+                            address: "1 Yonge St, Toronto ON"
                         },
                         price: {
                             perHour: 123.45

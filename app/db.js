@@ -15,28 +15,20 @@ var Spot = require('./models/Spot')
 var Lot = require('./models/Lot');
 
 var _db = {
-    findById: function(collection, id, cb) {
-        collections[collection].findById(id, function(err, res) {
-            if (err)
-                return cb(err);
-            else {
-                return cb(null, res);
-            }
-        });
-    },
-    find: function(collection, search, cb) {
-        collections[collection].find(search || {}, function (err, docs) {
-            return cb(err, docs);
-        });
-    },
-    createSpot: function(spot, cb) {
-        var p = new Spot();
-        p.address = spot.address;
-        p.location.coordinates = spot.coordinates;
-        p.save(function(err) {
-            return cb(err);
-        });
-    },
+    // findById: function(collection, id, cb) {
+    //     collections[collection].findById(id, function(err, res) {
+    //         if (err)
+    //             return cb(err);
+    //         else {
+    //             return cb(null, res);
+    //         }
+    //     });
+    // },
+    // find: function(collection, search, cb) {
+    //     collections[collection].find(search || {}, function (err, docs) {
+    //         return cb(err, docs);
+    //     });
+    // },
     checkUser: function(strategy, profile, cb) {
         var searchProp = 'authid.',
             search = {};
@@ -66,21 +58,22 @@ var _db = {
                 return cb(null, newUser);
             }
         })
-    },
-    connect: function(user, strat, profile, cb) {
-        var searchProp = 'authid.' + strat;
-        var search = {};
-        search[searchProp] = profile.id;
-        User.findOne(search, function(err, doc) {
-            if (doc == null)
-                user.addAuth(strat, profile.id, cb);
-            else
-                doc.remove(function(err) {
-                    if (err)
-                        return cb(err);
-                    else
-                        user.addAuth(strat, profile.id, cb);
-                });
+    }
+    //,
+    // connect: function(user, strat, profile, cb) {
+    //     var searchProp = 'authid.' + strat;
+    //     var search = {};
+    //     search[searchProp] = profile.id;
+    //     User.findOne(search, function(err, doc) {
+    //         if (doc == null)
+    //             user.addAuth(strat, profile.id, cb);
+    //         else
+    //             doc.remove(function(err) {
+    //                 if (err)
+    //                     return cb(err);
+    //                 else
+    //                     user.addAuth(strat, profile.id, cb);
+    //             });
                 //TODO: proper user merges
                 // user.merge(doc, function(err) {
                 //     if (err == null)
@@ -89,8 +82,8 @@ var _db = {
                 //         return user.save(cb);
                 //     }
                 // }
-        })
-    }
+    //     })
+    // }
 }
 
 var collections = function() {}

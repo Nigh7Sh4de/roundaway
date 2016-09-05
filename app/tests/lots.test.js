@@ -563,9 +563,7 @@ describe('lotController', function() {
             req.user = {
                 id: user.id
             }
-            app.geocoder = {
-                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
-            }
+            app.geocoder.geocode = mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
             res.sendBad = done;
             app.db.lots = {
                 create: function(obj) {
@@ -618,23 +616,25 @@ describe('lotController', function() {
         })
         
         it('if couldnt create lot should send error', function(done) {
+            app.geocoder.geocode = mockPromise([{formattedAddress: 'some addres', longitude: 12, latitude: 21}])
             app.db.lots = {
                 create: mockPromise(null, new Errors.TestError())
             }
             req.body = {
                 location: {
-                    coordinates: [12, 21]
+                    address: "some address"
                 }
             }
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentError(Errors.TestError)).to.be.true;
+                expect(res.sentError(Errors.TestError), JSON.stringify(res.send.firstCall.args[0])).to.be.true;
                 done();
             }
             app.lotController.CreateLot(req, res);
         })
         
         it('if couldnt insert entire collection should send error', function(done) {
+            app.geocoder.geocode = mockPromise([{formattedAddress: 'some addres', longitude: 12, latitude: 21}])
             app.db.lots = {
                 collection: {
                     insert: mockPromise(null, new Errors.TestError())
@@ -642,7 +642,7 @@ describe('lotController', function() {
             }
             req.body = {
                 location: {
-                    coordinates: [12, 21]
+                    address: 'some addres'
                 },
                 count: 5
             }
@@ -670,9 +670,7 @@ describe('lotController', function() {
             lot.price = {
                 perHour: 123.45
             };
-            app.geocoder = {
-                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
-            }
+            app.geocoder.geocode = mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
             app.db.lots = {
                 collection: {
                     insert: function(obj) {
@@ -706,9 +704,7 @@ describe('lotController', function() {
             lot.price = {
                 perHour: 123.45
             };
-            app.geocoder = {
-                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
-            }
+            app.geocoder.geocode = mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}]);
             app.db.lots = {
                 create: function(obj) {
                     expect(obj).to.have.property('price');
@@ -730,9 +726,7 @@ describe('lotController', function() {
                 coordinates: [12,34]
             }
             req.body.lot = lot;
-            app.geocoder = {
-                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
-            }
+            app.geocoder.geocode = mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}]);
             app.db.lots = {
                 create: function(obj) {
                     delete obj.id;
@@ -761,9 +755,7 @@ describe('lotController', function() {
             for (var i=0;i<count;i++) {
                 arr.push(lot);
             }
-            app.geocoder = {
-                reverse: mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}])
-            }
+            app.geocoder.geocode = mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}]);
             app.db.lots = {
                 collection: {
                     insert: sinon.spy(function(obj) {
