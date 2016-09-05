@@ -108,6 +108,43 @@ _d('the entire app should not explode', function() {
         })
     }
 
+    describe('Util Controller', function() {
+        describe('POST /api/util/location/geocode', function() {
+            it('should return coordinates for address', function(done) {
+                var address = '49 Wellington St W, Toronto, ON M5J 2T6, Canada';
+                var coordinates = {
+                    longitude: -79.379,
+                    latitude: 43.647
+                }
+                request(app).post('/api/util/location/geocode')
+                    .send({address: address})
+                    .end(function(err, res) {
+                        expect(res.text).to.contain(coordinates.longitude);
+                        expect(res.text).to.contain(coordinates.latitude);
+                        expect(res.status, res.body.errors).to.equal(200);
+                        done();
+                    })
+            })
+        })
+
+        describe('POST /api/util/location/geocode/reverse', function() {
+            it('should return coordinates for address', function(done) {
+                var address = '49 Wellington St W, Toronto, ON M5J 2T6, Canada';
+                var coordinates = {
+                    longitude: -79.379971,
+                    latitude: 43.647130
+                }
+                request(app).post('/api/util/location/geocode/reverse')
+                    .send(coordinates)
+                    .end(function(err, res) {
+                        expect(res.text).to.contain(address);
+                        expect(res.status, res.body.errors).to.equal(200);
+                        done();
+                    })
+            })
+        })
+    })
+
     describe('User Controller', function() {
         describe('GET /api/users', function() {
             it('should return users in db', function(done) {
