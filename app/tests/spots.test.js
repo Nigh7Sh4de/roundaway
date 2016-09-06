@@ -830,6 +830,16 @@ routeTest('spotController', [
             verb: verbs.PUT,
             route: '/api/spots/:id/name',
             method: 'SetNameOfSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/description',
+            method: 'GetDescriptionOfSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/description',
+            method: 'SetDescriptionOfSpot'
         }
     ])
 
@@ -1896,6 +1906,39 @@ describe('spotController', function() {
                 done();
             }
             app.spotController.SetNameOfSpot(req, res);
+        });
+    })
+
+    describe('GetDescriptionOfSpot', function() {
+        it('should get the description of the spot', function(done) {
+            var s = new Spot();
+            var description = s.description = 'some description';
+            req.doc = s;
+            req.params.id = s.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(description)).to.be.true;
+                done();
+            }
+            app.spotController.GetDescriptionOfSpot(req, res);
+        });
+    })
+
+    describe('SetDescriptionOfSpot', function() {
+        it('should set the description of the spot', function(done) {
+            var s = new Spot();
+            sinon.stub(s, 'setDescription', mockPromise());
+            var description = 'some description';
+            req.doc = s;
+            req.params.id = s.id;
+            req.body.description = description;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(s.setDescription.calledOnce).to.be.true;
+                expect(s.setDescription.calledWith(description)).to.be.true;
+                done();
+            }
+            app.spotController.SetDescriptionOfSpot(req, res);
         });
     })
 })

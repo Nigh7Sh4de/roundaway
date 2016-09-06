@@ -17,6 +17,8 @@ var controller = function(app) {
     app.put('/api/spots/:id/price', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetPriceOfSpot.bind(this));
     app.get('/api/spots/:id/name', app.checkAuth, app.checkOwner, this.GetNameOfSpot.bind(this));
     app.put('/api/spots/:id/name', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetNameOfSpot.bind(this));
+    app.get('/api/spots/:id/description', app.checkAuth, app.checkOwner, this.GetDescriptionOfSpot.bind(this));
+    app.put('/api/spots/:id/description', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetDescriptionOfSpot.bind(this));
     app.get('/api/spots/:id/bookings', app.checkAuth, app.checkOwner, this.GetAllBookingsForSpot.bind(this));
     app.put('/api/spots/:id/bookings', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
     app.put('/api/spots/:id/bookings/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveBookingsFromSpot.bind(this));
@@ -305,6 +307,20 @@ controller.prototype = {
         req.doc.setName(req.body.name)
         .then(function(spot) {
             res.sendGood('Set name for spot', spot);
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        });
+    },
+    GetDescriptionOfSpot: function(req, res) {
+        var description = req.doc.getDescription();
+        if (!description) return res.sendBad(new Errors.MissingProperty(req.doc, 'description', req.doc.getDescription()));
+        res.sendGood('Found description for spot', description);
+    },
+    SetDescriptionOfSpot: function(req, res) {
+        req.doc.setDescription(req.body.description)
+        .then(function(spot) {
+            res.sendGood('Set description for spot', spot);
         })
         .catch(function(err) {
             res.sendBad(err)
