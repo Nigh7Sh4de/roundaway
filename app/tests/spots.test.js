@@ -1909,6 +1909,39 @@ describe('spotController', function() {
         });
     })
 
+    describe('GetIfSpotIsReserved', function() {
+        it('should get if the spot is reserved', function(done) {
+            var s = new Spot();
+            var reserved = s.reserved = true;
+            req.doc = s;
+            req.params.id = s.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(reserved)).to.be.true;
+                done();
+            }
+            app.spotController.GetIfSpotIsReserved(req, res);
+        });
+    })
+
+    describe('SetIfSpotIsReserved', function() {
+        it('should set if the spot is reserved', function(done) {
+            var s = new Spot();
+            sinon.stub(s, 'setReserved', mockPromise());
+            var reserved = true;
+            req.doc = s;
+            req.params.id = s.id;
+            req.body.reserved = reserved;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(s.setReserved.calledOnce).to.be.true;
+                expect(s.setReserved.calledWith(reserved)).to.be.true;
+                done();
+            }
+            app.spotController.SetIfSpotIsReserved(req, res);
+        });
+    })
+
     describe('GetDescriptionOfSpot', function() {
         it('should get the description of the spot', function(done) {
             var s = new Spot();

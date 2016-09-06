@@ -17,6 +17,8 @@ var controller = function(app) {
     app.put('/api/spots/:id/price', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetPriceOfSpot.bind(this));
     app.get('/api/spots/:id/name', app.checkAuth, app.checkOwner, this.GetNameOfSpot.bind(this));
     app.put('/api/spots/:id/name', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetNameOfSpot.bind(this));
+    app.get('/api/spots/:id/reserved', app.checkAuth, app.checkOwner, this.GetIfSpotIsReserved.bind(this));
+    app.put('/api/spots/:id/reserved', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetIfSpotIsReserved.bind(this));
     app.get('/api/spots/:id/description', app.checkAuth, app.checkOwner, this.GetDescriptionOfSpot.bind(this));
     app.put('/api/spots/:id/description', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetDescriptionOfSpot.bind(this));
     app.get('/api/spots/:id/bookings', app.checkAuth, app.checkOwner, this.GetAllBookingsForSpot.bind(this));
@@ -307,6 +309,20 @@ controller.prototype = {
         req.doc.setName(req.body.name)
         .then(function(spot) {
             res.sendGood('Set name for spot', spot);
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        });
+    },
+    GetIfSpotIsReserved: function(req, res) {
+        var reserved = req.doc.getReserved();
+        if (!reserved) return res.sendBad(new Errors.MissingProperty(req.doc, 'reserved', req.doc.getReserved()));
+        res.sendGood('Found reserved for spot', reserved);
+    },
+    SetIfSpotIsReserved: function(req, res) {
+        req.doc.setReserved(req.body.reserved)
+        .then(function(spot) {
+            res.sendGood('Set reserved for spot', spot);
         })
         .catch(function(err) {
             res.sendBad(err)
