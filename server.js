@@ -42,6 +42,7 @@ var app = function(inject) {
     app.spotController = new inject.spotController(app);
     app.authController = new inject.authController(app);
     app.utilController = new inject.utilController(app);
+    app.carController = new inject.carController(app);
 
     app.get('/', app.sendIndex);
     
@@ -64,7 +65,8 @@ app.GetDefaultInjection = function(allowConnect) {
         spotController: require('./app/controllers/spotController'),
         authController: require('./app/controllers/authController'),
         lotController: require('./app/controllers/lotController'),
-        utilController: require('./app/controllers/utilController')
+        utilController: require('./app/controllers/utilController'),
+        carController: require('./app/controllers/carController')
     }
     if (!allowConnect)
         inject.db.connect = null;

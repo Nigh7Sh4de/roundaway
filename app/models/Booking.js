@@ -10,6 +10,10 @@ var bookingSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
+    car: {
+        type: Schema.Types.ObjectId,
+        ref: 'Car'
+    },
     spot: {
         type: Schema.Types.ObjectId,
         ref: 'Spot',
