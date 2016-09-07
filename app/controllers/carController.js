@@ -1,7 +1,11 @@
+var Errors = require('./../errors');
+var Car = require('./../models/Car');
+
 var controller = function(app) {
     this.app = app;
     app.get('/api/cars', app.checkAuth, app.checkAdmin, this.GetAllCars.bind(this));
-    app.put('/api/cars', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.GetCar.bind(this));
+    app.put('/api/cars', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateCar.bind(this));
+    app.get('/api/cars/:id', app.checkAuth, app.checkOwner, this.GetCar.bind(this));
     app.get('/api/cars/:id/license', app.checkAuth, app.checkOwner, this.GetLicenseOfCar.bind(this));
     app.get('/api/cars/:id/make', app.checkAuth, app.checkOwner, this.GetMakeOfCar.bind(this));
     app.get('/api/cars/:id/model', app.checkAuth, app.checkOwner, this.GetModelOfCar.bind(this));
@@ -23,6 +27,19 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err)
         });
+    },
+    CreateCar: function(req, res) {
+        var car = new Car(req.body.car || req.body);
+        if (!car.license)
+            return res.sendError(new Errors.BadInput('license'));
+        if (!car.user)
+            car.user = req.user;
+        car.save(function(err, car) {
+            if (err)
+                return res.sendBad(err);
+            res.sendGood(car);
+        })
+        
     },
     GetCar: function(req, res) {
         res.sendGood('Found car', req.doc.toJSON({getters: true}));

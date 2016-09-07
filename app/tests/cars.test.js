@@ -2,7 +2,10 @@ var expect = require('chai').expect;
 var sinon = require('sinon');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var mockPromise = require('./mockPromise');
 
+var server = require('./../../server');
+var expressExtensions = require('./../express');
 var Car = require('./../models/Car');
 
 describe('Car schema', function() {
@@ -138,6 +141,13 @@ routeTest('carController', [
         ignoreOwner: true
     },
     {
+        verb: verbs.PUT,
+        route: '/api/cars',
+        method: 'CreateCar',
+        ignoreId: true,
+        ignoreOwner: true
+    },
+    {
         verb: verbs.GET,
         route: '/api/cars/:id',
         method: 'GetCar'
@@ -174,6 +184,156 @@ routeTest('carController', [
     }
 ])
 
-describe('carController', function() {
+describe.only('carController', function() {
+    var app,
+        req = {},
+        res = {};
     
+    beforeEach(function() {
+        var inject = server.GetDefaultInjection();
+        app = server(inject);
+        req = expressExtensions.mockRequest();
+        res = expressExtensions.mockResponse();
+    })
+    
+    describe('GetAllCars', function() {
+        it('should GetAllCars', function(done) {
+            var c = new Car();
+            req.doc = c;
+            req.params.id = c.id;
+            app.db.cars = {
+                find: mockPromise([c])
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith([c.toJSON({getters: true})]), JSON.stringify(res.send.firstCall.args[0])).to.be.true;
+                done();
+            }
+            app.carController.GetAllCars(req, res);
+        })    
+    })
+
+    describe('CreateCar', function() {
+        it('should CreateCar', function(done) {
+            sinon.stub(Car.prototype, 'save', function(cb) { cb(); });
+            var license = '1z2x3c';
+            req.body = {
+                license: license
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(Car.prototype.save.calledOnce).to.be.true;
+                Car.prototype.save.restore();
+                done();
+            }
+            app.carController.CreateCar(req, res);
+        })    
+    })
+
+    describe('GetCar', function() {
+        it('should GetCar', function(done) {
+            var c = new Car();
+            req.doc = c;
+            req.params.id = c.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.toJSON({getters: true})));
+                done();
+            }
+            app.carController.GetCar(req, res);
+        })    
+    })
+
+    describe('GetLicenseOfCar', function() {
+        it('should GetLicenseOfCar', function(done) {
+            var c = new Car();
+            c.license = 'some license';
+            req.doc = c;
+            req.params.id = c.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.license)).to.be.true;
+                done();
+            }
+            app.carController.GetLicenseOfCar(req, res);
+        })    
+    })
+
+    describe('GetMakeOfCar', function() {
+        it('should GetMakeOfCar', function(done) {
+            var c = new Car();
+            c.make = 'some make';
+            req.doc = c;
+            req.params.id = c.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.make)).to.be.true;
+                done();
+            }
+            app.carController.GetMakeOfCar(req, res);
+        })    
+    })
+
+    describe('GetModelOfCar', function() {
+        it('should GetModelOfCar', function(done) {
+            var c = new Car();
+            c.model = 'some model';
+            req.doc = c;
+            req.params.id = c.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.model)).to.be.true;
+                done();
+            }
+            app.carController.GetModelOfCar(req, res);
+        })    
+    })
+
+    describe('GetYearOfCar', function() {
+        it('should GetYearOfCar', function(done) {
+            var c = new Car();
+            c.year = 2016;
+            req.doc = c;
+            req.params.id = c.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.year)).to.be.true;
+                done();
+            }
+            app.carController.GetYearOfCar(req, res);
+        })    
+    })
+
+    describe('GetColourOfCar', function() {
+        it('should GetColourOfCar', function(done) {
+            var c = new Car();
+            c.colour = 'some colour';
+            req.doc = c;
+            req.params.id = c.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.colour)).to.be.true;
+                done();
+            }
+            app.carController.GetColourOfCar(req, res);
+        })    
+    })
+
+    describe('GetDescriptionOfCar', function() {
+        it('should GetDescriptionOfCar', function(done) {
+            var c = new Car();
+            c.description = 'some description';
+            req.doc = c;
+            req.params.id = c.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.description)).to.be.true;
+                done();
+            }
+            app.carController.GetDescriptionOfCar(req, res);
+        })    
+    })
+
+
 })
