@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var ObjectId = require('mongoose').Types.ObjectId;
 var Location = require('./Location');
 var Range = require('./Range');
 var Price = require('./Price');
@@ -9,6 +10,10 @@ var lotSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
+    attendants: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     location: Location,
     price: {
         perHour: Price
@@ -17,6 +22,24 @@ var lotSchema = new Schema({
 }, {
     timestamps: true
 });
+
+lotSchema.methods.addAttendants = function(attendants) {
+    return new Promise(function(resolve, reject) {
+        attendants = attendants instanceof Array ? attendants : [attendants];
+        this.attendants = [...new Set(this.attendants.concat(attendants).map(function(att) {
+            if (typeof att === 'string')
+                return att;
+            if (att instanceof ObjectId)
+                return att.toString();
+            return att.id || att._id.toString() || att;
+        }))];
+        this.save(function(err, lot) {
+            if (err)
+                return reject(err);
+            return resolve(lot);
+        })
+    }.bind(this));
+}
 
 lotSchema.methods.getPrice = function() {
     var price = {},

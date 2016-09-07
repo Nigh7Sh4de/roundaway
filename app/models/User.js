@@ -12,6 +12,10 @@ var userSchema = new Schema({
     admin: {
         type: Boolean,
         default: false
+    },
+    attendant: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

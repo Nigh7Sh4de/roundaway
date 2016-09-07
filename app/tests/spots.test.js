@@ -21,6 +21,38 @@ describe('Spot schema', function() {
         Spot.prototype.save.restore();
     })
 
+    describe('addAttendants', function() {
+        it('should add the given attendants User objects', function() {
+            var s = new Spot();
+            expect(s.attendants).to.have.length(0);
+            var u = new User();
+            return s.addAttendants(u)
+            .then(function() {
+                expect(s.attendants).to.deep.include(u.id);
+            })
+        })
+        
+        it('should add the given attendants User id', function() {
+            var s = new Spot();
+            expect(s.attendants).to.have.length(0);
+            var u = new User();
+            return s.addAttendants(u.id)
+            .then(function() {
+                expect(s.attendants).to.deep.include(u.id);
+            })
+        })
+        
+        it('should add the given attendants User _id', function() {
+            var s = new Spot();
+            expect(s.attendants).to.have.length(0);
+            var u = new User();
+            return s.addAttendants(u._id)
+            .then(function() {
+                expect(s.attendants).to.deep.include(u.id);
+            })
+        })
+    })
+
     describe('setName', function() {
         it('should set the name of the spot', function() {
             var s = new Spot();
@@ -774,12 +806,14 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id/bookings',
-            method: 'GetAllBookingsForSpot'
+            method: 'GetAllBookingsForSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
             route: '/api/spots/:id/bookings',
-            method: 'AddBookingsToSpot'
+            method: 'AddBookingsToSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
@@ -840,7 +874,18 @@ routeTest('spotController', [
             verb: verbs.PUT,
             route: '/api/spots/:id/description',
             method: 'SetDescriptionOfSpot'
+        },
+        {
+            verb: verbs.GET,
+            route: '/api/spots/:id/attendants', 
+            method: 'GetAttendantsForSpot'
+        },
+        {
+            verb: verbs.PUT,
+            route: '/api/spots/:id/attendants', 
+            method: 'AddAttendantsToSpot'
         }
+    
     ])
 
 describe('spotController', function() {
@@ -1974,4 +2019,46 @@ describe('spotController', function() {
             app.spotController.SetDescriptionOfSpot(req, res);
         });
     })
+
+    describe('GetAttendantsForSpot', function() {
+        it('should get the attendants for the spot', function(done) {
+            var s = new Spot();
+            var attendants = [new User()];
+            s.attendants = attendants;
+            req.doc = s;
+            req.params.id = s.id;
+            app.db.users = {
+                find: mockPromise(attendants)
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(attendants)).to.be.true;
+                done();
+            }
+            app.spotController.GetAttendantsForSpot(req, res);
+        })
+    });
+
+    describe('AddAttendantsToSpot', function() {
+        it('should add the attendants to the spot', function(done) {
+            var s = new Spot();
+            req.doc = s;
+            req.params.id = s.id;
+            var attendants = [new User()];
+            app.db.users = {
+                find: mockPromise(attendants)
+            }
+            sinon.stub(s, 'addAttendants', mockPromise());
+            req.body.attendants = attendants;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(s.addAttendants.calledOnce).to.be.true;
+                expect(s.addAttendants.calledWith(attendants)).to.be.true;
+                done();
+            }
+            app.spotController.AddAttendantsToSpot(req, res);
+        })
+    });
+
 })

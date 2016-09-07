@@ -21,8 +21,10 @@ var controller = function(app) {
     app.put('/api/spots/:id/reserved', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetIfSpotIsReserved.bind(this));
     app.get('/api/spots/:id/description', app.checkAuth, app.checkOwner, this.GetDescriptionOfSpot.bind(this));
     app.put('/api/spots/:id/description', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetDescriptionOfSpot.bind(this));
-    app.get('/api/spots/:id/bookings', app.checkAuth, app.checkOwner, this.GetAllBookingsForSpot.bind(this));
-    app.put('/api/spots/:id/bookings', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
+    app.get('/api/spots/:id/attendants', app.checkAuth, app.checkOwner, this.GetAttendantsForSpot.bind(this));
+    app.put('/api/spots/:id/attendants', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAttendantsToSpot.bind(this));
+    app.get('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant, this.GetAllBookingsForSpot.bind(this));
+    app.put('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant, app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
     app.put('/api/spots/:id/bookings/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveBookingsFromSpot.bind(this));
     app.get('/api/spots/:id/available', app.checkAuth, app.checkOwner, this.GetAllAvailabilityOfSpot.bind(this));
     app.put('/api/spots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAvailabilityToSpot.bind(this));
@@ -341,6 +343,34 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err)
         });
+    },
+    GetAttendantsForSpot: function(req, res) {
+        this.app.db.users.find({id: {$in: req.doc.attendants}})
+        .then(function(attendants) {
+            if (!attendants) throw new Errors.MissingProperty(req.doc, 'attendants', false);
+            res.sendGood('Found attendants', attendants);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+    AddAttendantsToSpot: function(req, res) {
+        if (!req.body.attendants)
+            return res.sendBad(new Errors.BadInput('attendants'));
+        var ids = (req.body.attendants instanceof Array ? req.body.attendants : [req.body.attendants])
+            .map(function(att) {
+                return att.id || att._id || att;
+            })
+        this.app.db.users.find({_id: {$in: ids}})
+        .then(function(attendants) {
+            return req.doc.addAttendants(attendants);
+        })
+        .then(function(spot) {
+            res.sendGood('Added attendants', spot);
+        })
+        .catch(function(err) {
+            return res.sendBad(err);
+        })
     }
 }
 

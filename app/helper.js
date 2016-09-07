@@ -48,6 +48,31 @@ helper.prototype = {
         res.sendBad('You do not have the required privelages to access this resource', null, {status: 401});
     },
 
+    checkAttendant: function(req, res, next) {
+        if (!req.user)
+            return res.sendBad('Could not get session user')
+        var slash_api = '/api/'.length;
+        var slash = req.url.indexOf('/', slash_api);
+        var collection = req.url.substring(slash_api, slash);
+        var id = req.url.substr(slash+1, 24);
+        app.db[collection].findById(id).then(function(doc) {
+            if (!doc)
+                throw new Errors.NotFound(collection, id);
+            else if (req.user.admin ||
+                    collection === 'users' && doc.id == req.user.id ||
+                    doc.user == req.user.id || 
+                    doc.attendants.indexOf(req.user.id) >= 0) 
+            {
+                req.doc = doc;
+                next();
+            }
+            else
+                return res.sendBad('You do not have the required privelages to access this resource', null, { status: 401});
+        }).catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+
     checkOwner: function(req, res, next) {
         if (!req.user)
             return res.sendBad('Could not get session user')
@@ -59,8 +84,8 @@ helper.prototype = {
             if (!doc)
                 throw new Errors.NotFound(collection, id);
             else if (req.user.admin ||
-                     collection === 'users' && doc.id == req.user.id ||
-                     doc.user == req.user.id) 
+                    collection === 'users' && doc.id == req.user.id ||
+                    doc.user == req.user.id) 
             {
                 req.doc = doc;
                 next();

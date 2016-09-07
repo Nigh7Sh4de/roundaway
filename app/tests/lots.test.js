@@ -19,6 +19,39 @@ describe('Lot schema', function() {
         Lot.prototype.save.restore();
     })
 
+
+    describe('addAttendants', function() {
+        it('should add the given attendants User objects', function() {
+            var l = new Lot();
+            expect(l.attendants).to.have.length(0);
+            var u = new User();
+            return l.addAttendants(u)
+            .then(function() {
+                expect(l.attendants).to.deep.include(u.id);
+            })
+        })
+        
+        it('should add the given attendants User id', function() {
+            var l = new Lot();
+            expect(l.attendants).to.have.length(0);
+            var u = new User();
+            return l.addAttendants(u.id)
+            .then(function() {
+                expect(l.attendants).to.deep.include(u.id);
+            })
+        })
+        
+        it('should add the given attendants User _id', function() {
+            var l = new Lot();
+            expect(l.attendants).to.have.length(0);
+            var u = new User();
+            return l.addAttendants(u._id)
+            .then(function() {
+                expect(l.attendants).to.deep.include(u.id);
+            })
+        })
+    })
+
     describe('getPrice', function() {
         it('should return null if no price is set', function() {
             var l = new Lot();
@@ -500,6 +533,16 @@ routeTest('lotController', [
         verb: verbs.PUT,
         route: '/api/lots/:id/price',
         method: 'SetPriceOfLot'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id/attendants', 
+        method: 'GetAttendantsForLot'
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/attendants', 
+        method: 'AddAttendantsToLot'
     }
 ])
 
@@ -1015,4 +1058,73 @@ describe('lotController', function() {
             app.lotController.SetPriceOfLot(req, res);
         })
     })
+
+    describe('GetAttendantsForLot', function() {
+        it('should get the attendants for the spot', function(done) {
+            var l = new Lot();
+            var attendants = [new User()];
+            l.attendants = attendants;
+            req.doc = l;
+            req.params.id = l.id;
+            app.db.users = {
+                find: mockPromise(attendants)
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(attendants)).to.be.true;
+                done();
+            }
+            app.lotController.GetAttendantsForLot(req, res);
+        })
+    });
+
+    describe('AddAttendantsToLot', function() {
+        it('should add the attendants to the lot', function(done) {
+            var l = new Lot();
+            req.doc = l;
+            req.params.id = l.id;
+            var attendants = [new User()];
+            app.db.users = {
+                find: mockPromise(attendants)
+            }
+            sinon.stub(l, 'addAttendants', mockPromise());
+            req.body.attendants = attendants;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(l.addAttendants.calledOnce).to.be.true;
+                expect(l.addAttendants.calledWith(attendants)).to.be.true;
+                done();
+            }
+            app.lotController.AddAttendantsToLot(req, res);
+        })
+        
+        it('should add the attendants to the spots if necessary', function(done) {
+            var l = new Lot();
+            req.doc = l;
+            req.params.id = l.id;
+            var attendants = [new User()];
+            var s = new Spot();
+            s.lot = l;
+            app.db.users = {
+                find: mockPromise(attendants)
+            }
+            app.db.spots = {
+                find: mockPromise([s])
+            }
+            sinon.stub(l, 'addAttendants', mockPromise());
+            sinon.stub(s, 'addAttendants', mockPromise());
+            req.body.attendants = attendants;
+            req.body.updateSpots = true;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(l.addAttendants.calledOnce).to.be.true;
+                expect(l.addAttendants.calledWith(attendants)).to.be.true;
+                expect(s.addAttendants.calledOnce).to.be.true;
+                expect(s.addAttendants.calledWith(attendants)).to.be.true;
+                done();
+            }
+            app.lotController.AddAttendantsToLot(req, res);
+        })
+    });
 })

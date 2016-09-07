@@ -11,6 +11,10 @@ var spotSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User'
     },
+    attendants: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     lot: {
         type: Schema.Types.ObjectId,
         ref: 'Lot'
@@ -37,6 +41,24 @@ var spotSchema = new Schema({
 spotSchema.virtual('available.next').get(function() {
     return this.available.nextRange(new Date());
 })
+
+spotSchema.methods.addAttendants = function(attendants) {
+    return new Promise(function(resolve, reject) {
+        attendants = attendants instanceof Array ? attendants : [attendants];
+        this.attendants = [...new Set(this.attendants.concat(attendants).map(function(att) {
+            if (typeof att === 'string')
+                return att;
+            if (att instanceof ObjectId)
+                return att.toString();
+            return att.id || att._id.toString() || att;
+        }))];
+        this.save(function(err, spot) {
+            if (err)
+                return reject(err);
+            return resolve(spot);
+        })
+    }.bind(this));
+}
 
 spotSchema.methods.setReserved = function(reserved) {
     return new Promise(function(resolve, reject) {

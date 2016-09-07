@@ -9,6 +9,8 @@ var controller = function(app) {
     app.get('/api/lots/:id', app.checkAuth, app.checkOwner, this.GetLot.bind(this));
     app.get('/api/lots/:id/location', app.checkAuth, app.checkOwner, this.GetLocationOfLot.bind(this));
     app.get('/api/lots/:id/spots', app.checkAuth, app.checkOwner, this.GetSpotsForLot.bind(this));
+    app.get('/api/lots/:id/attendants', app.checkAuth, app.checkOwner, this.GetAttendantsForLot.bind(this));
+    app.put('/api/lots/:id/attendants', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAttendantsToLot.bind(this));
     app.get('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetAllAvailabilityOfLot.bind(this));
     app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
     app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
@@ -174,6 +176,48 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err)
         });
+    },
+    GetAttendantsForLot: function(req, res) {
+        this.app.db.users.find({id: {$in: req.doc.attendants}})
+        .then(function(attendants) {
+            if (!attendants) throw new Errors.MissingProperty(req.doc, 'attendants', false);
+            res.sendGood('Found attendants', attendants);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+    AddAttendantsToLot: function(req, res) {
+        if (!req.body.attendants)
+            return res.sendBad(new Errors.BadInput('attendants'));
+        var ids = (req.body.attendants instanceof Array ? req.body.attendants : [req.body.attendants])
+            .map(function(att) {
+                return att.id || att._id || att;
+            })
+        Promise.all([
+            this.app.db.users.find({_id: {$in: ids}}),
+            req.body.updateSpots ? this.app.db.spots.find({lot: req.doc.id}) : []
+        ])
+        .then(function(results) {
+            var attendants = results[0];
+            var spots = results[1];
+            return Promise.resolve([req.doc.addAttendants(attendants)].concat(
+                spots.map(function(spot) {
+                    return spot.addAttendants(attendants);
+                })
+            ));
+        })
+        .then(function(results) {
+            var result = {
+                lot: results.shift()
+            }
+            if (results.length)
+                result.spots = results;
+            res.sendGood('Added attendants', result);
+        })
+        .catch(function(err) {
+            return res.sendBad(err);
+        })
     }
 }
 
