@@ -9,6 +9,7 @@ var server = require('./../../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var User = require('./../models/User');
+var Booking = require('./../models/Booking');
 
 describe('Lot schema', function() {
     before(function() {
@@ -1127,4 +1128,168 @@ describe('lotController', function() {
             app.lotController.AddAttendantsToLot(req, res);
         })
     });
+    
+    describe('GetAllBookingsForLot', function() {
+        var l, s;
+        beforeEach(function() {
+            l = new Lot();
+            s = new Spot();
+            s.lot = l;
+            req.doc = l;
+            app.db.spots = {
+                find: mockPromise([s])
+            }
+        })
+
+        it('should return an empty array if no bookings are assigned', function(done) {
+            app.db.bookings = {
+                find: mockPromise([])
+            }
+            res.sent = function(body) {
+                expect(res.sentWith({bookings: []}))
+                done();
+            }
+            req.params.id = '123';
+            app.lotController.GetAllBookingsForLot(req, res);
+        })
+        
+        
+        it('should return the lot\'s bookings', function(done) {
+            var expected = [
+                new Booking(),
+                new Booking()
+            ]
+            app.db.bookings = {
+                find: function(search) {
+                    expect(search.spot.$in).to.deep.include(s.id);
+                    return mockPromise(expected)();
+                }
+            }
+            req.params.id = l.id;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(expected)).to.be.true;
+                done();
+            }
+            app.lotController.GetAllBookingsForLot(req, res);
+        });
+        
+        
+    })
+    
+    describe('AddBookingsToLot', function() {
+        var l, s;
+
+        beforeEach(function() {
+            l = new Lot();
+            s = new Spot();
+            s.lot = l;
+            req.doc = l;
+            app.db.spots = {
+                find: mockPromise([s])
+            }
+        })
+
+        it('should fail if bookings do not have start and end times', function(done) {
+            s.price.perHour = 123.45;
+            var b = new Booking();
+            req.params.id = l.id;
+            req.body = b;
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.BadInput)).to.be.true;
+                done();
+            }
+            app.lotController.AddBookingsToLot(req, res);
+        })
+
+        it('should set the user', function(done) {
+            var user = new User();
+            s.price.perHour = 123.45;
+            var b = new Booking();
+            b.start = b.end = new Date();
+            b.user = user._id;
+            sinon.stub(s, 'addBookings', function(_b) {
+                expect(_b).to.deep.include(b);
+                return mockPromise(s)();
+            })
+            sinon.stub(Booking.prototype, 'setSpot', function() {
+                expect(this.user).to.deep.equal(user._id);
+                return mockPromise(b)();
+            });
+            req.params.id = l.id;
+            req.body = b;
+            req.user = {
+                id: user.id
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(b.setSpot.calledOnce).to.be.true;
+                Booking.prototype.setSpot.restore();
+                done();
+            }
+            app.lotController.AddBookingsToLot(req, res);
+        })
+
+        it('should create booking object and add them', function(done) {
+            s.price.perHour = 123.45;
+            var b = new Booking();
+            b.start = b.end = new Date();
+            sinon.stub(s, 'addBookings', function(_b) {
+                expect(_b).to.deep.include(b);
+                return mockPromise(s)();
+            })
+            sinon.stub(Booking.prototype, 'setSpot', mockPromise(b));
+            req.params.id = l.id;
+            req.body = b;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(b.setSpot.calledOnce).to.be.true;
+                Booking.prototype.setSpot.restore();
+                done();
+            }
+            app.lotController.AddBookingsToLot(req, res);
+        })
+        
+        it('should fail if addBookings failed', function(done) {
+            sinon.stub(Booking.prototype, 'setSpot', mockPromise(new Booking()));
+            sinon.stub(s, 'addBookings', mockPromise(null, new Errors.TestError()));
+            req.params.id = l.id;
+            req.body.bookings = new Booking({
+                start: new Date(),
+                end: new Date()
+            });
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
+                Booking.prototype.setSpot.restore();
+                done();
+            };
+            app.lotController.AddBookingsToLot(req, res);
+        })
+        
+        it('should fail if given bad input', function(done) {
+            [
+                null,
+                undefined,
+                123,
+                function(){expect.fail()},
+                {badProp: 'bad value'}
+            ].forEach(function(input, i, arr) {
+                req.body.bookings = input;
+                res.sent = function() {
+                    if (res.send.callCount >= arr.length) {
+                        expect(res.sendBad.callCount).to.equal(res.send.callCount);
+                        done();
+                    }
+                }
+                app.lotController.AddBookingsToLot(req, res);
+            })
+        })
+        
+        
+    })
 })
