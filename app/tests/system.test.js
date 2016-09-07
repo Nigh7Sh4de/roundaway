@@ -13,8 +13,12 @@ var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
 
 var _d = describe;
-if (!inject.config.RUN_ALL_TESTS)
+if (!inject.config.RUN_SYSTEM_TESTS)
     _d = _d.skip;
+
+it.external = it;
+if (!inject.config.RUN_EXTERNAL_TESTS)
+    it.external = it.external.skip;
 
 _d('the entire app should not explode', function() {
     var app;
@@ -110,7 +114,7 @@ _d('the entire app should not explode', function() {
 
     describe('Util Controller', function() {
         describe('POST /api/util/location/geocode', function() {
-            it('should return formattedAddress for address', function(done) {
+            it.external('should return formattedAddress for address', function(done) {
                 var address = "49 Wellington St W, Toronto, ON";
                 var fullAddress = '49 Wellington St W, Toronto, ON M5J 2T6, Canada';
                 request(app).post('/api/util/location/geocode')
@@ -451,7 +455,7 @@ _d('the entire app should not explode', function() {
             })
         })
         describe('PUT /api/lots', function() {
-            it('should create a new lot', function(done) {
+            it.external('should create a new lot', function(done) {
                 request(app).put('/api/lots')
                     .set('Authorization', 'JWT ' + admin_token)
                     .send({lot: {
@@ -626,7 +630,7 @@ _d('the entire app should not explode', function() {
             })
         })
         describe('PUT /api/spots', function() {
-            it('should create a new spot', function(done) {
+            it.external('should create a new spot', function(done) {
                 request(app).put('/api/spots')
                     .set('Authorization', 'JWT ' + admin_token)
                     .send({spot: {
