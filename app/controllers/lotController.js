@@ -1,7 +1,6 @@
 var Errors = require('./../errors');
 var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
-var Booking = require('./../models/Booking');
 
 var controller = function(app) {
     this.app = app;
@@ -12,8 +11,6 @@ var controller = function(app) {
     app.get('/api/lots/:id/spots', app.checkAuth, app.checkOwner, this.GetSpotsForLot.bind(this));
     app.get('/api/lots/:id/attendants', app.checkAuth, app.checkOwner, this.GetAttendantsForLot.bind(this));
     app.put('/api/lots/:id/attendants', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAttendantsToLot.bind(this));
-    app.get('/api/lots/:id/bookings', app.checkAuth, app.checkAttendant, this.GetAllBookingsForLot.bind(this));
-    app.put('/api/lots/:id/bookings', app.checkAuth, app.checkAttendant, app.bodyParser.json(), this.AddBookingsToLot.bind(this));
     app.get('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetAllAvailabilityOfLot.bind(this));
     app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
     app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
@@ -220,58 +217,6 @@ controller.prototype = {
         })
         .catch(function(err) {
             return res.sendBad(err);
-        })
-    },
-    GetAllBookingsForLot: function(req, res) {
-        var app = this.app;
-        app.db.spots.find({lot: req.doc.id, reserved: !!req.body.includeReserved})
-        .then(function(spots) {
-            return app.db.bookings.find({spot: {$in: spots.map(function(spot) {
-                return spot.id
-            })}})
-        })
-        .then(function(bookings) {
-            if (!bookings) throw new Errors.MissingProperty(req.doc, 'bookings', false);
-            res.sendGood('Found bookings', bookings);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        })
-    },
-    AddBookingsToLot: function(req, res) {
-        var bookings = req.body.bookings || req.body;
-        var spot;
-        var lot = req.doc;
-        if (!(bookings instanceof Array)) bookings = [bookings];
-        for (var i=0; i<bookings.length; i++) {
-            var booking = bookings[i];
-            if (!booking.start || !booking.end ||
-                isNaN(new Date(booking.start).valueOf()) ||
-                isNaN(new Date(booking.end).valueOf()))
-                return res.sendBad(new Errors.BadInput(['start', 'end'], 'create booking')); 
-        }
-        this.app.db.spots.find({lot: lot.id, reserved: !!req.body.includeReserved})
-        .then(function(spots) {
-            spot = spots[0];
-            return Promise.all(bookings.map(function(booking) {
-                var b = new Booking(booking);
-                if (req.user && !b.user)
-                    b.user = req.user.id;
-                return b.setSpot(spot);
-            }))
-        })
-        .then(function(results) {
-            return spot.addBookings(results);
-        })
-        .then(function() {
-            res.sendGood('Added bookings to generic spot in lot', {
-                lot: lot,
-                spot: spot,
-                bookings: bookings
-            })
-        })
-        .catch(function(err) {
-            res.sendBad(err);
         })
     }
 }
