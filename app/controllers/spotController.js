@@ -2,6 +2,7 @@ var Errors = require('./../errors');
 var ObjectId = require('mongoose').Types.ObjectId;
 var Booking = require('./../models/Booking');
 var Spot = require('./../models/Spot');
+var Car = require('./../models/Car');
 
 var controller = function(app) {
     this.app = app;
@@ -191,20 +192,71 @@ controller.prototype = {
     AddBookingsToSpot: function(req, res) {
         var bookings = req.body.bookings || req.body;
         if (!(bookings instanceof Array)) bookings = [bookings];
+        var cars = new Array(bookings.length);
+        var carsToFind = new Array(cars.length);
+        var carsToCreate = new Array(cars.length);
         for (var i=0; i<bookings.length; i++) {
             var booking = bookings[i];
             if (!booking.start || !booking.end ||
                 isNaN(new Date(booking.start).valueOf()) ||
                 isNaN(new Date(booking.end).valueOf()))
-                return res.sendBad(new Errors.BadInput(['start', 'end'], 'create booking')); 
+                return res.sendBad(new Errors.BadInput(['start', 'end'], 'create booking'));
+            if (!booking.car) {
+                if(!booking.license)
+                    return res.sendBad(new Errors.BadInput(['car', 'license']));
+                else
+                    carsToFind[i] = {license: booking.license};
+            }
+            else carsToFind[i] = booking.car;
         }
         spot = req.doc;
-        Promise.all(bookings.map(function(booking) {
-            var b = new Booking(booking);
-            if (req.user && !b.user)
-                b.user = req.user.id;
-            return b.setSpot(spot);
+        Promise.all(carsToFind.map(function(car) {
+            if (typeof car === 'string')
+                return app.db.cars.findById(car);
+            if (car instanceof ObjectId)
+                return app.db.cars.findById(car.toString());
+            if (car.id || car._id)
+                return app.db.cars.findById(car.id || car._id);
+            if (car.license)
+                return app.db.cars.findOne(car);
+            else
+                throw new Error('Yeah I have no idea what happenned. Something to do with the cars input.');
         }))
+        .then(function(carsFound) {
+            for (var i=0;i<carsFound.length;i++) {
+                var carFound = carsFound[i];
+                if (!carFound) {
+                    if (!req.body.createCarIfNotInSystem)
+                        return res.sendBad(new Errors.BadInput('car'));
+                    else {
+                        if (carsToFind[i] instanceof Car)
+                            carsToCreate[i] = carsToFind[i].save();
+                        else if (carsToFind[i].license)
+                            carsToCreate[i] = new Car(carsToFind[i]).save();
+                        else
+                            throw new Errors.NotFound('Car', {id: carsToFind[i]})
+                    }
+                }
+                else cars[i] = carFound;
+            }
+            return Promise.all(carsToCreate)
+        })
+        .then(function(carsCreated) {
+            for (var i=0; i<carsCreated.length; i++) {
+                if (carsCreated[i])
+                    cars[i] = carsCreated[i];
+            }
+            return Promise.resolve(cars);
+        })
+        .then(function(cars) {
+            return Promise.all(bookings.map(function(booking, i) {
+                var b = new Booking(booking);
+                b.car = cars[i];
+                if (req.user && !b.user)
+                    b.user = req.user.id;
+                return b.setSpot(spot);
+            }))
+        })
         .then(function(results) {
             return spot.addBookings(results);
         })

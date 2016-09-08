@@ -11,6 +11,7 @@ var User = require('./../models/User');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
 var Booking = require('./../models/Booking');
+var Car = require('./../models/Car');
 
 var _d = describe;
 if (!inject.config.RUN_SYSTEM_TESTS)
@@ -697,14 +698,17 @@ _d('the entire app should not explode', function() {
                     new Date('2000/01/01'),
                     new Date('2100/01/01')
                 );
+                
                 spot.price.perHour = 123.45;
+                var license = 'some license'
                 var booking = {
                     start: new Date('2040/01/01'),
-                    end: new Date('2050/01/01')
+                    end: new Date('2050/01/01'),
+                    license: license 
                 };
                 insert(spot, function() {
                     request(app).put('/api/spots/' + spot.id + '/bookings')
-                    .send({bookings: booking})
+                    .send({bookings: booking, createCarIfNotInSystem: true})
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;

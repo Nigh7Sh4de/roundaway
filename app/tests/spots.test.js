@@ -11,6 +11,7 @@ var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
 var Booking = require('./../models/Booking');
 var User = require('./../models/User');
+var Car = require('./../models/Car');
 
 describe('Spot schema', function() {
     before(function() {
@@ -510,7 +511,7 @@ describe('Spot schema', function() {
     describe('removeLot', function() {
         it('should remove the lot', function() {
             var s = new Spot();
-            s.lot = 'some lot';
+            s.lot = 'sot';
             return s.removeLot().then(function(spot) {
                 expect(s.lot).not.be.ok;
             })
@@ -1538,10 +1539,84 @@ describe('spotController', function() {
     })
     
     describe('AddBookingsToSpot', function() {
+        var b;
+        var _addBookings;
+
+        beforeEach(function() {
+            b = new Booking();
+            sinon.stub(Spot.prototype, 'addBookings', function() {
+                return _addBookings.apply(this, arguments)
+            });
+            _addBookings = mockPromise('abc');
+            sinon.stub(Booking.prototype, 'setSpot', function() { return mockPromise(this)() });
+            sinon.stub(Car.prototype, 'save', function(cb) { cb(null, this) });
+        })
+
+        afterEach(function() {
+            Car.prototype.save.restore();
+            Spot.prototype.addBookings.restore();
+            Booking.prototype.setSpot.restore();
+        })
+
+        it('should create a new car if not found and required', function(done) {
+            Car.prototype.save.reset();
+            var s = new Spot();
+            s.price.perHour = 123.45;
+            b.start = b.end = new Date();
+            b.license = '1x2c3c';
+            app.db.cars = {
+                findOne: mockPromise()
+            }
+            _addBookings = function(_b) {
+                expect(_b[0].car.license).to.equal(b.license);
+                return mockPromise(s)();
+            }
+            req.doc = s;
+            req.params.id = s.id;
+            req.body = b;
+            req.body.createCarIfNotInSystem = true;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(b.setSpot.calledOnce).to.be.true;
+                expect(Car.prototype.save.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+        })
+
+        it('should find and use car if exists', function(done) {
+            Booking.prototype.setSpot.reset();
+            var s = new Spot();
+            s.price.perHour = 123.45;
+            b.start = b.end = new Date();
+            var c = new Car();
+            b.car = c.id;
+            app.db.cars = {
+                findById: function(id) {
+                    expect(id).to.deep.equal(c.id);
+                    return mockPromise(c)();
+                }
+            }
+            _addBookings = function(_b) {
+                expect(_b[0].car.id).to.deep.equal(c.id);
+                return mockPromise(s)();
+            }
+            req.doc = s;
+            req.params.id = s.id;
+            req.body = b;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(b.setSpot.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.AddBookingsToSpot(req, res);
+        })
+
         it('should fail if bookings do not have start and end times', function(done) {
             var s = new Spot();
             s.price.perHour = 123.45;
-            var b = new Booking();
             req.params.id = s.id;
             req.body = b;
             res.sent = function() {
@@ -1556,13 +1631,18 @@ describe('spotController', function() {
             var s = new Spot();
             var user = new User();
             s.price.perHour = 123.45;
-            var b = new Booking();
             b.start = b.end = new Date();
             b.user = user._id;
-            sinon.stub(s, 'addBookings', function(_b) {
-                expect(_b).to.deep.include(b);
+            var c = new Car();
+            b.car = c.id;
+            app.db.cars = {
+                findById: mockPromise(c)
+            }
+            _addBookings = function(_b) {
+                expect(_b[0]).to.deep.equal(b);
                 return mockPromise(s)();
-            })
+            }
+            Booking.prototype.setSpot.restore();
             sinon.stub(Booking.prototype, 'setSpot', function() {
                 expect(this.user).to.deep.equal(user._id);
                 return mockPromise(b)();
@@ -1577,22 +1657,25 @@ describe('spotController', function() {
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(b.setSpot.calledOnce).to.be.true;
-                Booking.prototype.setSpot.restore();
                 done();
             }
             app.spotController.AddBookingsToSpot(req, res);
         })
 
         it('should create booking object and add them', function(done) {
+            Booking.prototype.setSpot.reset();
             var s = new Spot();
             s.price.perHour = 123.45;
-            var b = new Booking();
             b.start = b.end = new Date();
-            sinon.stub(s, 'addBookings', function(_b) {
-                expect(_b).to.deep.include(b);
+            var c = new Car();
+            b.car = c.id;
+            app.db.cars = {
+                findById: mockPromise(c)
+            }
+            _addBookings = function(_b) {
+                expect(_b[0].id).to.deep.equal(b.id);
                 return mockPromise(s)();
-            })
-            sinon.stub(Booking.prototype, 'setSpot', mockPromise(b));
+            }
             req.doc = s;
             req.params.id = s.id;
             req.body = b;
@@ -1600,7 +1683,6 @@ describe('spotController', function() {
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(b.setSpot.calledOnce).to.be.true;
-                Booking.prototype.setSpot.restore();
                 done();
             }
             app.spotController.AddBookingsToSpot(req, res);
@@ -1608,18 +1690,23 @@ describe('spotController', function() {
         
         it('should fail if addBookings failed', function(done) {
             var s = new Spot();
-            sinon.stub(Booking.prototype, 'setSpot', mockPromise(new Booking()));
-            sinon.stub(s, 'addBookings', mockPromise(null, new Errors.TestError()));
+            // sinon.stub(Booking.prototype, 'setSpot', mockPromise(new Booking()));
+            _addBookings = mockPromise(null, new Errors.TestError());
+            // sinon.stub(s, 'addBookings', mockPromise(null, new Errors.TestError()));
             req.doc = s;
             req.params.id = s.id;
+            var c = new Car();
+            app.db.cars = {
+                findById: mockPromise(c)
+            }
             req.body.bookings = new Booking({
                 start: new Date(),
-                end: new Date()
+                end: new Date(),
+                car: c.id
             });
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 expect(res.sentError(Errors.TestError)).to.be.true;
-                Booking.prototype.setSpot.restore();
                 done();
             };
             app.spotController.AddBookingsToSpot(req, res);

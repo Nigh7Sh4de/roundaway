@@ -13,6 +13,7 @@ var User = require('./models/User')
 var Booking = require('./models/Booking');
 var Spot = require('./models/Spot')
 var Lot = require('./models/Lot');
+var Car = require('./models/Car');
 
 var _db = {
     // findById: function(collection, id, cb) {
@@ -100,6 +101,7 @@ collections.prototype = {
     bookings: Booking,
     spots: Spot,
     lots: Lot,
+    cars: Car,
     checkUser: _db.checkUser,
     connectUser: _db.connect
 }
