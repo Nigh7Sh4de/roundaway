@@ -184,7 +184,7 @@ routeTest('carController', [
     }
 ])
 
-describe.only('carController', function() {
+describe('carController', function() {
     var app,
         req = {},
         res = {};
