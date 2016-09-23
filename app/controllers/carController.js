@@ -18,7 +18,10 @@ var controller = function(app) {
 
 controller.prototype = {
     GetAllCars: function(req, res) {
-        this.app.db.cars.find({})
+        var search = {};
+        if (req.query.license)
+            search.license = req.query.license;
+        this.app.db.cars.find(search)
         .exec()
         .then(function(docs) {
             res.sendGood('Found cars', docs.map(function(doc) { 

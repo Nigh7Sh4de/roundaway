@@ -232,7 +232,30 @@ describe('carController', function() {
                 done();
             }
             app.carController.GetAllCars(req, res);
-        })    
+        })  
+
+        it.only('should get cars with license', function(done) {
+            var license = '1z2x3c';
+            var c = new Car({
+                license: license
+            });
+            req.doc = c;
+            req.params.id = c.id;
+            req.query.license = license;
+            app.db.cars = {
+                find: function(search) {
+                    expect(search.license).to.deep.equal(license);
+                    return mockPromise([c])();
+                }
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(c.toJSON({getters: true})));
+                done();
+            }
+            app.carController.GetAllCars(req, res);
+        })  
     })
 
     describe('CreateCar', function() {

@@ -238,6 +238,28 @@ _d('the entire app should not explode', function() {
     })
 
     describe('Car controller', function() {
+        describe('GET /api/cars', function() {
+            describe('?license', function() {
+                it('should find cars with license', function(done) {
+                    var license = '1z2x3c';
+                    var car = new Car({
+                        license: license
+                    }),
+                        car2 = new Car();
+                    insert(car, function() {
+                        request(app).get('/api/cars?license=' + license)
+                            .set('Authorization', 'JWT ' + token)
+                            .end(function(err, res) {
+                                expect(res.status, res.body.errors).to.equal(200);
+                                expect(res.text).to.contain(car.id);
+                                expect(res.text).to.not.contain(car2.id);
+                                done();
+                            })
+                    })
+                })
+            })
+        })
+
         describe('GET /api/cars/:id/bookings', function() {
             it('should return all bookings for car', function(done) {
                 var car = new Car();
