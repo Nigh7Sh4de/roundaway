@@ -7,6 +7,7 @@ var mockPromise = require('./mockPromise');
 var server = require('./../../server');
 var expressExtensions = require('./../express');
 var Car = require('./../models/Car');
+var Booking = require('./../models/Booking');
 
 describe('Car schema', function() {
     before(function() {
@@ -189,6 +190,18 @@ routeTest('carController', [
         route: '/api/cars/:id/description',
         method: 'GetDescriptionOfCar',
         attendantOrOwner: true
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/cars/:id/bookings',
+        method: 'GetAllBookingsForCar',
+        attendantOrOwner: true
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/cars/:id/bookings/next',
+        method: 'GetNextBookingForCar',
+        attendantOrOwner: true
     }
 ])
 
@@ -343,5 +356,42 @@ describe('carController', function() {
         })    
     })
 
+    describe('GetAllBookingsForCar', function() {
+        it('should get all bookings for car', function(done) {
+            var c = new Car();
+            var b = new Booking({
+                car: c.id
+            })
+            req.doc = c;
+            app.db.bookings = {
+                find: mockPromise([b])
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith([b.toJSON({getters: true})]));
+                done();
+            }
+            app.carController.GetAllBookingsForCar(req, res);
+        })
+    })
+
+    describe('GetNextBookingForCar', function() {
+        it('should get next booking for car', function(done) {
+            var c = new Car();
+            var b = new Booking({
+                car: c.id
+            })
+            req.doc = c;
+            app.db.bookings = {
+                find: mockPromise([b])
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(b.toJSON({getters: true})));
+                done();
+            }
+            app.carController.GetNextBookingForCar(req, res);
+        })
+    })
 
 })

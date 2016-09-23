@@ -12,7 +12,8 @@ var controller = function(app) {
     app.get('/api/cars/:id/year', app.checkAuth, app.checkAttendant.bind(app), this.GetYearOfCar.bind(this));
     app.get('/api/cars/:id/colour', app.checkAuth, app.checkAttendant.bind(app), this.GetColourOfCar.bind(this));
     app.get('/api/cars/:id/description', app.checkAuth, app.checkAttendant.bind(app), this.GetDescriptionOfCar.bind(this));
-
+    app.get('/api/cars/:id/bookings', app.checkAuth, app.checkAttendant.bind(app), this.GetAllBookingsForCar.bind(this));
+    app.get('/api/cars/:id/bookings/next', app.checkAuth, app.checkAttendant.bind(app), this.GetNextBookingForCar.bind(this));
 }
 
 controller.prototype = {
@@ -73,6 +74,33 @@ controller.prototype = {
         var description = req.doc.getDescription();
         if (!description) return res.sendBad(new Errors.MissingProperty(req.doc, 'description', description));
         res.sendGood('Found description of car', description); 
+    },
+    GetAllBookingsForCar: function(req, res) {
+        app.db.bookings.find({car: req.doc.id})
+        .then(function(bookings) {
+            bookings = bookings.map(function(b, i) {
+                return b.toJSON({getters: true});
+            })
+            res.sendGood('Found bookings for car', bookings)
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+    GetNextBookingForCar: function(req, res) {
+        var search = {car: req.doc.id, end: {$gte: new Date() }};
+        app.db.bookings.find(search)
+        .sort('start')
+        .limit(1)
+        .then(function(bookings) {
+            if (!bookings[0])
+                throw new Errors.NotFound('Booking', search)
+            booking = bookings[0].toJSON({getters: true});
+            res.sendGood('Found next booking for car', booking)
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
     }
 }
 

@@ -20,6 +20,7 @@ module.exports = function(resolveWith, errorWith, assert, assert_on) {
         promise.and = sinon.spy(returnThis);
         promise.where = sinon.spy(returnThis);
         promise.limit = sinon.spy(spliceThis);
+        promise.sort = sinon.spy(returnThis);
         promise.elemMatch = sinon.spy(spliceThis);
         promise.exec = sinon.spy(returnThis);
         if (assert) {

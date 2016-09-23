@@ -237,6 +237,59 @@ _d('the entire app should not explode', function() {
         })
     })
 
+    describe('Car controller', function() {
+        describe('GET /api/cars/:id/bookings', function() {
+            it('should return all bookings for car', function(done) {
+                var car = new Car();
+                var booking = new Booking({
+                        car: car.id,
+                        start: new Date(),
+                        end: new Date()
+                    }),
+                    booking2 = new Booking({
+                        car: car.id,
+                        start: new Date('2000/01/01'),
+                        end: new Date('2000/01/02')
+                    })
+                insert(car, booking, booking2, function() {
+                    request(app).get('/api/cars/' + car.id + '/bookings')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.text).to.contain.all(booking.id, booking2.id);
+                            done();
+                        })
+                })
+            })
+        })
+
+        describe('GET /api/cars/:id/bookings/next', function() {
+            it('should return next booking for car', function(done) {
+                var car = new Car();
+                var booking = new Booking({
+                        car: car.id,
+                        start: new Date(),
+                        end: new Date(Date.now().valueOf() + 1000*60*60*24)
+                    }),
+                    booking2 = new Booking({
+                        car: car.id,
+                        start: new Date('2000/01/01'),
+                        end: new Date('2000/01/02')
+                    })
+                insert(car, booking, booking2, function() {
+                    request(app).get('/api/cars/' + car.id + '/bookings/next')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.text).to.contain(booking.id);
+                            expect(res.text).to.not.contain(booking2.id);
+                            done();
+                        })
+                })
+            })
+        })
+    })
+
     describe('Booking controller', function() {
         describe('GET /api/bookings', function() {
             it('should return all bookings', function(done) {
