@@ -42,58 +42,58 @@ helper.prototype = {
         }.bind(this)
     }(),
 
-    checkAdmin: function(req, res, next) {
-        if (req.user.admin)
-            return next();
-        res.sendBad('You do not have the required privelages to access this resource', null, {status: 401});
-    },
-
-    checkAttendant: function(req, res, next) {
+    findResource: function(req, res, next, authRequirements) {
         if (!req.user)
             return res.sendBad('Could not get session user')
+
+        var search = [];
+        authRequirements = authRequirements || {};
+        if (authRequirements.owner)
+            search.push({user: req.user.id});
+        if (authRequirements.attendant)
+            search.push({attendants: req.user.id});
+        if (!search.length && !req.user.admin)
+            return res.sendBad('You do not have the required privelages to access this resource', null, {status: 401});
+
         var slash_api = '/api/'.length;
         var slash = req.url.indexOf('/', slash_api);
-        var collection = req.url.substring(slash_api, slash);
+        var uniqueResource = slash >= 0;
+        var collection = uniqueResource ? req.url.substring(slash_api, slash) : req.url.substring(slash_api);
         var id = req.url.substr(slash+1, 24);
-        app.db[collection].findById(id).then(function(doc) {
-            if (!doc)
-                throw new Errors.NotFound(collection, id);
-            else if (req.user.admin ||
-                    collection === 'users' && doc.id == req.user.id ||
-                    doc.user == req.user.id || 
-                    doc.attendants.indexOf(req.user.id) >= 0) 
-            {
-                req.doc = doc;
-                next();
-            }
+
+        
+        
+        var query = app.db[collection].find(uniqueResource ? {_id: id} : {});
+        if (!req.user.admin)
+            query.and([{$or: search}]);
+        query.exec()
+        .then(function(docs) {
+            if (!docs || !docs.length && !uniqueResource)
+                throw new Errors.NotFound(collection, {$or: search});
+            else if (uniqueResource)
+                req.doc = docs[0];
             else
-                return res.sendBad('You do not have the required privelages to access this resource', null, { status: 401});
+                req.docs = docs;
+            next();
         }).catch(function(err) {
             res.sendBad(err);
         })
     },
 
+    checkAdmin: function(req, res, next) {
+        this.findResource(req, res, next);
+    },
+
+    checkAttendant: function(req, res, next) {
+        this.findResource(req, res, next, {
+            owner: true,
+            attendant: true
+        })
+    },
+
     checkOwner: function(req, res, next) {
-        if (!req.user)
-            return res.sendBad('Could not get session user')
-        var slash_api = '/api/'.length;
-        var slash = req.url.indexOf('/', slash_api);
-        var collection = req.url.substring(slash_api, slash);
-        var id = req.url.substr(slash+1, 24);
-        app.db[collection].findById(id).then(function(doc) {
-            if (!doc)
-                throw new Errors.NotFound(collection, id);
-            else if (req.user.admin ||
-                    collection === 'users' && doc.id == req.user.id ||
-                    doc.user == req.user.id) 
-            {
-                req.doc = doc;
-                next();
-            }
-            else
-                return res.sendBad('You do not have the required privelages to access this resource', null, { status: 401});
-        }).catch(function(err) {
-            res.sendBad(err);
+        this.findResource(req, res, next, {
+            owner: true
         })
     }
 }

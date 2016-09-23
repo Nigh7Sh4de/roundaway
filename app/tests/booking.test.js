@@ -324,7 +324,6 @@ routeTest('bookingController', [
         route: '/api/bookings',
         method: 'GetAllBookings',
         ignoreId: true,
-        ignoreOwner: true
     },
     {
         verb: verbs.GET,
@@ -390,16 +389,16 @@ describe('bookingController', function() {
     describe('GetAllBookings', function() {
         it('should return all bookings', function(done) {
             var bookings = [new Booking(), new Booking()];
-            app.db.bookings = {find: mockPromise(bookings)}
             var simpleBookings = bookings.map(function(b) {
                 return b.toJSON({getters: true});
             });
+            req.docs = bookings;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(simpleBookings)).to.be.true;
                 done();
             }
-            app.bookingController.GetAllBookings(null, res);
+            app.bookingController.GetAllBookings(req, res);
         })
     })
     

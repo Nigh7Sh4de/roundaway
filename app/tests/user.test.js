@@ -222,22 +222,27 @@ routeTest('userController', [
         verb: verbs.GET,
         route: '/api/users/:id/lots',
         method: 'GetLotsForUser',
+        ignoreOwner: true
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/spots',
         method: 'GetSpotsForUser',
+        ignoreOwner: true
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/bookings',
         method: 'GetBookingsForUser',
+        ignoreOwner: true
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/profile',
         method: 'GetProfileOfUser',
+        ignoreOwner: true
     }, {
         verb: verbs.PATCH,
         route: '/api/users/:id/profile',
         method: 'UpdateProfileOfUser',
+        ignoreOwner: true
     }
 ]);
 
@@ -356,7 +361,10 @@ describe('userController', function() {
                     someProp: 'some value'
                 }
             }
-            req.doc = user;
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            res.sendBad = done;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(user.profile)).to.be.true;

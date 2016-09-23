@@ -131,7 +131,7 @@ _d('the entire app should not explode', function() {
 
     describe('User Controller', function() {
         describe('GET /api/users', function() {
-            it('should return users in db', function(done) {
+        it('should return users in db', function(done) {
                 var user = new User();
                 insert(user, function() {
                     request(app).get('/api/users')
@@ -164,7 +164,7 @@ _d('the entire app should not explode', function() {
                 });
                 insert(lot, function() {
                     request(app).get('/api/users/' + sessionUser.id + '/lots')
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(lot.id);
                             expect(res.status, res.body.errors).to.equal(200);
@@ -180,7 +180,7 @@ _d('the entire app should not explode', function() {
                 });
                 insert(spot, function() {
                     request(app).get('/api/users/' + sessionUser.id + '/spots')
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(spot.id);
                             expect(res.status, res.body.errors).to.equal(200);
@@ -196,7 +196,7 @@ _d('the entire app should not explode', function() {
                 });
                 insert(booking, function() {
                     request(app).get('/api/users/' + sessionUser.id + '/bookings')
-                        .set('Authorization', 'JWT ' + token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(booking.id);
                             expect(res.status, res.body.errors).to.equal(200);
@@ -208,7 +208,7 @@ _d('the entire app should not explode', function() {
         describe('GET /api/users/:id/profile', function() {
             it('should return profile for the user', function(done) {
                 request(app).get('/api/users/' + sessionUser.id + '/profile')
-                    .set('Authorization', 'JWT ' + token)
+                    .set('Authorization', 'JWT ' + admin_token)
                     .end(function(err, res) {
                         expect(res.body.data).to.deep.equal(userProfile);
                         expect(res.status, res.body.errors).to.equal(200);
@@ -221,11 +221,10 @@ _d('the entire app should not explode', function() {
                 var user = new User({
                     profile: userProfile
                 })
-                var _token = jwt.sign({id:user.id}, inject.config.JWT_SECRET_KEY);
                 insert(user, function() {
                     request(app).patch('/api/users/' + user.id + '/profile')
                         .send({name: 'Sh4de'})
-                        .set('Authorization', 'JWT ' + _token)
+                        .set('Authorization', 'JWT ' + admin_token)
                         .end(function(err, res) {
                             expect(res.status, res.body.errors).to.equal(200);
                             app.db.users.findById(user.id, function(err, doc) {
@@ -242,14 +241,17 @@ _d('the entire app should not explode', function() {
         describe('GET /api/bookings', function() {
             it('should return all bookings', function(done) {
                 var booking = new Booking(),
-                    booking2 = new Booking();
-                insert(booking, booking, function() {
+                    booking2 = new Booking({
+                        user: '123456789012345678901234'
+                    });
+                insert(booking, booking2, function() {
                     request(app).get('/api/bookings')
-                        .set('Authorization', 'JWT ' + admin_token)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain.all(booking.id, booking2.id);
+                            expect(res.text).to.contain(booking.id);
+                            expect(res.text).to.not.contain(booking2.id);
                             done();
                         })
                 })
@@ -257,7 +259,9 @@ _d('the entire app should not explode', function() {
         })
         describe('GET /api/bookings/:id', function() {
             it('should return specific booking', function(done) {
-                var booking = new Booking();
+                var booking = new Booking({
+                    user: sessionUser.id 
+                });
                 insert(booking, function() {
                     request(app).get('/api/bookings/' + booking.id)
                         .set('Authorization', 'JWT ' + token)
@@ -427,14 +431,17 @@ _d('the entire app should not explode', function() {
         describe('GET /api/lots', function() {
             it('should return all lots', function(done) {
                 var lot = new Lot(),
-                    lot2 = new Lot();
+                    lot2 = new Lot({
+                        user: '123456789012345678901234'
+                    });
                 insert(lot, lot2, function() {
                     request(app).get('/api/lots')
-                        .set('Authorization', 'JWT ' + admin_token)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain.all(lot.id, lot2.id);
+                            expect(res.text).to.contain(lot.id);
+                            expect(res.text).to.not.contain(lot2.id);
                             done();
                         })
                 })
@@ -602,14 +609,17 @@ _d('the entire app should not explode', function() {
         describe('GET /api/spots', function() {
             it('should return all spots', function(done) {
                 var spot = new Spot(),
-                    spot2 = new Spot();
+                    spot2 = new Spot({
+                        user: '123456789012345678901234'
+                    });
                 insert(spot, spot2, function() {
                     request(app).get('/api/spots')
-                        .set('Authorization', 'JWT ' + admin_token)
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain.all(spot.id, spot2.id);
+                            expect(res.text).to.contain(spot.id);
+                            expect(res.text).to.not.contain(spot2.id);
                             done();
                         })
                 })

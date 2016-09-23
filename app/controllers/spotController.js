@@ -6,46 +6,39 @@ var Car = require('./../models/Car');
 
 var controller = function(app) {
     this.app = app;
-    app.get('/api/spots', app.checkAuth, app.checkAdmin, this.GetAllSpots.bind(this));
-    app.put('/api/spots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateSpot.bind(this));
+    app.get('/api/spots', app.checkAuth, app.checkAttendant.bind(app), this.GetAllSpots.bind(this));
+    app.put('/api/spots', app.checkAuth, app.bodyParser.json(), this.CreateSpot.bind(this));
     app.get('/api/spots/near', this.GetNearestSpot.bind(this));
-    app.get('/api/spots/:id', app.checkAuth, app.checkOwner, this.GetSpot.bind(this));
-    app.get('/api/spots/:id/lot', app.checkAuth, app.checkOwner, this.GetLotForSpot.bind(this));
-    app.put('/api/spots/:id/lot', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetLotForSpot.bind(this));
-    app.put('/api/spots/:id/lot/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveLotFromSpot.bind(this));
-    app.get('/api/spots/:id/location', app.checkAuth, app.checkOwner, this.GetLocationOfSpot.bind(this));
-    app.get('/api/spots/:id/price', app.checkAuth, app.checkOwner, this.GetPriceOfSpot.bind(this));
-    app.put('/api/spots/:id/price', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetPriceOfSpot.bind(this));
-    app.get('/api/spots/:id/name', app.checkAuth, app.checkOwner, this.GetNameOfSpot.bind(this));
-    app.put('/api/spots/:id/name', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetNameOfSpot.bind(this));
-    app.get('/api/spots/:id/reserved', app.checkAuth, app.checkOwner, this.GetIfSpotIsReserved.bind(this));
-    app.put('/api/spots/:id/reserved', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetIfSpotIsReserved.bind(this));
-    app.get('/api/spots/:id/description', app.checkAuth, app.checkOwner, this.GetDescriptionOfSpot.bind(this));
-    app.put('/api/spots/:id/description', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetDescriptionOfSpot.bind(this));
-    app.get('/api/spots/:id/attendants', app.checkAuth, app.checkOwner, this.GetAttendantsForSpot.bind(this));
-    app.put('/api/spots/:id/attendants', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAttendantsToSpot.bind(this));
-    app.get('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant, this.GetAllBookingsForSpot.bind(this));
-    app.put('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant, app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
-    app.put('/api/spots/:id/bookings/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveBookingsFromSpot.bind(this));
-    app.get('/api/spots/:id/available', app.checkAuth, app.checkOwner, this.GetAllAvailabilityOfSpot.bind(this));
-    app.put('/api/spots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAvailabilityToSpot.bind(this));
-    app.put('/api/spots/:id/available/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveAvailabilityFromSpot.bind(this));
-    app.get('/api/spots/:id/booked', app.checkAuth, app.checkOwner, this.GetAllBookedTimeOfSpot.bind(this));
-    app.get('/api/spots/:id/schedule', app.checkAuth, app.checkOwner, this.GetEntireScheduleOfSpot.bind(this));
+    app.get('/api/spots/:id', app.checkAuth, app.checkAttendant.bind(app), this.GetSpot.bind(this));
+    app.get('/api/spots/:id/lot', app.checkAuth, app.checkAttendant.bind(app), this.GetLotForSpot.bind(this));
+    app.put('/api/spots/:id/lot', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetLotForSpot.bind(this));
+    app.put('/api/spots/:id/lot/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveLotFromSpot.bind(this));
+    app.get('/api/spots/:id/location', app.checkAuth, app.checkAttendant.bind(app), this.GetLocationOfSpot.bind(this));
+    app.get('/api/spots/:id/price', app.checkAuth, app.checkAttendant.bind(app), this.GetPriceOfSpot.bind(this));
+    app.put('/api/spots/:id/price', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetPriceOfSpot.bind(this));
+    app.get('/api/spots/:id/name', app.checkAuth, app.checkAttendant.bind(app), this.GetNameOfSpot.bind(this));
+    app.put('/api/spots/:id/name', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetNameOfSpot.bind(this));
+    app.get('/api/spots/:id/reserved', app.checkAuth, app.checkAttendant.bind(app), this.GetIfSpotIsReserved.bind(this));
+    app.put('/api/spots/:id/reserved', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetIfSpotIsReserved.bind(this));
+    app.get('/api/spots/:id/description', app.checkAuth, app.checkAttendant.bind(app), this.GetDescriptionOfSpot.bind(this));
+    app.put('/api/spots/:id/description', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetDescriptionOfSpot.bind(this));
+    app.get('/api/spots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), this.GetAttendantsForSpot.bind(this));
+    app.put('/api/spots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAttendantsToSpot.bind(this));
+    app.get('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant.bind(app), this.GetAllBookingsForSpot.bind(this));
+    app.put('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
+    app.put('/api/spots/:id/bookings/remove', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.RemoveBookingsFromSpot.bind(this));
+    app.get('/api/spots/:id/available', app.checkAuth, app.checkAttendant.bind(app), this.GetAllAvailabilityOfSpot.bind(this));
+    app.put('/api/spots/:id/available', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAvailabilityToSpot.bind(this));
+    app.put('/api/spots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromSpot.bind(this));
+    app.get('/api/spots/:id/booked', app.checkAuth, app.checkAttendant.bind(app), this.GetAllBookedTimeOfSpot.bind(this));
+    app.get('/api/spots/:id/schedule', app.checkAuth, app.checkAttendant.bind(app), this.GetEntireScheduleOfSpot.bind(this));
 }
 
 controller.prototype = {
     GetAllSpots: function(req, res) {
-        this.app.db.spots.find({})
-        .exec()
-        .then(function(docs) {
-            res.sendGood('Found spots', docs.map(function(d) {
-                return d.toJSON({getters: true});
-            }));
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        });
+        res.sendGood('Found spots', req.docs.map(function(doc) { 
+            return doc.toJSON({getters: true}) 
+        }));
     },
     CreateSpot: function(req, res) {
         var app = this.app;

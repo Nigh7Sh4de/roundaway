@@ -1,12 +1,12 @@
 var controller = function(app) {
     this.app = app;
-    app.get('/api/users', app.checkAuth, app.checkAdmin, this.GetAllUsers.bind(this));
+    app.get('/api/users', app.checkAuth, app.checkAdmin.bind(app), this.GetAllUsers.bind(this));
     app.get('/api/users/profile', app.checkAuth, this.GetProfileOfSessionUser.bind(this));
-    app.get('/api/users/:id/lots', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetLotsForUser.bind(this));
-    app.get('/api/users/:id/spots', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetSpotsForUser.bind(this));
-    app.get('/api/users/:id/bookings', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetBookingsForUser.bind(this));
-    app.get('/api/users/:id/profile', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetProfileOfUser.bind(this));
-    app.patch('/api/users/:id/profile', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.UpdateProfileOfUser.bind(this));
+    app.get('/api/users/:id/lots', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetLotsForUser.bind(this));
+    app.get('/api/users/:id/spots', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetSpotsForUser.bind(this));
+    app.get('/api/users/:id/bookings', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetBookingsForUser.bind(this));
+    app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetProfileOfUser.bind(this));
+    app.patch('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.UpdateProfileOfUser.bind(this));
 }
 
 controller.prototype = {
@@ -64,7 +64,11 @@ controller.prototype = {
         })
     },
     UpdateProfileOfUser: function(req, res) {
-        req.doc.updateProfile(req.body)
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            return user.updateProfile(req.body)
+        })
         .then(function(user) {
             res.sendGood('Profile updated', user.profile)
         })
@@ -73,7 +77,14 @@ controller.prototype = {
         })
     },
     GetProfileOfUser: function(req, res) {
-        res.sendGood('Found profile for user', req.doc.profile);
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            res.sendGood('Found profile for user', user.profile);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
     }
 }
 

@@ -490,20 +490,23 @@ routeTest('lotController', [
         verb: verbs.GET,
         route: '/api/lots',
         method: 'GetAllLots',
+        ignoreAdmin: true,
         ignoreId: true,
-        ignoreOwner: true
+        attendantOrOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/lots/:id',
-        method: 'GetLot'
+        method: 'GetLot',
+        attendantOrOwner: true
     },
     {
         verb: verbs.PUT,
         route: '/api/lots',
         method: 'CreateLot',
         ignoreId: true,
-        ignoreOwner: true
+        ignoreOwner: true,
+        ignoreAdmin: true
     },
     {
         verb: verbs.GET,
@@ -513,7 +516,14 @@ routeTest('lotController', [
     {
         verb: verbs.GET,
         route: '/api/lots/:id/spots',
-        method: 'GetSpotsForLot'
+        method: 'GetSpotsForLot',
+        attendantOrOwner: true
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id/available',
+        method: 'GetAllAvailabilityOfLot',
+        attendantOrOwner: true
     },
     {
         verb: verbs.PUT,
@@ -528,7 +538,8 @@ routeTest('lotController', [
     {
         verb: verbs.GET,
         route: '/api/lots/:id/price',
-        method: 'GetPriceOfLot'
+        method: 'GetPriceOfLot',
+        attendantOrOwner: true
     },
     {
         verb: verbs.PUT,
@@ -560,15 +571,17 @@ describe('lotController', function() {
     describe('GetAllLots', function() {
         it('should return all lots', function(done) {
             var lots = [new Lot(), new Lot()];
-            app.db.lots = {
-                find: mockPromise(lots)
-            }
+            var simpleLots = lots.map(function(b) {
+                return b.toJSON({getters: true});
+            });
+            req.docs = lots;
+            res.sendBad = done;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(lots)).to.be.true;
+                expect(res.sentWith(simpleLots)).to.be.true;
                 done();
             }
-            app.lotController.GetAllLots(null, res);
+            app.lotController.GetAllLots(req, res);
         })
     })
     

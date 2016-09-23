@@ -4,30 +4,23 @@ var ObjectId = require('mongoose').Types.ObjectId;
 
 var controller = function(app) {
     this.app = app;
-    app.get('/api/bookings', app.checkAuth, app.checkAdmin, this.GetAllBookings.bind(this));
-    app.get('/api/bookings/:id', app.checkAuth, app.checkOwner, this.GetBooking.bind(this));
-    app.get('/api/bookings/:id/spot', app.checkAuth, app.checkOwner, this.GetSpotForBooking.bind(this));
-    app.get('/api/bookings/:id/start', app.checkAuth, app.checkOwner, this.GetStartOfBooking.bind(this));
-    app.get('/api/bookings/:id/duration', app.checkAuth, app.checkOwner, this.GetDurationForBooking.bind(this));
-    app.get('/api/bookings/:id/end', app.checkAuth, app.checkOwner, this.GetEndOfBooking.bind(this));
-    app.get('/api/bookings/:id/time', app.checkAuth, app.checkOwner, this.GetTimeOfBooking.bind(this));
-    app.get('/api/bookings/:id/price', app.checkAuth, app.checkOwner, this.GetPriceOfBooking.bind(this));
-    app.get('/api/bookings/:id/status', app.checkAuth, app.checkOwner, this.GetStatusOfBooking.bind(this));
-    app.put('/api/bookings/:id/pay', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.PayForBooking.bind(this));
+    app.get('/api/bookings', app.checkAuth, app.checkOwner.bind(app), this.GetAllBookings.bind(this));
+    app.get('/api/bookings/:id', app.checkAuth, app.checkOwner.bind(app), this.GetBooking.bind(this));
+    app.get('/api/bookings/:id/spot', app.checkAuth, app.checkOwner.bind(app), this.GetSpotForBooking.bind(this));
+    app.get('/api/bookings/:id/start', app.checkAuth, app.checkOwner.bind(app), this.GetStartOfBooking.bind(this));
+    app.get('/api/bookings/:id/duration', app.checkAuth, app.checkOwner.bind(app), this.GetDurationForBooking.bind(this));
+    app.get('/api/bookings/:id/end', app.checkAuth, app.checkOwner.bind(app), this.GetEndOfBooking.bind(this));
+    app.get('/api/bookings/:id/time', app.checkAuth, app.checkOwner.bind(app), this.GetTimeOfBooking.bind(this));
+    app.get('/api/bookings/:id/price', app.checkAuth, app.checkOwner.bind(app), this.GetPriceOfBooking.bind(this));
+    app.get('/api/bookings/:id/status', app.checkAuth, app.checkOwner.bind(app), this.GetStatusOfBooking.bind(this));
+    app.put('/api/bookings/:id/pay', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.PayForBooking.bind(this));
 }
 
 controller.prototype = {
     GetAllBookings: function(req, res) {
-        this.app.db.bookings.find({})
-        .exec()
-        .then(function(docs) {
-            res.sendGood('Found bookings', docs.map(function(doc) { 
-                return doc.toJSON({getters: true}) 
-            }));
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
+        res.sendGood('Found bookings', req.docs.map(function(doc) { 
+            return doc.toJSON({getters: true}) 
+        }));
     },
     GetBooking: function(req, res) {
         res.sendGood('Found booking', req.doc.toJSON({getters: true}));

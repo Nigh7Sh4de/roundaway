@@ -761,13 +761,14 @@ routeTest('spotController', [
             route: '/api/spots',
             method: 'GetAllSpots',
             ignoreId: true,
-            ignoreOwner: true
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
             route: '/api/spots',
             method: 'CreateSpot',
             ignoreId: true,
+            ignoreAdmin: true,
             ignoreOwner: true
         },
         {
@@ -782,12 +783,14 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id',
-            method: 'GetSpot'
+            method: 'GetSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/lot',
-            method: 'GetLotForSpot'
+            method: 'GetLotForSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
@@ -802,7 +805,8 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id/location',
-            method: 'GetLocationOfSpot'
+            method: 'GetLocationOfSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.GET,
@@ -819,12 +823,14 @@ routeTest('spotController', [
         {
             verb: verbs.PUT,
             route: '/api/spots/:id/bookings/remove',
-            method: 'RemoveBookingsFromSpot'
+            method: 'RemoveBookingsFromSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/available',
-            method: 'GetAllAvailabilityOfSpot'
+            method: 'GetAllAvailabilityOfSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
@@ -839,17 +845,20 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id/booked',
-            method: 'GetAllBookedTimeOfSpot'
+            method: 'GetAllBookedTimeOfSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/schedule',
-            method: 'GetEntireScheduleOfSpot'
+            method: 'GetEntireScheduleOfSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/price',
-            method: 'GetPriceOfSpot'
+            method: 'GetPriceOfSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
@@ -859,7 +868,8 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id/name',
-            method: 'GetNameOfSpot'
+            method: 'GetNameOfSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
@@ -869,7 +879,8 @@ routeTest('spotController', [
         {
             verb: verbs.GET,
             route: '/api/spots/:id/description',
-            method: 'GetDescriptionOfSpot'
+            method: 'GetDescriptionOfSpot',
+            attendantOrOwner: true
         },
         {
             verb: verbs.PUT,
@@ -905,15 +916,13 @@ describe('spotController', function() {
         it('should return all spots', function(done) {
             var spots = [new Spot(), new Spot()];
             var simpleSpots = spots.map(function(s) { return s.toJSON({getters: true}) });
-            app.db.spots = {
-                find: mockPromise(spots)
-            }
+            req.docs = spots;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(simpleSpots)).to.be.true;
                 done();
             }
-            app.spotController.GetAllSpots(null, res);
+            app.spotController.GetAllSpots(req, res);
         })
     })
     

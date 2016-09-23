@@ -4,30 +4,25 @@ var Lot = require('./../models/Lot');
 
 var controller = function(app) {
     this.app = app;
-    app.get('/api/lots', app.checkAuth, app.checkAdmin, this.GetAllLots.bind(this));
-    app.put('/api/lots', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateLot.bind(this));
-    app.get('/api/lots/:id', app.checkAuth, app.checkOwner, this.GetLot.bind(this));
-    app.get('/api/lots/:id/location', app.checkAuth, app.checkOwner, this.GetLocationOfLot.bind(this));
-    app.get('/api/lots/:id/spots', app.checkAuth, app.checkOwner, this.GetSpotsForLot.bind(this));
-    app.get('/api/lots/:id/attendants', app.checkAuth, app.checkOwner, this.GetAttendantsForLot.bind(this));
-    app.put('/api/lots/:id/attendants', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAttendantsToLot.bind(this));
-    app.get('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.GetAllAvailabilityOfLot.bind(this));
-    app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
-    app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
-    app.get('/api/lots/:id/price', app.checkAuth, app.checkOwner, this.GetPriceOfLot.bind(this));
-    app.put('/api/lots/:id/price', app.checkAuth, app.checkOwner, app.bodyParser.json(), this.SetPriceOfLot.bind(this));
+    app.get('/api/lots', app.checkAuth, app.checkAttendant.bind(app), this.GetAllLots.bind(this));
+    app.put('/api/lots', app.checkAuth, app.bodyParser.json(), this.CreateLot.bind(this));
+    app.get('/api/lots/:id', app.checkAuth, app.checkAttendant.bind(app), this.GetLot.bind(this));
+    app.get('/api/lots/:id/location', app.checkAuth, app.checkOwner.bind(app), this.GetLocationOfLot.bind(this));
+    app.get('/api/lots/:id/spots', app.checkAuth, app.checkAttendant.bind(app), this.GetSpotsForLot.bind(this));
+    app.get('/api/lots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), this.GetAttendantsForLot.bind(this));
+    app.put('/api/lots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAttendantsToLot.bind(this));
+    app.get('/api/lots/:id/available', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.GetAllAvailabilityOfLot.bind(this));
+    app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
+    app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
+    app.get('/api/lots/:id/price', app.checkAuth, app.checkAttendant.bind(app), this.GetPriceOfLot.bind(this));
+    app.put('/api/lots/:id/price', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetPriceOfLot.bind(this));
 }
 
 controller.prototype = {
     GetAllLots: function(req, res) {
-        this.app.db.lots.find({})
-        .exec()
-        .then(function(lots) {
-            return res.sendGood('Lots found', lots);
-        })
-        .catch(function(err) {
-            return res.sendBad(err);
-        })
+        res.sendGood('Found lots', req.docs.map(function(doc) { 
+            return doc.toJSON({getters: true}) 
+        }));
     },
     GetLot: function(req, res) {
         res.sendGood('Found lot', req.doc);

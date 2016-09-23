@@ -3,15 +3,15 @@ var Car = require('./../models/Car');
 
 var controller = function(app) {
     this.app = app;
-    app.get('/api/cars', app.checkAuth, app.checkAdmin, this.GetAllCars.bind(this));
-    app.put('/api/cars', app.checkAuth, app.checkAdmin, app.bodyParser.json(), this.CreateCar.bind(this));
-    app.get('/api/cars/:id', app.checkAuth, app.checkOwner, this.GetCar.bind(this));
-    app.get('/api/cars/:id/license', app.checkAuth, app.checkOwner, this.GetLicenseOfCar.bind(this));
-    app.get('/api/cars/:id/make', app.checkAuth, app.checkOwner, this.GetMakeOfCar.bind(this));
-    app.get('/api/cars/:id/model', app.checkAuth, app.checkOwner, this.GetModelOfCar.bind(this));
-    app.get('/api/cars/:id/year', app.checkAuth, app.checkOwner, this.GetYearOfCar.bind(this));
-    app.get('/api/cars/:id/colour', app.checkAuth, app.checkOwner, this.GetColourOfCar.bind(this));
-    app.get('/api/cars/:id/description', app.checkAuth, app.checkOwner, this.GetDescriptionOfCar.bind(this));
+    app.get('/api/cars', app.checkAuth, app.checkAttendant.bind(app), this.GetAllCars.bind(this));
+    app.put('/api/cars', app.checkAuth, app.bodyParser.json(), this.CreateCar.bind(this));
+    app.get('/api/cars/:id', app.checkAuth, app.checkAttendant.bind(app), this.GetCar.bind(this));
+    app.get('/api/cars/:id/license', app.checkAuth, app.checkAttendant.bind(app), this.GetLicenseOfCar.bind(this));
+    app.get('/api/cars/:id/make', app.checkAuth, app.checkAttendant.bind(app), this.GetMakeOfCar.bind(this));
+    app.get('/api/cars/:id/model', app.checkAuth, app.checkAttendant.bind(app), this.GetModelOfCar.bind(this));
+    app.get('/api/cars/:id/year', app.checkAuth, app.checkAttendant.bind(app), this.GetYearOfCar.bind(this));
+    app.get('/api/cars/:id/colour', app.checkAuth, app.checkAttendant.bind(app), this.GetColourOfCar.bind(this));
+    app.get('/api/cars/:id/description', app.checkAuth, app.checkAttendant.bind(app), this.GetDescriptionOfCar.bind(this));
 
 }
 

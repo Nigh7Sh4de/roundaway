@@ -3,7 +3,7 @@ var mockPromise = require('./mockPromise');
 var expect= require('chai').expect;
 
 describe('helper', function() {
-    describe('checkOwner', function() {
+    describe('findResource', function() {
         var _app,
             req,
             res;
@@ -28,7 +28,7 @@ describe('helper', function() {
                 db: {}
             } 
             global.app.db[collection] = {
-                findById: mockPromise(resolve, reject)
+                find: mockPromise(resolve, reject)
             }
         }
 
@@ -38,7 +38,22 @@ describe('helper', function() {
                 expect(err).to.be.ok;
                 done();
             }
-            new helper().checkOwner(req, res, expect.fail);
+            new helper().findResource(req, res, expect.fail);
+        })
+
+        it('should send back a collection if route is generic', function(done) {
+            var userId = '123';
+            prepareReqDoc([{
+                user: userId
+            }], null, 'users')
+            req.user = {
+                id: userId,
+                admin: false
+            }
+            req.url = '/api/users';
+            new helper().findResource(req, res, done, {
+                owner: true
+            });
         })
 
         it('sets doc and continues for owner', function(done) {
@@ -50,7 +65,9 @@ describe('helper', function() {
                 id: userId,
                 admin: false
             }
-            new helper().checkOwner(req, res, done);
+            new helper().findResource(req, res, done, {
+                owner: true
+            });
         })
 
         it('sets doc and continues for owner', function(done) {
@@ -62,19 +79,7 @@ describe('helper', function() {
                 id: userId + '456',
                 admin: true
             }
-            new helper().checkOwner(req, res, done);
-        })
-
-        it('set doc and continues for themselves', function(done) {
-            var userId = '123';
-            prepareReqDoc({
-                id: userId
-            }, undefined, 'users')
-            req.url = '/api/users/123456789012345678901234';
-            req.user = {
-                id: userId
-            }
-            new helper().checkOwner(req, res, done);
+            new helper().findResource(req, res, done);
         })
 
         it('fails if unauthorized', function(done) {
@@ -83,7 +88,7 @@ describe('helper', function() {
                 expect(err).to.be.ok;
                 done();
             }
-            new helper().checkOwner(req, res, expect.fail)
+            new helper().findResource(req, res, expect.fail)
         })
     })
 })

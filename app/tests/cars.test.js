@@ -138,49 +138,57 @@ routeTest('carController', [
         route: '/api/cars',
         method: 'GetAllCars',
         ignoreId: true,
-        ignoreOwner: true
+        attendantOrOwner: true
     },
     {
         verb: verbs.PUT,
         route: '/api/cars',
         method: 'CreateCar',
+        ignoreAdmin: true,
         ignoreId: true,
         ignoreOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id',
-        method: 'GetCar'
+        method: 'GetCar',
+        attendantOrOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/license',
-        method: 'GetLicenseOfCar'
+        method: 'GetLicenseOfCar',
+        attendantOrOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/make',
-        method: 'GetMakeOfCar'
+        method: 'GetMakeOfCar',
+        attendantOrOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/model',
-        method: 'GetModelOfCar'
+        method: 'GetModelOfCar',
+        attendantOrOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/year',
-        method: 'GetYearOfCar'
+        method: 'GetYearOfCar',
+        attendantOrOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/colour',
-        method: 'GetColourOfCar'
+        method: 'GetColourOfCar',
+        attendantOrOwner: true
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/description',
-        method: 'GetDescriptionOfCar'
+        method: 'GetDescriptionOfCar',
+        attendantOrOwner: true
     }
 ])
 
