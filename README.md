@@ -20,7 +20,7 @@ Roundaway
    <td>8080</td>
    <td>http://roundaway.com</td>
    <td>1.0.0</td>
-   <td>0.0</td>
+   <td>0.1.0</td>
    <td>production</td>
   </tr>
   <tr>
@@ -28,7 +28,7 @@ Roundaway
    <td>8081</td>
    <td>http://roundaway.com:8081</th>
    <td>1.0.0</td>
-   <td>b: 1-table</td>
+   <td>0.1.0</td>
    <td>staging (completed items)</td>
   </tr>
   <tr>
