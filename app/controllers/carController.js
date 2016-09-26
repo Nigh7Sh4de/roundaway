@@ -18,19 +18,9 @@ var controller = function(app) {
 
 controller.prototype = {
     GetAllCars: function(req, res) {
-        var search = {};
-        if (req.query.license)
-            search.license = req.query.license;
-        this.app.db.cars.find(search)
-        .exec()
-        .then(function(docs) {
-            res.sendGood('Found cars', docs.map(function(doc) { 
-                return doc.toJSON({getters: true}) 
-            }));
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
+        res.sendGood('Found cars', req.docs.map(function(doc) { 
+            return doc.toJSON({getters: true}) 
+        }));
     },
     CreateCar: function(req, res) {
         var car = new Car(req.body.car || req.body);

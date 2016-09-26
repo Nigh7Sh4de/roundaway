@@ -54,18 +54,25 @@ helper.prototype = {
             search.push({attendants: req.user.id});
         if (!search.length && !req.user.admin)
             return res.sendBad('You do not have the required privelages to access this resource', null, {status: 401});
-
+        
         var slash_api = '/api/'.length;
         var slash = req.url.indexOf('/', slash_api);
+        var question = req.url.indexOf('?');
         var uniqueResource = slash >= 0;
-        var collection = uniqueResource ? req.url.substring(slash_api, slash) : req.url.substring(slash_api);
         var id = req.url.substr(slash+1, 24);
+        var collection;
+        if (slash >= 0)
+            collection = req.url.substring(slash_api, slash) 
+        else if (question >= 0)
+            collection = req.url.substring(slash_api, question);
+        else
+            collection = req.url.substring(slash_api);
 
-        
-        
         var query = app.db[collection].find(uniqueResource ? {_id: id} : {});
         if (!req.user.admin)
             query.and([{$or: search}]);
+        if (req.query)
+            query.and([req.query]);
         query.exec()
         .then(function(docs) {
             if (!docs || !docs.length && !uniqueResource)

@@ -220,7 +220,7 @@ describe('carController', function() {
     describe('GetAllCars', function() {
         it('should GetAllCars', function(done) {
             var c = new Car();
-            req.doc = c;
+            req.docs = [c];
             req.params.id = c.id;
             app.db.cars = {
                 find: mockPromise([c])
@@ -234,12 +234,12 @@ describe('carController', function() {
             app.carController.GetAllCars(req, res);
         })  
 
-        it.only('should get cars with license', function(done) {
+        it('should get cars with license', function(done) {
             var license = '1z2x3c';
             var c = new Car({
                 license: license
             });
-            req.doc = c;
+            req.docs = [c];
             req.params.id = c.id;
             req.query.license = license;
             app.db.cars = {
