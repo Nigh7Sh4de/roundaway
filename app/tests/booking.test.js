@@ -8,6 +8,7 @@ var verbs = routeTest.verbs;
 var server = require('./../../server');
 var Booking = require('./../models/Booking');
 var Spot = require('./../models/Spot');
+var Car = require('./../models/Car');
 
 describe('Booking schema', function() {
     before(function() {
@@ -337,6 +338,11 @@ routeTest('bookingController', [
     },
     {
         verb: verbs.GET,
+        route: '/api/bookings/:id/car',
+        method: 'GetCarForBooking'
+    },
+    {
+        verb: verbs.GET,
         route: '/api/bookings/:id/start',
         method: 'GetStartOfBooking'
     },
@@ -470,6 +476,62 @@ describe('bookingController', function() {
                 done();
             }
             app.bookingController.GetSpotForBooking(req, res);
+        })
+    })
+            
+    describe('GetCarForBooking', function() {
+        it('should return error if booking has no car attached', function(done) {
+            req.doc = new Booking();
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
+                done();
+            }
+            app.bookingController.GetCarForBooking(req, res);
+        })
+
+        it('should return the car associated with the booking', function(done) {
+            var car = new Car();
+            var booking = new Booking();
+            booking.car = car;
+            req.doc = booking;
+            app.db.cars = {
+                findById: mockPromise(car)
+            }
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(car.toJSON({getters: true}))).to.be.true;
+                done();
+            };
+            app.bookingController.GetCarForBooking(req, res);
+        })
+        
+        it('should error if db encountered error looking for car', function(done) {
+            req.doc = new Booking();
+            app.db.cars = {
+                findById: mockPromise(null, 'some error')
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
+                done();
+            }
+            app.bookingController.GetCarForBooking(req, res);
+        })
+        
+        it('should return error if car found is null', function(done) {
+            req.doc = new Booking({
+                car: '123456789012345678901234'
+            });
+            app.db.cars = {
+                findById: mockPromise(null)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.NotFound)).to.be.true;
+                done();
+            }
+            app.bookingController.GetCarForBooking(req, res);
         })
     })
     

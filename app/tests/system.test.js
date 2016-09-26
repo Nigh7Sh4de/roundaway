@@ -367,6 +367,24 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
+        describe('GET /api/bookings/:id/car', function() {
+            it('should return car for the booking', function(done) {
+                var car = new Car();
+                var booking = new Booking({
+                    car: car.id
+                });
+                insert(car, booking, function() {
+                    request(app).get('/api/bookings/' + booking.id + '/car')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.text).to.contain(car.id);
+                            done();
+                        });
+                })
+            })
+        })
         describe('GET /api/bookings/:id/start', function() {
             it('should get the start of the booking', function(done) {
                 var start = new Date();

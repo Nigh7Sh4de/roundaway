@@ -7,6 +7,7 @@ var controller = function(app) {
     app.get('/api/bookings', app.checkAuth, app.checkOwner.bind(app), this.GetAllBookings.bind(this));
     app.get('/api/bookings/:id', app.checkAuth, app.checkOwner.bind(app), this.GetBooking.bind(this));
     app.get('/api/bookings/:id/spot', app.checkAuth, app.checkOwner.bind(app), this.GetSpotForBooking.bind(this));
+    app.get('/api/bookings/:id/car', app.checkAuth, app.checkOwner.bind(app), this.GetCarForBooking.bind(this));
     app.get('/api/bookings/:id/start', app.checkAuth, app.checkOwner.bind(app), this.GetStartOfBooking.bind(this));
     app.get('/api/bookings/:id/duration', app.checkAuth, app.checkOwner.bind(app), this.GetDurationForBooking.bind(this));
     app.get('/api/bookings/:id/end', app.checkAuth, app.checkOwner.bind(app), this.GetEndOfBooking.bind(this));
@@ -33,6 +34,19 @@ controller.prototype = {
         .then(function(spot) {
             if (!spot) throw new Errors.NotFound('Spot', req.doc.spot);
             res.sendGood('Found spot', spot.toJSON({getters: true}));
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        });
+    },
+    GetCarForBooking: function(req, res) {
+        if (!req.doc.car)
+            return res.sendBad(new Errors.MissingProperty(req.doc, 'car'));
+        this.app.db.cars.findById(req.doc.car)
+        .exec()
+        .then(function(car) {
+            if (!car) throw new Errors.NotFound('Car', req.doc.car);
+            res.sendGood('Found car', car.toJSON({getters: true}));
         })
         .catch(function(err) {
             res.sendBad(err)
