@@ -59,6 +59,8 @@ controller.prototype = {
                     newSpot.price = lot.getPrice();
                 if (lot.available.ranges.length)
                     newSpot.available = lot.available.ranges;
+                if (lot.attendants.length)
+                    newSpot.attendants = lot.attendants;
                 return Promise.resolve(lot.location);
             }) : app.geocoder.geocode(address).then(function(loc) {
                 return Promise.resolve({

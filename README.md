@@ -704,7 +704,7 @@ Returns the <b>Spot</b> with the specified id.
     <td>attendant</td>
   </tr>
 </table>
-Returns the lot associated with the <b>Spot</b>
+Returns the <b>Lot</b> associated with the <b>Spot</b>
 
 ##### PUT `/api/spots/:id/lot`
 <table>
@@ -713,7 +713,7 @@ Returns the lot associated with the <b>Spot</b>
     <td>owner</td>
   </tr>
 </table>
-Associate a lot with the <b>Spot</b>
+Associate a <b>Lot</b> with the <b>Spot</b>. This will not transfer over any of the Lot's properties such as <code>price</code>, <code>location</code>, etc.
 
 ##### PUT `/api/spots/:id/lot/remove`
 <table>

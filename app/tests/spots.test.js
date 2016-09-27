@@ -972,6 +972,40 @@ describe('spotController', function() {
             delete emptySpot._id;    
         })
 
+        it('should transfer attendants from lot', function(done) {
+            var spot = Object.assign({}, emptySpot);
+            var attendant = new User();
+            var lot = new Lot({
+                location: {
+                    address: '123 fake st',
+                    coordinates: [12,34]
+                },
+                attendants: [attendant.id],
+                price: {
+                    perHour: 123.45
+                }
+            });
+            spot.lot = lot._id;
+            req.body.spot = spot;
+            app.geocoder.geocode = mockPromise([{formattedAddress: '123 fake st', longitude: 12, latitude: 34}]);
+            app.db.lots = {
+                findById: mockPromise(lot)
+            }
+            app.db.spots = {
+                create: function(obj) {
+                    expect(obj.price.perHour).to.equal(lot.price.perHour);
+                    expect(obj.attendants).to.deep.include(attendant._id);
+                    return mockPromise(obj)();
+                }
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.spotController.CreateSpot(req, res);
+        })
+
         it('should try to get default available schedule from lot', function(done) {
             var spot = Object.assign({}, emptySpot);
             var lot = new Lot();
