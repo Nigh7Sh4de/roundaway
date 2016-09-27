@@ -67,11 +67,12 @@ Roundaway
   * JWT_SECRET_KEY
   * PORT
   * DB_CONNECTION_STRING
-  * RUN_ALL_TESTS
+  * RUN_SYSTEM_TESTS
+  * RUN_EXTERNAL_TESTS
 8. Ensure MongoDB server is running on localhost
 9. *(Optional)* The server will be the port defined in **config.js**. Set up any necessary port-forwarding to accomodate this.
 
-*(Note: For deployment to `master`, since `config.js` is `.gitignore`d the file that is already deployed should be left with the keys it has and updated as necessary)*
+*(Note: For upgrading existing deployments, since `config.js` is `.gitignore`d, the file that is already deployed should be left with the keys it has and updated as necessary)*
 
 ## Tests
 
@@ -114,41 +115,47 @@ Commits with breaking tests are allowed in topic branches and thus when merged i
 *All models have a `createdAt` and `updatedAt` field*
 
 #### User
-The `User` object holds basic data about the user including `Profile` and authentication information. All other models reference their owner through a **user** property.
+The <b>User</b> object holds basic data about the <b>User</b> including <code>profile</code> and authentication information. All other models reference their owner through a <code>user</code> property.
 
     profile: Profile,
     authid: {
         facebook: String,
         google: String
     },
-    admin: Boolean
+    admin: Boolean,
+    attendant: Boolean
 
 #### Lot
-A `Lot` is simply a collection of `Spot`s that share a common **location**. The `Lot`'s **price**, **availability**, and **location** are used as defaults for new `Spot`s.
+A <b>Lot</b> is simply a collection of <b>Spot</b>s that share a common <code>profile</code>. The <b>Lot</b>'s **price**, **availability**, and **location** are used as defaults for new <b>Spot</b>s.
 
     User: User
+    attendants: [User]
     location: Location,
     price: Price,
     available: Ranger
 
 #### Spot
-A `Spot` can be booked by users for a set period of time. Once a `Spot` is created you cannot modify the **location**. Modifying the **price** of a `Spot` will not modify existing `Booking`s. Associating a `Spot` with a `Lot` will overwrite the `Spot`'s **location** with the one in the `Lot`. 
+A <b>Spot</b> can be booked by users for a set period of time. Once a <b>Spot</b> is created you cannot modify the **location**. Modifying the **price** of a <b>Spot</b> will not modify existing `Booking`s. Associating a <b>Spot</b> with a <b>Lot</b> will overwrite the <b>Spot</b>'s **location** with the one in the <b>Lot</b>. 
     
-    user: User
+    user: User,
+    attendants: [User],
+    lot: Lot,
+    name: String,
+    description: String
+    reserved: Boolean,
     price: Price,
     location: Location,
     available: Ranger,
     booked: Ranger,
-    lot: Lot,
-    description: String
 
 
 #### Booking
-A `Booking` is an immutable object that is used to track bookings on a `Spot`. Once a `Booking` is created you cannot modify the **spot**, **price**, **start**, nor **end** properties. The status defaults to `unpaid` and will change to `paid` once payment has been succesfuly processed. A `Booking`s price is calculated using it's duration (calculated using it's **start** and **end** properties) multiplied byt he price of the `Spot` that it is associated with.
+A `Booking` is an immutable object that is used to track bookings on a <b>Spot</b>. Once a `Booking` is created you cannot modify the **spot**, **price**, **start**, nor **end** properties. The status defaults to `unpaid` and will change to `paid` once payment has been succesfuly processed. A `Booking`s price is calculated using it's duration (calculated using it's **start** and **end** properties) multiplied byt he price of the <b>Spot</b> that it is associated with.
 
     user: User,
-    status: BookingStatus,
+    car: Car,
     spot: Spot,
+    status: BookingStatus,
     price: Price,
     start: Date,
     end: Date,
@@ -175,18 +182,26 @@ In order to make API calls that are auth protected use the following flow:
 *All api calls are on the `/api` route*
 
 ### Authorization
-Each route has security policy with the following three properties:
+Each route has a security policy with one of the following properties:
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
+    <td><i>public</i></td>
+    <td>Anyone can access this route</td>
+  </tr>
+  <tr>
+    <td><i>authorized</i></td>
     <td>A valid JWT must be provided</td>
   </tr>
   <tr>
-    <td><i>Requires authorization</i></td>
-    <td>You must be the associated user or be an admin</td>
+    <td><i>attendant</i></td>
+    <td>You must be an attendant that is specified on the resource</td>
   </tr>
   <tr>
-    <td><i>Requires admin</i></td>
+    <td><i>owner</i></td>
+    <td>You must be an owner of the resource (user id is set in the resource's <code>user</code> property)</td>
+  </tr>
+  <tr>
+    <td><i>admin</i></td>
     <td>You must be an admin</td>
   </tr>
 </table>
@@ -219,6 +234,10 @@ Each route has security policy with the following three properties:
 ##### POST `/api/util/location/geocode`
 <table>
   <tr>
+    <td><i>Security</i></td>
+    <td>public</td>
+  </tr>
+  <tr>
     <td>address</td>
     <td>The address you wish to geocode</td>
   </tr>
@@ -229,6 +248,10 @@ Retrieve the proper formatted address for a location (as it would be saved in th
 
 ##### GET `/auth/:strat?access_token`
 <table>
+  <tr>
+    <td><i>Security</i></td>
+    <td>public</td>
+  </tr>
   <tr>
     <td>strat</td>
     <td>The social network with which to authenticate. Can be one of: ['facebook', 'google'].</td>
@@ -244,425 +267,408 @@ Once you have authenticated the user elsewhere (client-side or on another server
 ##### GET `/api/users`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td><i>security</i></td>
+    <td>admin</td>
   </tr>
 </table>
-Returns the entire `users` collection.
+Returns the entire <b>User</b>s collection.
 
 ##### GET `/api/users/profile`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>authorized</td>
   </tr>
 </table>
-Returns the current session user.
+Returns the current session <b>User</b>.
 
 ##### GET `/api/users/:userid/lots`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>admin</td>
   </tr>
 </table>
-Returns the given user's lots.
+Returns the given <b>User</b>'s lots.
 
 ##### GET `/api/users/:userid/spots`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>admin</td>
   </tr>
 </table>
-Returns the given user's spots.
+Returns the given <b>User</b>'s spots.
 
 ##### GET `/api/users/:userid/bookings`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>admin</td>
   </tr>
 </table>
-Returns the given user's bookings.
+Returns the given <b>User</b>'s bookings.
 
 ##### GET `/api/users/:userid/profile`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>admin</td>
   </tr>
 </table>
-Returns the given user's profile.
+Returns the given <b>User</b>'s profile.
 
 ##### PATCH `/api/users/:userid/profile`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>admin</td>
   </tr>
   <tr>
     <td colspan="2">Profile properties</td>
   </tr>
   <tr>
     <td>name</td>
-    <td>Name of the user</td>
+    <td>Name of the <b>User</b></td>
   </tr>
 </table>
-Updates the specified fields of the user's profile.
+Updates the specified fields of the <b>User</b>'s profile.
 
 #### Booking
 
 ##### GET `/api/bookings`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the entire bookings collection.
+Returns the owned <b>Booking</b> or entire collection if admin.
 
 ##### GET `/api/bookings/:id`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the booking with the specified id.
+Returns the <b>Booking</b> with the specified id.
 
 ##### GET `/api/bookings/:id/spot`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the spot that is associated with this booking.
+Returns the spot that is associated with this <b>Booking</b>.
+
+##### GET `/api/bookings/:id/car`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+Returns the car that is associated with this <b>Booking</b>.
 
 ##### GET `/api/bookings/:id/start`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the start of the specified booking.
+Returns the start of the specified <b>Booking</b>.
 
 ##### GET `/api/bookings/:id/duration`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the duration of the specified booking.
+Returns the duration of the specified <b>Booking</b>.
 
 ##### GET `/api/bookings/:id/end`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the end of the specified booking.
+Returns the end of the specified <b>Booking</b>.
 
 ##### GET `/api/bookings/:id/time`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the time `{start: Date, end: Date}` of the specified booking.
+Returns the time <code>{start: Date, end: Date}</code> of the specified <b>Booking</b>.
 
 ##### GET `/api/bookings/:id/price`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
 </table>
-Returns the price of the booking of the specified booking.
+Returns the price of the booking of the specified <b>Booking</b>.
+
+##### GET `/api/bookings/:id/status`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+Returns the status of the booking of the specified <b>Booking</b>.
 
 ##### PUT `/api/bookings/:id/pay`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
   <tr>
     <td>token</td>
     <td>The card token to use as the source of payment</td>
   </tr>
 </table>
-Pay for a booking.
+Pay for a <b>Booking</b>.
 
 #### Lot
 
 ##### GET `/api/lots`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the entire lots collection.
+Returns the owned <b>Lot</b>s or entire collection if admin.
 
 ##### PUT `/api/lots`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
+    <td><i>security</i></td>
+    <td>authorized</td>
   </tr>
   <tr>
     <td>count</td>
-    <td>Number of lots to create (defaults to 1)</td>
+    <td>Number of <b>Lot</b>s to create (defaults to 1)</td>
   </tr>
   <tr>
     <td>location</td>
-    <td>An object containing a <code>coordinates</code> property with the coordinates of the location of the lot<br /> 
+    <td>An object containing a <code>coordinates</code> property with the coordinates of the location of the <b>Lot</b><br /> 
     Can either be a number array of <code>[longitude, latitude]</code> or
     an object containing <code>long</code> or <code>lon</code> and <code>lat</code> and properties</td>
   </tr>
   <tr>
     <td><i>(optional)</i> price</td>
-    <td>A price object containing the price breakdown for the lot (to be used as a default for the lot's spots)</td>
+    <td>A price object containing the price breakdown for the <b>Lot</b> (to be used as a default for the <b>Lot</b>'s spots)</td>
   </tr>
   <tr>
     <td>lot</td>
-    <td>An object containing the properties you want to intiate the lot(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
+    <td>An object containing the properties you want to intiate the <b>Lot</b>(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
   </tr>
 </table>
-Create a new lot.
+Create a new <b>Lot</b>.
 
 ##### GET `/api/lots/:id`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the lot with the specified id.
+Returns the <b>Lot</b> with the specified id.
 
 ##### GET `/api/lots/:id/location`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the location of the lot with the specified id.
+Returns the location of the <b>Lot</b> with the specified id.
 
 ##### GET `/api/lots/:id/spots`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the spots associated with the lot.
+Returns the spots associated with the <b>Lot</b>.
+
+
+##### GET `/api/lots/:id/attendants`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+Return the attendants associated with the <b>Lot</b>.
+
+##### PUT `/api/lots/:id/attendants`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>attendants</td>
+    <td>The id's of <b>User</b>'s to add as attendants</td>  
+  </tr>
+</table>
+Return the attendants associated with the <b>Lot</b>.
+
+##### GET `/api/lots/:id/available`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns the ranges during which new spots in this <b>Lot</b> would be available in an array where each pair of indices is a start and end time. 
+
+##### PUT `/api/lots/:id/available`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to add</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to add</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td><i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td><i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td><i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
+  </tr>
+</table>
+Adds availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
+
+##### PUT `/api/lots/:id/available/remove`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to remove</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to remove</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td><i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td><i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td><i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
+  </tr>
+</table>
+Removes availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
+
+##### GET `/api/lots/:id/price`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns an object which which contains details for each price type (such as per hour, etc).
+
+##### GET `/api/lots/:id/price`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+  <tr>
+    <td>...</td>
+    <td>The <code>Price</code> properties you wish to update and their new values</td>
+  </tr>
+</table>
+Set the price of new spots for the <b>Lot</b>. Does not modify existing spots.
 
 #### Spot
 
 ##### GET `/api/spots`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the entire spots collection.
+Returns the owned <b>Spot</b>s or entire collection if admin.
+
+##### PUT `/api/spots`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>authorized</td>
+  </tr>
+  <tr>
+    <td>location</td>
+    <td>An object containing an <code>address: String</code> property with the address of the <b>Spot</b>; this address will be geocoded again to retrieve a uniform formattedAddress and coordinates 
+  </tr>
+  <tr>
+    <td>price</td>
+    <td>A price object containing the price breakdown for the <b>Spot</b> (to be used as a default for the <b>Spot</b>'s <b>Spot</b>s)</td>
+  </tr>
+  <tr>
+    <td><i>(optional)</i> lot</td>
+    <td>Either the id or the entire <b>Lot</b> object of the lot to associate with this <b>Spot</b> (<i><code>*</code></i> when this property is provided, price and location properties are attempted to be retrieved from the <b>Lot</b> object)</td>
+  </tr>
+  <tr>
+    <td><i>(optional)</i> <b>Spot</b></td>
+    <td>An object containing the properties you want to intiate the <b>Spot</b>(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
+  </tr>
+  <tr>
+    <td><i>(optional)</i> count</td>
+    <td>Number of <b>Spot</b>s to create (defaults to 1)</td>
+  </tr>
+</table>
+Create a new <b>Spot</b>.
 
 ##### GET `/api/spots/near?long=LONGITUDE&lat=LATITUDE&available=DATE&count=COUNT`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>False</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>False</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>public</td>
   </tr>
   <tr>
     <td>long</td>
@@ -673,117 +679,184 @@ Returns the entire spots collection.
     <td>Latitude of the target location</td>
   </tr>
     <td>available</td>
-    <td>A datetime during which this spot should be available (if unassigned then current time is used)</td>
+    <td>A datetime during which this <b>Spot</b> should be available (if unassigned then current time is used)</td>
   </tr>
   <tr>
     <td>count</td>
-    <td>Number of spots to return</td>
+    <td>Number of <b>Spot</b>s to return</td>
   </tr>
 </table>
-Returns the required number of Spots based on the given filters
-
-##### PUT `/api/spots`
-<table>
-  <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td>location</td>
-    <td>An object containing an <code>address: String</code> property with the address of the spot; this address will be geocoded again to retrieve a uniform formattedAddress and coordinates 
-  </tr>
-  <tr>
-    <td>price</td>
-    <td>A price object containing the price breakdown for the spot (to be used as a default for the spot's spots)</td>
-  </tr>
-  <tr>
-    <td><i>(optional)</i> lot</td>
-    <td>Either the id or the entire <code>Lot</code> object of the lot to associate with this spot (<i><code>*</code></i> when this property is provided, price and location properties are attempted to be retrieved from the <code>Lot</code> object)</td>
-  </tr>
-  <tr>
-    <td><i>(optional</i> spot</td>
-    <td>An object containing the properties you want to intiate the spot(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
-  </tr>
-  <tr>
-    <td>i>(optional)</i> count</td>
-    <td>Number of spots to create (defaults to 1)</td>
-  </tr>
-</table>
-Create a new spot.
+Returns the required number of <b>Spot</b>s based on the given filters
 
 ##### GET `/api/spots/:id`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the spot with the specified id.
+Returns the <b>Spot</b> with the specified id.
 
+##### GET `/api/spots/:id/lot`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns the lot associated with the <b>Spot</b>
+
+##### PUT `/api/spots/:id/lot`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+Associate a lot with the <b>Spot</b>
+
+##### PUT `/api/spots/:id/lot/remove`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+Disassociate any lot from this <b>Spot</b>
 
 ##### GET `/api/spots/:id/location`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the location of the spot with the specified id.
+Returns the location of the <b>Spot</b> with the specified id.
+
+##### GET `/api/spots/:id/price`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns an object which which contains details for each price type (such as per hour, etc).
+
+##### PUT `/api/spots/:id/price`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>...</td>
+    <td>The <code>Price</code> properties you wish to update and their new values</td>
+  </tr>
+</table>
+Set the price of a <b>Spot</b>. Does not modify existing bookings.
+
+##### GET `/api/spots/:id/name`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns the name of the <b>Spot</b>
+
+##### PUT `/api/spots/:id/name`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>the name to set for the <b>Spot</b></td>
+  </tr>
+</table>
+Set the name of the <b>Spot</b>
+
+##### GET `/api/spots/:id/reserved`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns the reserved of the <b>Spot</b>
+
+##### PUT `/api/spots/:id/reserved`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>reserved</td>
+    <td>the reserved state to set for the <b>Spot</b></td>
+  </tr>
+</table>
+Set the reserved state of the <b>Spot</b>. When true, this <b>Spot</b> will not be booked when booking a generic <b>Spot</b> through a **Lot**.
+
+##### GET `/api/spots/:id/description`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns the description of the <b>Spot</b>
+
+##### PUT `/api/spots/:id/description`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>the description to set for the <b>Spot</b></td>
+  </tr>
+</table>
+Set the description of the <b>Spot</b>
+
+##### GET `/api/lots/:id/attendants`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+Return the attendants associated with the lot.
+
+##### PUT `/api/lots/:id/attendants`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>attendants</td>
+    <td>The id's of <b>User</b>'s to add as attendants</td>  
+  </tr>
+</table>
+Return the attendants associated with the lot.
 
 ##### GET `/api/spots/:id/bookings`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the bookings associated with the spot with the given id.
+Returns the bookings associated with the <b>Spot</b> with the given id.
 
 ##### PUT `/api/spots/:id/bookings`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
   <tr>
     <td>start</td>
@@ -795,24 +868,16 @@ Returns the bookings associated with the spot with the given id.
   </tr>
   <tr>
     <td>bookings</td>
-    <td>The <code>booking</code> object(s) to add, can be either a single <code>Booking</code> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> (when this is used, the rest of the request body is ignored)
+    <td>The <b>Booking</b> object(s) to add, can be either a single <b>Booking</b> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> (when this is used, the rest of the request body is ignored)
   </tr>
 </table>
-Creates a new booking for the spot
+Creates a new booking for the <b>Spot</b>
 
 ##### PUT `/api/spots/:id/bookings/remove`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
   <tr>
     <td>id</td>
@@ -827,42 +892,26 @@ Creates a new booking for the spot
     <td>The end of the booking</td>
   </tr>
   <tr>
-    <td>bookings</td>
-    <td>The <code>booking</code> object(s) to remove, can be either a single <code>Booking</code> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> or an <b>id</b> (when this is used, the rest of the request body is ignored)
+    <td>bookings</td> 
+    <td>The <b>Booking</b> object(s) to remove, can be either a single <b>Booking</b> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> or an <b>id</b> (when this is used, the rest of the request body is ignored)
   </tr>
 </table>
-Removes the specified booking objects from the spot and updates schedules.
+Removes the specified booking objects from the <b>Spot</b> and updates schedules.
 
 ##### GET `/api/spots/:id/available`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the ranges during which this spot is available in an array where each pair of indices is a start and end time. 
+Returns the ranges during which this <b>Spot</b> is available in an array where each pair of indices is a start and end time. 
 
 ##### PUT `/api/spots/:id/available`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
   <tr>
     <td>start</td>
@@ -894,16 +943,8 @@ Adds availability based on the supplied information. Either <code>count</code> (
 ##### PUT `/api/spots/:id/available/remove`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>owner</td>
   </tr>
   <tr>
     <td>start</td>
@@ -935,71 +976,18 @@ Removes availability based on the supplied information. Either <code>count</code
 ##### GET `/api/spots/:id/booked`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
-Returns the ranges during which this spot is booked in an array where each pair of indices is a start and end time. 
+Returns the ranges during which this <b>Spot</b> is booked in an array where each pair of indices is a start and end time. 
 
 ##### GET `/api/spots/:id/schedules`
 <table>
   <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
+    <td><i>security</i></td>
+    <td>attendant</td>
   </tr>
 </table>
 Returns an object which contains 2 propertes: `booked` and `available` each of which are arrays where each pair of indices is a start and end time.
 
-##### GET `/api/spots/:id/price`
-<table>
-  <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
-  </tr>
-</table>
-Returns an object which which contains details for each price type (such as per hour, etc).
-
-##### GET `/api/spots/:id/price`
-<table>
-  <tr>
-    <td><i>Requires JWT</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires authorization</i></td>
-    <td>True</td>
-  </tr>
-  <tr>
-    <td><i>Requires admin</i></td>
-    <td>False</td>
-  </tr>
-  <tr>
-    <td>...</td>
-    <td>The <code>Price</code> properties you wish to update and their new values</td>
-  </tr>
-</table>
-Set the price of a spot. Does not modify existing bookings.
