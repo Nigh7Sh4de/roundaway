@@ -16,6 +16,10 @@ var controller = function(app) {
     app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
     app.get('/api/lots/:id/price', app.checkAuth, app.checkAttendant.bind(app), this.GetPriceOfLot.bind(this));
     app.put('/api/lots/:id/price', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetPriceOfLot.bind(this));
+    app.get('/api/lots/:id/name', app.checkAuth, app.checkAttendant.bind(app), this.GetNameOfLot.bind(this));
+    app.put('/api/lots/:id/name', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetNameOfLot.bind(this));
+    app.get('/api/lots/:id/description', app.checkAuth, app.checkAttendant.bind(app), this.GetDescriptionOfLot.bind(this));
+    app.put('/api/lots/:id/description', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetDescriptionOfLot.bind(this));
 }
 
 controller.prototype = {
@@ -213,6 +217,34 @@ controller.prototype = {
         .catch(function(err) {
             return res.sendBad(err);
         })
+    },
+    GetNameOfLot: function(req, res) {
+        var name = req.doc.getName();
+        if (!name) return res.sendBad(new Errors.MissingProperty(req.doc, 'name', req.doc.getName()));
+        res.sendGood('Found name for lot', name);
+    },
+    SetNameOfLot: function(req, res) {
+        req.doc.setName(req.body.name)
+        .then(function(lot) {
+            res.sendGood('Set name for lot', lot);
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        });
+    },
+    GetDescriptionOfLot: function(req, res) {
+        var description = req.doc.getDescription();
+        if (!description) return res.sendBad(new Errors.MissingProperty(req.doc, 'description', req.doc.getDescription()));
+        res.sendGood('Found description for lot', description);
+    },
+    SetDescriptionOfLot: function(req, res) {
+        req.doc.setDescription(req.body.description)
+        .then(function(lot) {
+            res.sendGood('Set description for lot', lot);
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        });
     }
 }
 

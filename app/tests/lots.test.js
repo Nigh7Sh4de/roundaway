@@ -20,6 +20,45 @@ describe('Lot schema', function() {
         Lot.prototype.save.restore();
     })
 
+    describe('setName', function() {
+        it('should set the name of the Lot', function() {
+            var l = new Lot();
+            var name = 'some name';
+            expect(l.name).to.not.be.ok;
+            return l.setName(name)
+            .then(function() {
+                expect(l.name).to.deep.equal(name);
+            })
+        })
+    })
+
+    describe('getName', function() {
+        it('should get the name of the Lot', function() {
+            var l = new Lot();
+            var name = 'some name';
+            l.name = name;
+            expect(l.getName()).to.deep.equal(name);
+        })
+    })
+
+    describe('setDescription', function() {
+        it('should set the description', function() {
+            var l = new Lot();
+            var d = 'some description';
+            return l.setDescription(d).then(function(spot) {
+                expect(l.description).to.deep.equal(d);
+            })
+        })
+    })
+
+    describe('getDescription', function() {
+        it('should return the description', function() {
+            var l = new Lot();
+            var d = 'some description';
+            l.description = d;
+            expect(l.getDescription()).to.deep.equal(d);
+        })
+    })
 
     describe('addAttendants', function() {
         it('should add the given attendants User objects', function() {
@@ -555,6 +594,28 @@ routeTest('lotController', [
         verb: verbs.PUT,
         route: '/api/lots/:id/attendants', 
         method: 'AddAttendantsToLot'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id/name',
+        method: 'GetNameOfLot',
+        attendantOrOwner: true
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/name',
+        method: 'SetNameOfLot'
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id/description',
+        method: 'GetDescriptionOfLot',
+        attendantOrOwner: true
+    },
+    {
+        verb: verbs.PUT,
+        route: '/api/lots/:id/description',
+        method: 'SetDescriptionOfLot'
     }
 ])
 
@@ -1141,4 +1202,70 @@ describe('lotController', function() {
             app.lotController.AddAttendantsToLot(req, res);
         })
     });
+
+    describe('GetNameOfLot', function() {
+        it('should get the name of the lot', function(done) {
+            var l = new Lot();
+            var name = l.name = 'some name';
+            req.doc = l;
+            req.params.id = l.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(name)).to.be.true;
+                done();
+            }
+            app.lotController.GetNameOfLot(req, res);
+        });
+    })
+
+    describe('SetNameOfLot', function() {
+        it('should set the name of the lot', function(done) {
+            var l = new Lot();
+            sinon.stub(l, 'setName', mockPromise());
+            var name = 'some name';
+            req.doc = l;
+            req.params.id = l.id;
+            req.body.name = name;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(l.setName.calledOnce).to.be.true;
+                expect(l.setName.calledWith(name)).to.be.true;
+                done();
+            }
+            app.lotController.SetNameOfLot(req, res);
+        });
+    })
+
+    describe('GetDescriptionOfLot', function() {
+        it('should get the description of the lot', function(done) {
+            var l = new Lot();
+            var description = l.description = 'some description';
+            req.doc = l;
+            req.params.id = l.id;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(description)).to.be.true;
+                done();
+            }
+            app.lotController.GetDescriptionOfLot(req, res);
+        });
+    })
+
+    describe('SetDescriptionOfLot', function() {
+        it('should set the description of the lot', function(done) {
+            var l = new Lot();
+            sinon.stub(l, 'setDescription', mockPromise());
+            var description = 'some description';
+            req.doc = l;
+            req.params.id = l.id;
+            req.body.description = description;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(l.setDescription.calledOnce).to.be.true;
+                expect(l.setDescription.calledWith(description)).to.be.true;
+                done();
+            }
+            app.lotController.SetDescriptionOfLot(req, res);
+        });
+    })
 })

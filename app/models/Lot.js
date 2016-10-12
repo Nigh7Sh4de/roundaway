@@ -19,9 +19,40 @@ var lotSchema = new Schema({
         perHour: Price
     },
     available: Range(Date),
+    name: String,
+    description: String
 }, {
     timestamps: true
 });
+
+lotSchema.methods.setName = function(name) {
+    return new Promise(function(resolve, reject) {
+        this.name = name;
+        this.save(function(err, lot) {
+            if (err)
+                return reject(err);
+            return resolve(lot);
+        });
+    }.bind(this));
+}
+
+lotSchema.methods.getName = function() {
+    return this.name || null;
+}
+
+lotSchema.methods.getDescription = function() {
+    return this.description || null;
+}
+
+lotSchema.methods.setDescription = function(description) {
+    return new Promise(function(resolve, reject) {
+        this.description = String(description);
+        this.save(function(err, lot) {
+            if (err) return reject(err);
+            resolve(lot);
+        });
+    }.bind(this))
+}
 
 lotSchema.methods.addAttendants = function(attendants) {
     return new Promise(function(resolve, reject) {
