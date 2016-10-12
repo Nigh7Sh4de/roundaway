@@ -132,7 +132,9 @@ A <b>Lot</b> is simply a collection of <b>Spot</b>s that share a common <code>pr
     attendants: [User]
     location: Location,
     price: Price,
-    available: Ranger
+    available: Ranger,
+    name: String,
+    description: String
 
 #### Spot
 A <b>Spot</b> can be booked by users for a set period of time. Once a <b>Spot</b> is created you cannot modify the **location**. Modifying the **price** of a <b>Spot</b> will not modify existing `Booking`s. Associating a <b>Spot</b> with a <b>Lot</b> will overwrite the <b>Spot</b>'s **location** with the one in the <b>Lot</b>. 
@@ -624,6 +626,50 @@ Returns an object which which contains details for each price type (such as per 
 </table>
 Set the price of new spots for the <b>Lot</b>. Does not modify existing spots.
 
+##### GET `/api/lots/:id/name`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns the name of the <b>Lot</b>
+
+##### PUT `/api/lots/:id/name`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>the name to set for the <b>Lot</b></td>
+  </tr>
+</table>
+Set a name for the <b>Lot</b> that will be used by the owner to identify spots (instead of just by location)
+
+##### GET `/api/lots/:id/description`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+Returns the description of the <b>Lot</b>
+
+##### PUT `/api/lots/:id/description`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>the description to set for the <b>Lot</b></td>
+  </tr>
+</table>
+Set the description of the <b>Lot</b> that will be displayed to users looking to rent (can provide details regarding where to park, type of spot, etc). In retrospect this is probably useless on <b>Lot</b>s.
+
 #### Spot
 
 ##### GET `/api/spots`
@@ -821,16 +867,16 @@ Returns the description of the <b>Spot</b>
 </table>
 Set the description of the <b>Spot</b> that will be displayed to users looking to rent the spot (can provide details regarding where to park, type of spot, etc.)
 
-##### GET `/api/lots/:id/attendants`
+##### GET `/api/spots/:id/attendants`
 <table>
   <tr>
     <td><i>security</i></td>
     <td>owner</td>
   </tr>
 </table>
-Return the attendants associated with the lot.
+Return the attendants associated with the spot.
 
-##### PUT `/api/lots/:id/attendants`
+##### PUT `/api/spots/:id/attendants`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -841,7 +887,7 @@ Return the attendants associated with the lot.
     <td>The id's of <b>User</b>'s to add as attendants</td>  
   </tr>
 </table>
-Return the attendants associated with the lot.
+Return the attendants associated with the spot.
 
 ##### GET `/api/spots/:id/bookings`
 <table>
