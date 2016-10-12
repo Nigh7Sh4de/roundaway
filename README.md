@@ -775,7 +775,7 @@ Returns the name of the <b>Spot</b>
     <td>the name to set for the <b>Spot</b></td>
   </tr>
 </table>
-Set the name of the <b>Spot</b>
+Set a name for the <b>Spot</b> that will be used by the owner to identify spots (instead of just by location)
 
 ##### GET `/api/spots/:id/reserved`
 <table>
@@ -819,7 +819,7 @@ Returns the description of the <b>Spot</b>
     <td>the description to set for the <b>Spot</b></td>
   </tr>
 </table>
-Set the description of the <b>Spot</b>
+Set the description of the <b>Spot</b> that will be displayed to users looking to rent the spot (can provide details regarding where to park, type of spot, etc.)
 
 ##### GET `/api/lots/:id/attendants`
 <table>
