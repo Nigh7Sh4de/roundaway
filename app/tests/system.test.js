@@ -696,6 +696,49 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
+
+        describe('GET /api/lots/:id/name', function() {
+            it('should get the lot name', function(done) {
+                var name = 'some name';
+                var lot = new Lot({
+                    name: name
+                });
+                insert(lot, function() {
+                    request(app).get('/api/lots/' + lot.id + '/name')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.body.data).to.deep.equal(name);
+                            done();
+                        })
+                })
+            })
+        })
+
+        describe('PUT /api/lots/:id/name', function() {
+            it('should get the lot name', function(done) {
+                var lot = new Lot();
+                var name = 'some name';
+                insert(lot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/name')
+                        .send({
+                            name: name
+                        })
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            app.db.lots.findById(lot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc).to.be.ok;
+                                expect(doc.getName()).to.deep.equal(name);
+                                done();
+                            })
+                        })
+                })
+            })
+        })
     })
 
     describe('Spot Controller', function() {
@@ -1020,6 +1063,49 @@ _d('the entire app should not explode', function() {
                                 expect(doc.getPrice()).to.deep.equal({
                                     perHour: pricePerHour
                                 });
+                                done();
+                            })
+                        })
+                })
+            })
+        })
+
+        describe('GET /api/spots/:id/name', function() {
+            it('should get the spot name', function(done) {
+                var name = 'some name';
+                var spot = new Spot({
+                    name: name
+                });
+                insert(spot, function() {
+                    request(app).get('/api/spots/' + spot.id + '/name')
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.body.data).to.deep.equal(name);
+                            done();
+                        })
+                })
+            })
+        })
+
+        describe('PUT /api/spots/:id/name', function() {
+            it('should get the spot name', function(done) {
+                var spot = new Spot();
+                var name = 'some name';
+                insert(spot, function() {
+                    request(app).put('/api/spots/' + spot.id + '/name')
+                        .send({
+                            name: name
+                        })
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            app.db.spots.findById(spot.id, function(err, doc) {
+                                expect(err).to.not.be.ok;
+                                expect(doc).to.be.ok;
+                                expect(doc.getName()).to.deep.equal(name);
                                 done();
                             })
                         })
