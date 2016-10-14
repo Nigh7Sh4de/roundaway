@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Roundaway by Nigh7Sh4de</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Roundaway</h1>
+      <h2 class="project-tagline">Roundaway API</h2>
+      <a href="https://github.com/Nigh7Sh4de/roundaway" class="btn">View on GitHub</a>
+      <a href="https://github.com/Nigh7Sh4de/roundaway/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/Nigh7Sh4de/roundaway/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h2>
+<a id="backend-objects" class="anchor" href="#backend-objects" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Backend Objects</h2>
+
+<p><em>These are object definitions used in the backend models</em></p>
+
+<h4>
+<a id="location-" class="anchor" href="#location-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Location <code>{}</code>
+</h4>
+
+<pre><code>address: String,
+coordinates: [Number]
+</code></pre>
+
+<h4>
+<a id="price-" class="anchor" href="#price-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Price <code>{}</code>
+</h4>
+
+<pre><code>perHour: Number
+</code></pre>
+
+<h4>
+<a id="range-type-" class="anchor" href="#range-type-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Range (Type) <code>{}</code>
+</h4>
+
+<pre><code>start: Type,
+end: Type
+</code></pre>
+
+<h4>
+<a id="ranger-" class="anchor" href="#ranger-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Ranger <code>[]</code>
+</h4>
+
+<pre><code>[Range(Date)]
+next: Range(Date)
+</code></pre>
+
+<h4>
+<a id="bookingstatus-enum" class="anchor" href="#bookingstatus-enum" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>BookingStatus <code>enum</code>
+</h4>
+
+<pre><code>unpaid,
+paid,
+archived
+</code></pre>
+
+<h4>
+<a id="profile-" class="anchor" href="#profile-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Profile <code>{}</code>
+</h4>
+
+<pre><code>name: String
+</code></pre>
+
+<h2>
+<a id="models" class="anchor" href="#models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Models</h2>
+
+<p><em>All models have a <code>createdAt</code> and <code>updatedAt</code> field</em></p>
+
+<h4>
+<a id="user" class="anchor" href="#user" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>User</h4>
+
+<p>The <b>User</b> object holds basic data about the <b>User</b> including <code>profile</code> and authentication information. All other models reference their owner through a <code>user</code> property.</p>
+
+<pre><code>profile: Profile,
+authid: {
+    facebook: String,
+    google: String
+},
+admin: Boolean,
+attendant: Boolean
+</code></pre>
+
+<h4>
+<a id="lot" class="anchor" href="#lot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Lot</h4>
+
+<p>A <b>Lot</b> is simply a collection of <b>Spot</b>s that share a common <code>profile</code>. The <b>Lot</b>'s <strong>price</strong>, <strong>availability</strong>, and <strong>location</strong> are used as defaults for new <b>Spot</b>s.</p>
+
+<pre><code>User: User
+attendants: [User]
+location: Location,
+price: Price,
+available: Ranger,
+name: String,
+description: String
+</code></pre>
+
+<h4>
+<a id="spot" class="anchor" href="#spot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Spot</h4>
+
+<p>A <b>Spot</b> can be booked by users for a set period of time. Once a <b>Spot</b> is created you cannot modify the <strong>location</strong>. Modifying the <strong>price</strong> of a <b>Spot</b> will not modify existing <code>Booking</code>s. Associating a <b>Spot</b> with a <b>Lot</b> will overwrite the <b>Spot</b>'s <strong>location</strong> with the one in the <b>Lot</b>. </p>
+
+<pre><code>user: User,
+attendants: [User],
+lot: Lot,
+name: String,
+description: String
+reserved: Boolean,
+price: Price,
+location: Location,
+available: Ranger,
+booked: Ranger,
+</code></pre>
+
+<h4>
+<a id="booking" class="anchor" href="#booking" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Booking</h4>
+
+<p>A <code>Booking</code> is an immutable object that is used to track bookings on a <b>Spot</b>. Once a <code>Booking</code> is created you cannot modify the <strong>spot</strong>, <strong>price</strong>, <strong>start</strong>, nor <strong>end</strong> properties. The status defaults to <code>unpaid</code> and will change to <code>paid</code> once payment has been succesfuly processed. A <code>Booking</code>s price is calculated using it's duration (calculated using it's <strong>start</strong> and <strong>end</strong> properties) multiplied byt he price of the <b>Spot</b> that it is associated with.</p>
+
+<pre><code>user: User,
+car: Car,
+spot: Spot,
+status: BookingStatus,
+price: Price,
+start: Date,
+end: Date,
+</code></pre>
+
+<h2>
+<a id="authentication" class="anchor" href="#authentication" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authentication</h2>
+
+<p>Certain API routes requre a JWT and/or the associated user to have certain privelages. The specific requirements for each route are listed below.
+In order to make API calls that are auth protected use the following flow:</p>
+
+<ol>
+<li>Authenticate with a 3rd party authentication server of your choice. Currently supported options:
+
+<ul>
+<li>Facebook</li>
+<li>Google </li>
+</ul>
+</li>
+<li>Hit <code>POST /auth/:strat</code> with an <strong>access_token</strong> as supplied by the social network you are authenticating with</li>
+<li>You will receieve a <strong>JWT</strong> in the response if authentication was successful after one of the following operations has completed:
+
+<ul>
+<li>A user was found in db</li>
+<li>A new user was created</li>
+</ul>
+</li>
+<li>Set an <code>Authorizaton</code> header with the <code>JWT</code> scheme (as in: <code>Authorization: JWT JWT_STRING...</code>) in all subsequent requests</li>
+<li>If a certain user requires elevated privelages (such as <em>admin</em>) the db admin must set the appropriate flag in the user collection manually (<em>note</em>: changing privelages does not require generating a new JWT, so changing privelages can be done on the fly)</li>
+</ol>
+
+<h2>
+<a id="api" class="anchor" href="#api" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API</h2>
+
+<p><em>All api calls are on the <code>/api</code> route</em></p>
+
+<h3>
+<a id="authorization" class="anchor" href="#authorization" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authorization</h3>
+
+<p>Each route has a security policy with one of the following properties:</p>
+
+<table>
+  <tr>
+    <td><i>public</i></td>
+    <td>Anyone can access this route</td>
+  </tr>
+  <tr>
+    <td><i>authorized</i></td>
+    <td>A valid JWT must be provided</td>
+  </tr>
+  <tr>
+    <td><i>attendant</i></td>
+    <td>You must be an attendant that is specified on the resource</td>
+  </tr>
+  <tr>
+    <td><i>owner</i></td>
+    <td>You must be an owner of the resource (user id is set in the resource's <code>user</code> property)</td>
+  </tr>
+  <tr>
+    <td><i>admin</i></td>
+    <td>You must be an admin</td>
+  </tr>
+</table>
+
+<h3>
+<a id="responses" class="anchor" href="#responses" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Responses</h3>
+
+<table>
+  <tr>
+    <td>status</td>
+    <td>One word status description: <code>ERROR</code> or <code>SUCCESS</code>.</td>
+  </tr>
+  <tr>
+    <td>message</td>
+    <td>Optional for <code>ERROR</code> responses. Contains some response message describe the back-end operation that took place</td>
+  </tr>
+  <tr>
+    <td>errors</td>
+    <td>Array of strings containing the different errors that occured. Sometimes present on <code>SUCCESS</code> responses as well when performing an action on a collection and some documents succeeded while others did not</td>
+  </tr>
+  <tr>
+    <td>data</td>
+    <td>Any data being returned by the server as per the request</td>
+  </tr>
+</table>
+
+<h3>
+<a id="requests" class="anchor" href="#requests" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Requests</h3>
+
+<h4>
+<a id="util" class="anchor" href="#util" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Util</h4>
+
+<h5>
+<a id="post-apiutillocationgeocode" class="anchor" href="#post-apiutillocationgeocode" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>POST <code>/api/util/location/geocode</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>Security</i></td>
+    <td>public</td>
+  </tr>
+  <tr>
+    <td>address</td>
+    <td>The address you wish to geocode</td>
+  </tr>
+</table>
+
+<p>Retrieve the proper formatted address for a location (as it would be saved in the database)</p>
+
+<h4>
+<a id="authentication-1" class="anchor" href="#authentication-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authentication</h4>
+
+<h5>
+<a id="get-authstrataccess_token" class="anchor" href="#get-authstrataccess_token" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/auth/:strat?access_token</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>Security</i></td>
+    <td>public</td>
+  </tr>
+  <tr>
+    <td>strat</td>
+    <td>The social network with which to authenticate. Can be one of: ['facebook', 'google'].</td>
+  </tr>
+  <tr>
+    <td>access_token</td>
+    <td>The access token as provided by the social network</td>
+</tr>
+</table>
+
+<p>Once you have authenticated the user elsewhere (client-side or on another server), send the <code>access_token</code> here in order to authenticate with this server. Sends back a JWT for subsequent API requests.</p>
+
+<h4>
+<a id="user-1" class="anchor" href="#user-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>User</h4>
+
+<h5>
+<a id="get-apiusers" class="anchor" href="#get-apiusers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Returns the entire <b>User</b>s collection.</p>
+
+<h5>
+<a id="get-apiusersprofile" class="anchor" href="#get-apiusersprofile" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/profile</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>authorized</td>
+  </tr>
+</table>
+
+<p>Returns the current session <b>User</b>.</p>
+
+<h5>
+<a id="get-apiusersuseridlots" class="anchor" href="#get-apiusersuseridlots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/lots</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Returns the given <b>User</b>'s lots.</p>
+
+<h5>
+<a id="get-apiusersuseridspots" class="anchor" href="#get-apiusersuseridspots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/spots</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Returns the given <b>User</b>'s spots.</p>
+
+<h5>
+<a id="get-apiusersuseridbookings" class="anchor" href="#get-apiusersuseridbookings" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/bookings</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Returns the given <b>User</b>'s bookings.</p>
+
+<h5>
+<a id="get-apiusersuseridprofile" class="anchor" href="#get-apiusersuseridprofile" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/profile</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Returns the given <b>User</b>'s profile.</p>
+
+<h5>
+<a id="patch-apiusersuseridprofile" class="anchor" href="#patch-apiusersuseridprofile" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PATCH <code>/api/users/:userid/profile</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+  <tr>
+    <td colspan="2">Profile properties</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>Name of the <b>User</b>
+</td>
+  </tr>
+</table>
+
+<p>Updates the specified fields of the <b>User</b>'s profile.</p>
+
+<h4>
+<a id="booking-1" class="anchor" href="#booking-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Booking</h4>
+
+<h5>
+<a id="get-apibookings" class="anchor" href="#get-apibookings" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the owned <b>Booking</b> or entire collection if admin.</p>
+
+<h5>
+<a id="get-apibookingsid" class="anchor" href="#get-apibookingsid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the <b>Booking</b> with the specified id.</p>
+
+<h5>
+<a id="get-apibookingsidspot" class="anchor" href="#get-apibookingsidspot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/spot</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the spot that is associated with this <b>Booking</b>.</p>
+
+<h5>
+<a id="get-apibookingsidcar" class="anchor" href="#get-apibookingsidcar" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/car</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the car that is associated with this <b>Booking</b>.</p>
+
+<h5>
+<a id="get-apibookingsidstart" class="anchor" href="#get-apibookingsidstart" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/start</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the start of the specified <b>Booking</b>.</p>
+
+<h5>
+<a id="get-apibookingsidduration" class="anchor" href="#get-apibookingsidduration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/duration</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the duration of the specified <b>Booking</b>.</p>
+
+<h5>
+<a id="get-apibookingsidend" class="anchor" href="#get-apibookingsidend" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/end</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the end of the specified <b>Booking</b>.</p>
+
+<h5>
+<a id="get-apibookingsidtime" class="anchor" href="#get-apibookingsidtime" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/time</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the time <code>{start: Date, end: Date}</code> of the specified <b>Booking</b>.</p>
+
+<h5>
+<a id="get-apibookingsidprice" class="anchor" href="#get-apibookingsidprice" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/price</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the price of the booking of the specified <b>Booking</b>.</p>
+
+<h5>
+<a id="get-apibookingsidstatus" class="anchor" href="#get-apibookingsidstatus" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/bookings/:id/status</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Returns the status of the booking of the specified <b>Booking</b>.</p>
+
+<h5>
+<a id="put-apibookingsidpay" class="anchor" href="#put-apibookingsidpay" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/bookings/:id/pay</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>token</td>
+    <td>The card token to use as the source of payment</td>
+  </tr>
+</table>
+
+<p>Pay for a <b>Booking</b>.</p>
+
+<h4>
+<a id="lot-1" class="anchor" href="#lot-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Lot</h4>
+
+<h5>
+<a id="get-apilots" class="anchor" href="#get-apilots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the owned <b>Lot</b>s or entire collection if admin.</p>
+
+<h5>
+<a id="put-apilots" class="anchor" href="#put-apilots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>authorized</td>
+  </tr>
+  <tr>
+    <td>count</td>
+    <td>Number of <b>Lot</b>s to create (defaults to 1)</td>
+  </tr>
+  <tr>
+    <td>location</td>
+    <td>An object containing a <code>coordinates</code> property with the coordinates of the location of the <b>Lot</b><br> 
+    Can either be a number array of <code>[longitude, latitude]</code> or
+    an object containing <code>long</code> or <code>lon</code> and <code>lat</code> and properties</td>
+  </tr>
+  <tr>
+    <td>
+<i>(optional)</i> price</td>
+    <td>A price object containing the price breakdown for the <b>Lot</b> (to be used as a default for the <b>Lot</b>'s spots)</td>
+  </tr>
+  <tr>
+    <td>lot</td>
+    <td>An object containing the properties you want to intiate the <b>Lot</b>(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
+  </tr>
+</table>
+
+<p>Create a new <b>Lot</b>.</p>
+
+<h5>
+<a id="get-apilotsid" class="anchor" href="#get-apilotsid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the <b>Lot</b> with the specified id.</p>
+
+<h5>
+<a id="get-apilotsidlocation" class="anchor" href="#get-apilotsidlocation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/location</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the location of the <b>Lot</b> with the specified id.</p>
+
+<h5>
+<a id="get-apilotsidspots" class="anchor" href="#get-apilotsidspots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/spots</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the spots associated with the <b>Lot</b>.</p>
+
+<h5>
+<a id="get-apilotsidattendants" class="anchor" href="#get-apilotsidattendants" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/attendants</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Return the attendants associated with the <b>Lot</b>.</p>
+
+<h5>
+<a id="put-apilotsidattendants" class="anchor" href="#put-apilotsidattendants" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots/:id/attendants</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>attendants</td>
+    <td>The id's of <b>User</b>'s to add as attendants</td>  
+  </tr>
+</table>
+
+<p>Return the attendants associated with the <b>Lot</b>.</p>
+
+<h5>
+<a id="get-apilotsidavailable" class="anchor" href="#get-apilotsidavailable" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/available</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the ranges during which new spots in this <b>Lot</b> would be available in an array where each pair of indices is a start and end time. </p>
+
+<h5>
+<a id="put-apilotsidavailable" class="anchor" href="#put-apilotsidavailable" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots/:id/available</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to add</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to add</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
+  </td>
+</tr>
+</table>
+
+<p>Adds availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.</p>
+
+<h5>
+<a id="put-apilotsidavailableremove" class="anchor" href="#put-apilotsidavailableremove" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots/:id/available/remove</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to remove</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to remove</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
+  </td>
+</tr>
+</table>
+
+<p>Removes availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.</p>
+
+<h5>
+<a id="get-apilotsidprice" class="anchor" href="#get-apilotsidprice" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/price</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns an object which which contains details for each price type (such as per hour, etc).</p>
+
+<h5>
+<a id="get-apilotsidprice-1" class="anchor" href="#get-apilotsidprice-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/price</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+  <tr>
+    <td>...</td>
+    <td>The <code>Price</code> properties you wish to update and their new values</td>
+  </tr>
+</table>
+
+<p>Set the price of new spots for the <b>Lot</b>. Does not modify existing spots.</p>
+
+<h5>
+<a id="get-apilotsidname" class="anchor" href="#get-apilotsidname" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/name</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the name of the <b>Lot</b></p>
+
+<h5>
+<a id="put-apilotsidname" class="anchor" href="#put-apilotsidname" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots/:id/name</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>the name to set for the <b>Lot</b>
+</td>
+  </tr>
+</table>
+
+<p>Set a name for the <b>Lot</b> that will be used by the owner to identify spots (instead of just by location)</p>
+
+<h5>
+<a id="get-apilotsiddescription" class="anchor" href="#get-apilotsiddescription" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/lots/:id/description</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the description of the <b>Lot</b></p>
+
+<h5>
+<a id="put-apilotsiddescription" class="anchor" href="#put-apilotsiddescription" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots/:id/description</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>the description to set for the <b>Lot</b>
+</td>
+  </tr>
+</table>
+
+<p>Set the description of the <b>Lot</b> that will be displayed to users looking to rent (can provide details regarding where to park, type of spot, etc). In retrospect this is probably useless on <b>Lot</b>s.</p>
+
+<h4>
+<a id="spot-1" class="anchor" href="#spot-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Spot</h4>
+
+<h5>
+<a id="get-apispots" class="anchor" href="#get-apispots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the owned <b>Spot</b>s or entire collection if admin.</p>
+
+<h5>
+<a id="put-apispots" class="anchor" href="#put-apispots" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>authorized</td>
+  </tr>
+  <tr>
+    <td>location</td>
+    <td>An object containing an <code>address: String</code> property with the address of the <b>Spot</b>; this address will be geocoded again to retrieve a uniform formattedAddress and coordinates 
+  </td>
+</tr>
+  <tr>
+    <td>price</td>
+    <td>A price object containing the price breakdown for the <b>Spot</b> (to be used as a default for the <b>Spot</b>'s <b>Spot</b>s)</td>
+  </tr>
+  <tr>
+    <td>
+<i>(optional)</i> lot</td>
+    <td>Either the id or the entire <b>Lot</b> object of the lot to associate with this <b>Spot</b> (<i><code>*</code></i> when this property is provided, price and location properties are attempted to be retrieved from the <b>Lot</b> object)</td>
+  </tr>
+  <tr>
+    <td>
+<i>(optional)</i> <b>Spot</b>
+</td>
+    <td>An object containing the properties you want to intiate the <b>Spot</b>(s) with (if this is used the rest of the request body except <b>count</b> is ignored)</td>
+  </tr>
+  <tr>
+    <td>
+<i>(optional)</i> count</td>
+    <td>Number of <b>Spot</b>s to create (defaults to 1)</td>
+  </tr>
+</table>
+
+<p>Create a new <b>Spot</b>.</p>
+
+<h5>
+<a id="get-apispotsnearlonglongitudelatlatitudeavailabledatecountcount" class="anchor" href="#get-apispotsnearlonglongitudelatlatitudeavailabledatecountcount" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/near?long=LONGITUDE&amp;lat=LATITUDE&amp;available=DATE&amp;count=COUNT</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>public</td>
+  </tr>
+  <tr>
+    <td>long</td>
+    <td>Longitude of the target location</td>
+  </tr>
+  <tr>
+    <td>lat</td>
+    <td>Latitude of the target location</td>
+  </tr>
+    <td>available</td>
+    <td>A datetime during which this <b>Spot</b> should be available (if unassigned then current time is used)</td>
+  
+  <tr>
+    <td>count</td>
+    <td>Number of <b>Spot</b>s to return</td>
+  </tr>
+</table>
+
+<p>Returns the required number of <b>Spot</b>s based on the given filters</p>
+
+<h5>
+<a id="get-apispotsid" class="anchor" href="#get-apispotsid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the <b>Spot</b> with the specified id.</p>
+
+<h5>
+<a id="get-apispotsidlot" class="anchor" href="#get-apispotsidlot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/lot</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the <b>Lot</b> associated with the <b>Spot</b></p>
+
+<h5>
+<a id="put-apispotsidlot" class="anchor" href="#put-apispotsidlot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/lot</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Associate a <b>Lot</b> with the <b>Spot</b>. This will not transfer over any of the Lot's properties such as <code>price</code>, <code>location</code>, etc.</p>
+
+<h5>
+<a id="put-apispotsidlotremove" class="anchor" href="#put-apispotsidlotremove" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/lot/remove</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Disassociate any lot from this <b>Spot</b></p>
+
+<h5>
+<a id="get-apispotsidlocation" class="anchor" href="#get-apispotsidlocation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/location</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the location of the <b>Spot</b> with the specified id.</p>
+
+<h5>
+<a id="get-apispotsidprice" class="anchor" href="#get-apispotsidprice" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/price</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns an object which which contains details for each price type (such as per hour, etc).</p>
+
+<h5>
+<a id="put-apispotsidprice" class="anchor" href="#put-apispotsidprice" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/price</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>...</td>
+    <td>The <code>Price</code> properties you wish to update and their new values</td>
+  </tr>
+</table>
+
+<p>Set the price of a <b>Spot</b>. Does not modify existing bookings.</p>
+
+<h5>
+<a id="get-apispotsidname" class="anchor" href="#get-apispotsidname" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/name</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the name of the <b>Spot</b></p>
+
+<h5>
+<a id="put-apispotsidname" class="anchor" href="#put-apispotsidname" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/name</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>the name to set for the <b>Spot</b>
+</td>
+  </tr>
+</table>
+
+<p>Set a name for the <b>Spot</b> that will be used by the owner to identify spots (instead of just by location)</p>
+
+<h5>
+<a id="get-apispotsidreserved" class="anchor" href="#get-apispotsidreserved" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/reserved</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the reserved of the <b>Spot</b></p>
+
+<h5>
+<a id="put-apispotsidreserved" class="anchor" href="#put-apispotsidreserved" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/reserved</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>reserved</td>
+    <td>the reserved state to set for the <b>Spot</b>
+</td>
+  </tr>
+</table>
+
+<p>Set the reserved state of the <b>Spot</b>. When true, this <b>Spot</b> will not be booked when booking a generic <b>Spot</b> through a <strong>Lot</strong>.</p>
+
+<h5>
+<a id="get-apispotsiddescription" class="anchor" href="#get-apispotsiddescription" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/description</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the description of the <b>Spot</b></p>
+
+<h5>
+<a id="put-apispotsiddescription" class="anchor" href="#put-apispotsiddescription" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/description</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>the description to set for the <b>Spot</b>
+</td>
+  </tr>
+</table>
+
+<p>Set the description of the <b>Spot</b> that will be displayed to users looking to rent the spot (can provide details regarding where to park, type of spot, etc.)</p>
+
+<h5>
+<a id="get-apispotsidattendants" class="anchor" href="#get-apispotsidattendants" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/attendants</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+</table>
+
+<p>Return the attendants associated with the spot.</p>
+
+<h5>
+<a id="put-apispotsidattendants" class="anchor" href="#put-apispotsidattendants" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/attendants</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>attendants</td>
+    <td>The id's of <b>User</b>'s to add as attendants</td>  
+  </tr>
+</table>
+
+<p>Return the attendants associated with the spot.</p>
+
+<h5>
+<a id="get-apispotsidbookings" class="anchor" href="#get-apispotsidbookings" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/bookings</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the bookings associated with the <b>Spot</b> with the given id.</p>
+
+<h5>
+<a id="put-apispotsidbookings" class="anchor" href="#put-apispotsidbookings" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/bookings</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the booking</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the booking</td>
+  </tr>
+  <tr>
+    <td>bookings</td>
+    <td>The <b>Booking</b> object(s) to add, can be either a single <b>Booking</b> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> (when this is used, the rest of the request body is ignored)
+  </td>
+</tr>
+</table>
+
+<p>Creates a new booking for the <b>Spot</b></p>
+
+<h5>
+<a id="put-apispotsidbookingsremove" class="anchor" href="#put-apispotsidbookingsremove" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/bookings/remove</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+  <tr>
+    <td>id</td>
+    <td>The id of the booking</td>
+  </tr>
+  <tr>
+  <td><i>(used instead of id) start</i></td>
+    <td>The start of the booking</td>
+  </tr>
+  <tr>
+    <td><i>(used instead of id) end</i></td>
+    <td>The end of the booking</td>
+  </tr>
+  <tr>
+    <td>bookings</td> 
+    <td>The <b>Booking</b> object(s) to remove, can be either a single <b>Booking</b> object or an <code>Array</code> of them that must include properties <b>start</b> and <b>end</b> or an <b>id</b> (when this is used, the rest of the request body is ignored)
+  </td>
+</tr>
+</table>
+
+<p>Removes the specified booking objects from the <b>Spot</b> and updates schedules.</p>
+
+<h5>
+<a id="get-apispotsidavailable" class="anchor" href="#get-apispotsidavailable" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/available</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the ranges during which this <b>Spot</b> is available in an array where each pair of indices is a start and end time. </p>
+
+<h5>
+<a id="put-apispotsidavailable" class="anchor" href="#put-apispotsidavailable" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/available</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to add</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to add</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
+  </td>
+</tr>
+</table>
+
+<p>Adds availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.</p>
+
+<h5>
+<a id="put-apispotsidavailableremove" class="anchor" href="#put-apispotsidavailableremove" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/spots/:id/available/remove</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the range to remove</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the range to remove</td>
+  </tr>
+  <tr>
+    <td>interval</td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The interval (in ms) at which to repeat this range</td>
+  </tr>
+  <tr>
+    <td>count </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The number of times to repeat the recuring range</td>
+  </tr>
+  <tr>
+    <td>finish </td>
+    <td>
+<i>(optional - required for recuring ranges)</i> The limit at which to stop repeating the recuring range</td>
+  </tr>
+  <tr>
+    <td>schedules</td>
+    <td>An array of schedules each with <i>start</i>, <i>end</i>, and optionally <i>interval</i> and either <i>count</i> or <i>finish</i>. If using an array, the rest of the body of the request will be ignored.
+  </td>
+</tr>
+</table>
+
+<p>Removes availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.</p>
+
+<h5>
+<a id="get-apispotsidbooked" class="anchor" href="#get-apispotsidbooked" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/booked</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns the ranges during which this <b>Spot</b> is booked in an array where each pair of indices is a start and end time. </p>
+
+<h5>
+<a id="get-apispotsidschedules" class="anchor" href="#get-apispotsidschedules" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/spots/:id/schedules</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+</table>
+
+<p>Returns an object which contains 2 propertes: <code>booked</code> and <code>available</code> each of which are arrays where each pair of indices is a start and end time.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Nigh7Sh4de/roundaway">Roundaway</a> is maintained by <a href="https://github.com/Nigh7Sh4de">Nigh7Sh4de</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
