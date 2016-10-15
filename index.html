@@ -646,6 +646,31 @@ In order to make API calls that are auth protected use the following flow:</p>
 <p>Returns the ranges during which new spots in this <b>Lot</b> would be available in an array where each pair of indices is a start and end time. </p>
 
 <h5>
+<a id="get-apilotsidavailable" class="anchor" href="#get-apilotsidavailable" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots/:id/available/check</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+  </tr>
+  <tr>
+    <td>start</td>
+    <td>The start of the requested duration</td>
+  </tr>
+  <tr>
+    <td>end</td>
+    <td>The end of the requested duration</td>
+  </tr>
+  <tr>
+    <td>deviation</td>
+    <td>The amount (in <b>ms</b>) to return similar spots</td>
+  </tr>
+</table>
+
+<p>Returns the spots that are available during that time in the form of <code>{exact: [], similar: []}</code></p>
+
+<h5>
 <a id="put-apilotsidavailable" class="anchor" href="#put-apilotsidavailable" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>PUT <code>/api/lots/:id/available</code>
 </h5>
 
