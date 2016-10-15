@@ -566,6 +566,12 @@ routeTest('lotController', [
     },
     {
         verb: verbs.PUT,
+        route: '/api/lots/:id/available/check',
+        method: 'CheckAvailabilityOfLot',
+        attendantOrOwner: true
+    },
+    {
+        verb: verbs.PUT,
         route: '/api/lots/:id/available',
         method: 'AddAvailabilityToLot'
     },
@@ -954,6 +960,58 @@ describe('lotController', function() {
             }
             app.lotController.GetSpotsForLot(req, res);
         });
+    })
+
+    describe('CheckAvailabilityOfLot', function() {
+        it('should return the spot if availability is available', function(done) {
+            var range = {
+                start: new Date('01/01/2010'),
+                end: new Date('01/02/2010')
+            }
+            var l = new Lot();
+            var s = new Spot({lot: l});
+            s.available.addRange(range.start, range.end);
+            app.db.spots = {
+                find: mockPromise([s])
+            }
+            req.body = range;
+            req.doc = l;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith({
+                    exact: [s],
+                    similar: []
+                })).to.be.true;
+                done();
+            }
+            app.lotController.CheckAvailabilityOfLot(req, res);
+        })
+        it('should return the spot if availability is available', function(done) {
+            var range = {
+                start: new Date('01/01/2010'),
+                end: new Date('01/02/2010'),
+                deviation: 1000*60*60*24*365
+            }
+            var l = new Lot();
+            var s = new Spot({lot: l});
+            s.available.addRange(new Date('02/01/2010'), new Date('02/02/2010'));
+            app.db.spots = {
+                find: mockPromise([s])
+            }
+            req.body = range;
+            req.doc = l;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith({
+                    exact: [],
+                    similar: [s]
+                })).to.be.true;
+                done();
+            }
+            app.lotController.CheckAvailabilityOfLot(req, res);
+        })
     })
 
     describe('AddAvailabilityToLot', function() {

@@ -12,6 +12,7 @@ var controller = function(app) {
     app.get('/api/lots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), this.GetAttendantsForLot.bind(this));
     app.put('/api/lots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAttendantsToLot.bind(this));
     app.get('/api/lots/:id/available', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.GetAllAvailabilityOfLot.bind(this));
+    app.put('/api/lots/:id/available/check', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.CheckAvailabilityOfLot.bind(this));
     app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
     app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
     app.get('/api/lots/:id/price', app.checkAuth, app.checkAttendant.bind(app), this.GetPriceOfLot.bind(this));
@@ -91,6 +92,38 @@ controller.prototype = {
     },
     GetAllAvailabilityOfLot: function(req, res) {
         res.sendGood('Found availability for lot', {available: req.doc.available.ranges});
+    },
+    CheckAvailabilityOfLot: function(req, res) {
+        if (!req.body || !req.body.start || !req.body.end)
+            return res.sendBad(new Errors.BadInput(['start', 'end']));
+        var start = new Date(req.body.start);
+        var end = new Date(req.body.end); 
+        var _start = new Date(start.valueOf() + (req.body.deviation || 0))
+        var _end = new Date(end.valueOf() - (req.body.deviation || 0))
+
+        app.db.spots.find({
+            lot: req.doc.id,
+            available: { $elemMatch: {
+                start: { $lte: _start },
+                end: { $gte: _end }
+            }}
+        })
+        .exec()
+        .then(function(spots) {
+            if (!spots || !spots.length)
+                return new Errors.NotFound('spots', {available: {_start, _end}});
+            var similar = [];
+            var exact = [];
+            spots.forEach(spot => {
+                if (spot.available.checkRange(start, end))
+                    exact.push(spot);
+                else similar.push(spot);
+            })
+            res.sendGood('Found spots with the availability', {similar, exact});
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
     },
     AddAvailabilityToLot: function(req, res) {
         if (!req.body ||
