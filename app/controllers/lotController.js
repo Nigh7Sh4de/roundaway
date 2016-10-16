@@ -100,6 +100,7 @@ controller.prototype = {
         var end = new Date(req.body.end); 
         var _start = new Date(start.valueOf() + (req.body.deviation || 0))
         var _end = new Date(end.valueOf() - (req.body.deviation || 0))
+        if (_end < start) _end = start;
 
         app.db.spots.find({
             lot: req.doc.id,
