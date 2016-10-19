@@ -25,9 +25,7 @@ var errors = {
     NotFound: function(collection, search) {
         this.stack = new Error().stack;
         
-        if (typeof search === 'string')
-            search = { id: search }        
-        else if (search instanceof ObjectId)
+        if (search instanceof ObjectId)
             search = { _id: search }
 
         this.message = 'Could not find ' + collection + ': ' +
