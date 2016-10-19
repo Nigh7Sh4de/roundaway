@@ -1,6 +1,7 @@
 node_modules
 logs
 public
+coverage
 
 .DS_Store
 *.sublime-workspace
