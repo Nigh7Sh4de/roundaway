@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
-var Errors = require('./../errors');
 
+var Errors = require('./../errors');
 var server = require('./../server');
 var config = {
     FACEBOOK_CLIENT_ID: "FACEBOOK_CLIENT_ID",
@@ -15,7 +15,7 @@ var config = {
     DB_CONNECTION_STRING: "DB_CONNECTION_STRING"
 }
 
-describe.only('config', function() {
+describe('config', function() {
     describe('keys', function() {
         it('should continue if config has all necessary keys', function(done) {
             try {
