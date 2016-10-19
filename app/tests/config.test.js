@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var Errors = require('./../errors');
 
-var server = require('./../../server');
+var server = require('./../server');
 var config = {
     FACEBOOK_CLIENT_ID: "FACEBOOK_CLIENT_ID",
     FACEBOOK_CLIENT_SECRET: "FACEBOOK_CLIENT_SECRET",

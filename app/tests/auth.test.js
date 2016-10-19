@@ -4,7 +4,7 @@ var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
 var request = require('supertest');
 var sinon = require('sinon');
-var server = require('./../../server');
+var server = require('./../server');
 
 routeTest('authController', [
     {

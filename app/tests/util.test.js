@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
-var server = require('./../../server');
+var server = require('./../server');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
 var mockPromise = require('./mockPromise');

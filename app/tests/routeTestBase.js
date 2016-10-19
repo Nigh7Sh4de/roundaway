@@ -2,7 +2,7 @@ var testConnectionString = "mongodb://localhost/roundaway_test"
 var sinon = require('sinon');
 var request = require('supertest');
 var expect = require('chai').expect;
-var server = require('./../../server');
+var server = require('./../server');
 var inject;
 var funcs = [];
 var verbs = {

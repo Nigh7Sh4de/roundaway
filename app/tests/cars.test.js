@@ -4,7 +4,7 @@ var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
 var mockPromise = require('./mockPromise');
 
-var server = require('./../../server');
+var server = require('./../server');
 var expressExtensions = require('./../express');
 var Car = require('./../models/Car');
 var Booking = require('./../models/Booking');

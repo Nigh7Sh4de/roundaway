@@ -1,4 +1,4 @@
-var Errors = require('./app/errors'); 
+var Errors = require('./errors'); 
 
 var app = function(inject) {
     var express = require('express');
@@ -54,28 +54,25 @@ var app = function(inject) {
 
 app.GetDefaultInjection = function(allowConnect) {
     var inject = {
-        config: new (require('./config'))(),
-        db: new (require('./app/db'))(),
-        helper: new (require('./app/helper'))(),
+        config: new (require('./../config'))(),
+        db: new (require('./db'))(),
+        helper: new (require('./helper'))(),
 
-        expressExtensions: require('./app/express'),
-        passport: require('./app/passport'),
-        stripe: require('./app/stripe'),
+        expressExtensions: require('./express'),
+        passport: require('./passport'),
+        stripe: require('./stripe'),
 
-        userController: require('./app/controllers/userController'),
-        bookingController: require('./app/controllers/bookingController'),
-        spotController: require('./app/controllers/spotController'),
-        authController: require('./app/controllers/authController'),
-        lotController: require('./app/controllers/lotController'),
-        utilController: require('./app/controllers/utilController'),
-        carController: require('./app/controllers/carController')
+        userController: require('./controllers/userController'),
+        bookingController: require('./controllers/bookingController'),
+        spotController: require('./controllers/spotController'),
+        authController: require('./controllers/authController'),
+        lotController: require('./controllers/lotController'),
+        utilController: require('./controllers/utilController'),
+        carController: require('./controllers/carController')
     }
     if (!allowConnect)
         inject.db.connect = null;
     return inject;
 }
 
-if (require.main == module)
-    app(app.GetDefaultInjection(true)).start();
-else
-    module.exports = app;
+module.exports = app;
