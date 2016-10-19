@@ -1,3 +1,5 @@
+var Errors = require('./app/errors'); 
+
 var app = function(inject) {
     var express = require('express');
     var app = express();
@@ -15,7 +17,7 @@ var app = function(inject) {
         "DB_CONNECTION_STRING"
     ].forEach(function(configKey) {
         if (!inject.config[configKey])
-            throw new Error('Must define config: ' + configKey);
+            throw new Errors.InvalidConfig(configKey);
     })
     app.config = inject.config;
     
