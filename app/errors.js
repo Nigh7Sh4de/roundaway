@@ -6,6 +6,14 @@ var errors = {
         this.message = text || 'test error';
     },
 
+    Unauthorized: function(permissions) {
+        this.stack = new Error().stack;
+        this.message = 'User is not authorized.';
+        if (permissions) {
+            this.message += ' Missing permissions: ' + permissions.toString();
+        }
+    },
+
     InvalidConfig: function(key) {
         this.stack = new Error().stack;
         this.message = 'Must define config: ' + key; 

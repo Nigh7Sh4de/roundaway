@@ -26,12 +26,6 @@ helper.prototype = {
         console.log('Roundaway started on port ' + this.address().port);
     },
 
-    allowGet: function(file) {
-        this.get(file, function(req, res) {
-            return res.sendFile(file, { root: __dirname + '/..' });
-        });
-    },
-
     sendIndex: function(req, res) {
         return res.sendFile('/public/index.html', { root: __dirname + '/..' });
     },
@@ -44,7 +38,7 @@ helper.prototype = {
 
     findResource: function(req, res, next, authRequirements) {
         if (!req.user)
-            return res.sendBad('Could not get session user')
+            return res.sendBad(new Errors.Unauthorized());
 
         var search = [];
         authRequirements = authRequirements || {};
@@ -53,7 +47,7 @@ helper.prototype = {
         if (authRequirements.attendant)
             search.push({attendants: req.user.id});
         if (!search.length && !req.user.admin)
-            return res.sendBad('You do not have the required privelages to access this resource', null, {status: 401});
+            return res.sendBad(new Errors.Unauthorized(Object.keys(authRequirements)));
         
         var slash_api = '/api/'.length;
         var slash = req.url.indexOf('/', slash_api);
