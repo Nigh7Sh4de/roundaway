@@ -635,6 +635,49 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
+        describe('PUT /api/lots/:id/available/check', function() {
+            it('should get spot with availability', function(done) {
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2010/01/02')
+                }
+                var lot = new Lot();
+                var spot = new Spot({lot: lot});
+                spot.available.addRange(_av.start, _av.end);
+                insert(lot, spot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/available/check')
+                        .send(_av)
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.body.data.exact[0].id).to.deep.equal(spot.id);
+                            done();
+                        })
+                })
+            })
+            it('should return spots with similar availability', function(done) {
+                var _av = {
+                    start: new Date('2010/01/01'),
+                    end: new Date('2010/01/02'),
+                    deviation: 1000*60*60*24*365
+                }
+                var lot = new Lot();
+                var spot = new Spot({lot: lot});
+                spot.available.addRange(new Date('2010/02/01'), new Date('2010/02/02'));
+                insert(lot, spot, function() {
+                    request(app).put('/api/lots/' + lot.id + '/available/check')
+                        .send(_av)
+                        .set('Authorization', 'JWT ' + token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.body.data.similar[0].id).to.deep.equal(spot.id);
+                            done();
+                        })
+                })
+            })
+        })
         describe('PUT /api/lots/:id/available', function() {
             it('should add availability', function(done) {
                 var _av = {

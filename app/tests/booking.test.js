@@ -8,6 +8,7 @@ var verbs = routeTest.verbs;
 var server = require('./../server');
 var Booking = require('./../models/Booking');
 var Spot = require('./../models/Spot');
+var Lot = require('./../models/Lot');
 var Car = require('./../models/Car');
 
 describe('Booking schema', function() {
@@ -69,6 +70,18 @@ describe('Booking schema', function() {
     })
     
     describe('setSpot', function() {
+        it('should set the lot for generic spots', function() {
+            var b = new Booking();
+            var l = new Lot();
+            var s = new Spot({lot: l.id, reserved: false});
+            s.price.perHour = 123.45;
+            expect(b.spot).to.not.be.ok;
+            return b.setSpot(s).then(function() {
+                expect(b.spot).to.deep.equal(s._id);
+                expect(b.lot).to.deep.equal(l._id);
+            })
+        })
+
         it('should set the price', function() {
             var b = new Booking();
             var price = 123.45;

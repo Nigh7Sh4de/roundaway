@@ -14,6 +14,15 @@ var bookingSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Car'
     },
+    lot: {
+        type: Schema.Types.ObjectId,
+        ref: 'Lot',
+        set: function(data) {
+            if (typeof data === 'string')
+                data = new mongoose.Types.ObjectId(data);
+            return data;
+        }
+    },
     spot: {
         type: Schema.Types.ObjectId,
         ref: 'Spot',
@@ -105,6 +114,8 @@ bookingSchema.methods.setSpot = function(spot) {
         if (!spot.getPrice() || !spot.getPrice().perHour)
             return reject('Cannot set spot for this booking because the spot provided does not have a set price');
         this.spot = spot.id;
+        if (!spot.reserved)
+            this.lot = spot.lot;
         var onehour = 1000*60*60;
         this.price = spot.getPrice().perHour * this.getDuration() / onehour;
         this.save(function(err, booking) {
