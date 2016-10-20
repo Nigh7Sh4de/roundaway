@@ -1,6 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Scema;
-
+var Errors = require('./errors');
 /**
  * Stupid hack because mongoose doesn't know 
  * how to properly deprecate functionality that 
@@ -16,20 +16,6 @@ var Lot = require('./models/Lot');
 var Car = require('./models/Car');
 
 var _db = {
-    // findById: function(collection, id, cb) {
-    //     collections[collection].findById(id, function(err, res) {
-    //         if (err)
-    //             return cb(err);
-    //         else {
-    //             return cb(null, res);
-    //         }
-    //     });
-    // },
-    // find: function(collection, search, cb) {
-    //     collections[collection].find(search || {}, function (err, docs) {
-    //         return cb(err, docs);
-    //     });
-    // },
     checkUser: function(strategy, profile, cb) {
         var searchProp = 'authid.',
             search = {};
@@ -92,7 +78,7 @@ var collections = function() {}
 collections.prototype = {
     connect: function(connString) {
         if (!connString)
-            throw new Error('Must supply a connection string for the db');
+            throw new Errors.InvalidConfig('DB_CONNECTION_STRING');
         this.connection = mongoose.connect(connString, {
             promiseLibrary: Promise
         }).connection;
