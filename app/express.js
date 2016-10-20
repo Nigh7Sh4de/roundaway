@@ -18,6 +18,8 @@ var exts = {
         express.response.sendBad = this.sendBad;
     },
 
+    deepEqual: deepEqual,
+
     sendGood: function(msg, obj, opt) {
         opt = opt || {};
         return this.status(opt.code || 200).
@@ -61,8 +63,8 @@ var exts = {
                     if (!body)
                         return false;
                     for (var prop in obj) {
-                        var a = body[prop].toObject ? body[prop].toObject() : body[prop];
-                        var b = obj[prop].toObject ? obj[prop].toObject() : obj[prop];
+                        var a = body[prop] && body[prop].toObject ? body[prop].toObject() : body[prop];
+                        var b = obj[prop] && obj[prop].toObject ? obj[prop].toObject() : obj[prop];
                         if (!deepEqual(a, b))
                             return false;
                     }
@@ -89,9 +91,9 @@ var exts = {
                     return e;
                 })
                 var errorsCalled = this.send.firstCall.args[0].errors;
-                for (var i=0; i<errorsCalled.length; i++) {
+                for (var i=0; i < errorsCalled.length; i++) {
                     var _error = errorsCalled[0];
-                    var type = _error.substring(0, _error.indexOf(':'));
+                    var type = _error.substring(0, _error.indexOf(':')) || _error;
                     if (error.indexOf(type) >= 0)
                         error.splice(error.indexOf(type), 1);
                 }
