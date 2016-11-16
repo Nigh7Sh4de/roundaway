@@ -12,7 +12,6 @@ authController.prototype = {
         this.app.passport.authenticate(
             req.params.strat + '-token',  
             function(err, user, info) {
-                // console.log(err, user, info)
                 if (err)
                     return res.sendBad(err);
                 if (info && info.stack)

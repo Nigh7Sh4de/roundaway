@@ -48,12 +48,6 @@ const auth = function(db, config) {
     }, (accessToken, refreshToken, profile, cb) => {
         this.checkUser('facebook', profile, cb);
     })
-    // const passport = require('passport');
-
-    // for (var strat in strategies)
-    //     passport.use(strategies[strat])
-
-    // passport.use(fbStrategy)
     
     return strategies;
 }
