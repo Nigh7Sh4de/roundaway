@@ -16,18 +16,11 @@ const auth = function(db, config) {
             else if (doc) cb(null, doc);
             else if (strategy === 'jwt') cb(new Errors.NotFound('User', search));
             else {
-                console.log('hi');
-                debugger
                 search.profile = {
                     name: profile.displayName
                 }
                 var newUser = new User(search)
-                console.log('saving...');
-                newUser.save(function(err, user) {
-                    console.log('saved');
-                    if (err) throw err;
-                    return cb(null, user);
-                })
+                newUser.save(cb);
             }
         })
     } 
