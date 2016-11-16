@@ -1,4 +1,6 @@
 var expect = require('chai').expect;
+var Errors = require('./../errors');
+var User = require('./../models/User');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
@@ -35,31 +37,79 @@ describe('authController', function() {
     beforeEach(function () {
         var inject = server.GetDefaultInjection();
         app = server(inject);
+
+        delete app.passport
+        app.passport = require('passport')
+        const auth = inject.auth(inject.db, inject.config)
+        for (var strat in auth) {
+            auth[strat]._oauth2 = {
+                get: (profileURL, accessToken, cb) => cb(null, '{}')
+            }
+            app.passport.use(auth[strat])
+        }
+
         req = expressExtensions.mockRequest();
         res = expressExtensions.mockResponse();
+
+        sinon.stub(User.prototype, 'save', (cb) => cb(null, this))
+
     });
+
+    afterEach(function() {
+        if (User.prototype.save.restore)
+            User.prototype.save.restore();
+    })
 
     describe('Authenticate', function() {
         it('should authenticate with the given strat token', function(done) {
-            var ctrl = app.authController;
             var strats = [ 'facebook', 'google' ];
-            req.body.access_token = 'someinvalidtoken';
-            req.body.refresh_token = 'someinvalidtoken';
-            res.sendBad = sinon.spy((err) => {
-                expect(err).to.be.ok;
-                expect(err).to.have.property('name', 'InternalOAuthError')
-                res.send(err);
-            })
+            app.db.users = {
+                findOne: (search, cb) => cb(null, {})
+            }
+            req.body.access_token = 'sometoken';
+            req.body.refresh_token = 'sometoken';
             res.sent = () => {
                 if (res.send.callCount >= strats.length) {
-                    expect(res.sendBad.callCount === res.send.callCount)
+                    expect(res.sendGood.callCount === res.send.callCount)
                     done();
                 }
             }
+            res.sendBad = done;
             strats.forEach(function (s) {
                 req.params.strat = s;
-                ctrl.Authenticate(req, res);
+                app.authController.Authenticate(req, res, done);
             })
+        })
+
+        it('should fail if db threw an error', function(done) {
+            app.db.users = {
+                findOne: (search, cb) => cb(new Errors.TestError())
+            }
+            req.params.strat = 'facebook';
+            req.body.access_token = 'sometoken';
+            req.body.refresh_token = 'sometoken';
+            res.sent = () => {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.TestError)).to.be.true;
+                done();
+            }
+            res.sendGood = done;
+            app.authController.Authenticate(req, res, done);
+        })
+
+        it('should create new user if not found', function(done) {
+            app.db.users = {
+                findOne: (search, cb) => cb()
+            }
+            req.params.strat = 'facebook';
+            req.body.access_token = 'sometoken';
+            req.body.refresh_token = 'sometoken';
+            res.sendBad = done;
+            res.sent = () => {
+                expect(res.sendGood.calledOnce).to.be.true;
+                done();
+            }
+            app.authController.Authenticate(req, res, done);
         })
     })
 });
