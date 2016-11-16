@@ -40,21 +40,26 @@ describe('authController', function() {
     });
 
     describe('Authenticate', function() {
-        it('should authenticate with the given strat token', function() {
+        it('should authenticate with the given strat token', function(done) {
             var ctrl = app.authController;
-            var strats = [ 'google', 'facebook' ];
-            var passport = {
-                authenticate: sinon.spy(function() { return function(){} })
-            }
-            ctrl.app = {
-                passport: passport
+            var strats = [ 'facebook', 'google' ];
+            req.body.access_token = 'someinvalidtoken';
+            req.body.refresh_token = 'someinvalidtoken';
+            res.sendBad = sinon.spy((err) => {
+                expect(err).to.be.ok;
+                expect(err).to.have.property('name', 'InternalOAuthError')
+                res.send(err);
+            })
+            res.sent = () => {
+                if (res.send.callCount >= strats.length) {
+                    expect(res.sendBad.callCount === res.send.callCount)
+                    done();
+                }
             }
             strats.forEach(function (s) {
                 req.params.strat = s;
                 ctrl.Authenticate(req, res);
-                expect(passport.authenticate.calledWith(s + '-token')).to.be.true;
             })
-            expect(passport.authenticate.callCount).to.equal(strats.length);
         })
     })
 });

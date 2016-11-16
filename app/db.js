@@ -16,37 +16,6 @@ var Lot = require('./models/Lot');
 var Car = require('./models/Car');
 
 var _db = {
-    checkUser: function(strategy, profile, cb) {
-        var searchProp = 'authid.',
-            search = {};
-        if (strategy === 'jwt')
-            searchProp = '_id';
-        else
-            searchProp += strategy;
-
-        search[searchProp] = profile.id;
-        collections.prototype.users.findOne(search, function(err, doc) {
-            if (err)
-                return cb(err);
-            if (doc)
-                return cb(null, doc);
-            else if (strategy === 'jwt') {
-                return cb('User not found in db');
-            }
-            else {
-                search.profile = {
-                    name: profile.displayName
-                }
-                var newUser = new User(search);
-                newUser.save(function(err) {
-                    if (err)
-                        throw err;
-                })
-                return cb(null, newUser);
-            }
-        })
-    }
-    //,
     // connect: function(user, strat, profile, cb) {
     //     var searchProp = 'authid.' + strat;
     //     var search = {};
@@ -88,8 +57,7 @@ collections.prototype = {
     spots: Spot,
     lots: Lot,
     cars: Car,
-    checkUser: _db.checkUser,
-    connectUser: _db.connect
+    // connectUser: _db.connect
 }
 
 module.exports = collections;

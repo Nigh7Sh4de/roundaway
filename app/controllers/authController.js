@@ -12,8 +12,11 @@ authController.prototype = {
         this.app.passport.authenticate(
             req.params.strat + '-token',  
             function(err, user, info) {
+                // console.log(err, user, info)
                 if (err)
                     return res.sendBad(err);
+                if (info && info.stack)
+                    return res.sendBad(info);
                 if (!user)
                     return res.sendBad(['User could not be authenticated', info]);
                 var token = jwt.sign({id: user.id, profile: user.profile}, config.JWT_SECRET_KEY);

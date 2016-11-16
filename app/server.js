@@ -24,7 +24,10 @@ var app = function(inject) {
     app.db = inject.db;
     if (app.db.connect != null && typeof app.db.connect === 'function')
         app.db.connect(app.config.DB_CONNECTION_STRING);
-    app.passport = inject.passport(app.db, app.config);
+    app.passport = require('passport')
+    const strategies = inject.auth(app.db, app.config);
+    for (var strat in strategies)
+        app.passport.use(strategies[strat])
     app.geocoder = require('node-geocoder')('google','https',{
         apiKey: app.config.GOOGLE_API_KEY
     });
@@ -59,7 +62,7 @@ app.GetDefaultInjection = function(allowConnect) {
         helper: new (require('./helper'))(),
 
         expressExtensions: require('./express'),
-        passport: require('./passport'),
+        auth: require('./auth'),
         stripe: require('./stripe'),
 
         userController: require('./controllers/userController'),
