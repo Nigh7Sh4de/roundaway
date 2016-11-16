@@ -23,7 +23,8 @@
   "scripts": {
     "test": "mocha app/tests",
     "test-debug": "mocha --debug-brk app/tests",
-    "start": "node index.js"
+    "start": "node index.js",
+    "cover": "istanbul cover node_modules/mocha/bin/_mocha app/tests"
   },
   "description": "Roundaway",
   "main": "server.js",
