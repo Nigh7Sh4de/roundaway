@@ -25,7 +25,7 @@ var app = function(inject) {
     if (app.db.connect != null && typeof app.db.connect === 'function')
         app.db.connect(app.config.DB_CONNECTION_STRING);
     app.passport = require('passport')
-    const strategies = inject.auth(app.db, app.config);
+    const strategies = inject.strategies(app.db, app.config);
     for (var strat in strategies)
         app.passport.use(strategies[strat])
     app.geocoder = require('node-geocoder')('google','https',{
@@ -62,7 +62,7 @@ app.GetDefaultInjection = function(allowConnect) {
         helper: new (require('./helper'))(),
 
         expressExtensions: require('./express'),
-        auth: require('./auth'),
+        strategies: require('./strategies'),
         stripe: require('./stripe'),
 
         userController: require('./controllers/userController'),

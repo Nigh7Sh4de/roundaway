@@ -41,7 +41,7 @@ describe('authController', function() {
 
         delete app.passport
         app.passport = require('passport')
-        const auth = inject.auth(inject.db, inject.config)
+        const auth = inject.strategies(inject.db, inject.config)
         for (var strat in auth) {
             auth[strat]._oauth2 = {
                 get: (profileURL, accessToken, cb) => cb(null, '{}')
