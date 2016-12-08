@@ -81,7 +81,8 @@ controller.prototype = {
         if (!req.doc.getPrice())
             return res.sendBad(new Errors.MissingProperty(req.doc, 'price', req.doc.getPrice()));
         
-        app.stripe.charge(req.body.token, req.doc.getPrice())
+        var destination = req.user.stripe && req.user.stripe.stripe_id ? req.user.stripe.stripe_id : null
+        app.stripe.charge(req.body.token, destination, req.doc.getPrice())
         .then(function(charge) {
             _charge = charge;
             return req.doc.pay()

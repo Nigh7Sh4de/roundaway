@@ -32,8 +32,10 @@ _d('the entire app should not explode', function() {
     }
     var sessionUser;
     var adminUser;
+    var stripeUser;
     var token = 'aaa.bbb.ccc';
     var admin_token = 'aaa.bbb.ccc';
+    var stripe_user_token = 'aaa.bbb.ccc';
 
     before(function(done) {
         sessionUser = new User({
@@ -46,16 +48,25 @@ _d('the entire app should not explode', function() {
             profile: userProfile,
             authid: userAuth
         });
+        stripeUser = new User({
+            stripe: {
+                stripe_id: 'some stripe id'
+            },
+            profile: userProfile,
+            authid: userAuth
+        });
         inject.config.DB_CONNECTION_STRING = testConnectionString;
         token = jwt.sign({id:sessionUser.id}, inject.config.JWT_SECRET_KEY);
         admin_token = jwt.sign({id:adminUser.id}, inject.config.JWT_SECRET_KEY);
+        stripe_user_token = jwt.sign({id:stripeUser.id}, inject.config.JWT_SECRET_KEY);
         app = server(inject);
-        app.stripe.charge = function(t, a) {
-            return Promise.resolve({
-                token: t,
-                amount: a
-            })
-        }
+        app.stripe.stripe = {
+            charges: {
+                create: function(params) {
+                    return Promise.resolve(params)
+                }
+            }
+        } 
         app.db.connection.on('error', function(err) {
             throw err;
         });
@@ -64,7 +75,8 @@ _d('the entire app should not explode', function() {
             app.db.users.collection.insert(
                 [
                     sessionUser.toJSON({getters: true}), 
-                    adminUser.toJSON({getters: true})
+                    adminUser.toJSON({getters: true}),
+                    stripeUser.toJSON({getters: true})
                 ], done);
         });
     })
@@ -480,6 +492,28 @@ _d('the entire app should not explode', function() {
             })
         })
         describe('PUT /api/bookings/:id/pay', function() {
+            it('should pay the destination if user has stripe connected', function(done) {
+                var price = 123.45;
+                var booking = new Booking({
+                    start: new Date('2000/01/01'),
+                    end: new Date('2050/01/01'),
+                    price: price,
+                    user: stripeUser
+                })
+                insert(booking, function() {
+                    request(app).put('/api/bookings/' + booking.id + '/pay')
+                        .send({token: 'some token'})
+                        .set('Authorization', 'JWT ' + stripe_user_token)
+                        .end(function(err, res) {
+                            expect(err).to.not.be.ok;
+                            expect(res.status, res.body.errors).to.equal(200);
+                            expect(res.text).to.deep.contain(price * 100);
+                            expect(res.text).to.deep.contain(stripeUser.stripe.stripe_id);
+                            done();
+                        })
+                });
+            })
+
             it('should pay the price of the booking', function(done) {
                 var price = 123.45;
                 var booking = new Booking({
@@ -494,7 +528,7 @@ _d('the entire app should not explode', function() {
                         .end(function(err, res) {
                             expect(err).to.not.be.ok;
                             expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.deep.contain(price);
+                            expect(res.text).to.deep.contain(price * 100);
                             done();
                         })
                 });
