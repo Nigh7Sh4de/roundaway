@@ -11,10 +11,13 @@ stripe.prototype = {
     charge: function(source, destination, amount) {
         amount = parseInt(amount * 100);
         var charge = {
-            card: source,
             amount: amount,
             currency: 'cad'
         }
+        if (source.indexOf('cus_') === 0)
+            charge.customer = source
+        else
+            charge.source = source
         if (destination) {
             charge.destination = destination;
             charge.application_fee = amount * (0.1 + 0.029) + 30
@@ -39,6 +42,9 @@ stripe.prototype = {
             limit: 10
         });
     },
+    createCustomer: function(source) {
+        return this.stripe.customers.create({ source });
+    }
 }
 
 module.exports = stripe;

@@ -81,8 +81,23 @@ controller.prototype = {
         if (!req.doc.getPrice())
             return res.sendBad(new Errors.MissingProperty(req.doc, 'price', req.doc.getPrice()));
         
-        var destination = req.user.stripe && req.user.stripe.stripe_id ? req.user.stripe.stripe_id : null
-        app.stripe.charge(req.body.token, destination, req.doc.getPrice())
+        var destination = null;
+        app.db.spots.findById(req.doc.spot._id || req.doc.spot)
+        .then(function(spot) {
+            return app.db.users.findById(spot.user._id || spot.user)
+        })
+        .then(function(user) {
+            if (user.stripe && user.stripe.stripe_id)
+                destination = user.stripe.stripe_id;
+            if (!req.body.useStripeCustomer)
+                return Promise.resolve({id: req.body.token});
+            else if (req.user.stripe && req.user.stripe.customer_id)
+                return Promise.resolve({id: req.user.stripe.customer_id});
+            else return app.stripe.createCustomer(req.body.token)
+        })
+        .then(function(customer) {
+            return app.stripe.charge(customer.id, destination, req.doc.getPrice())
+        })
         .then(function(charge) {
             _charge = charge;
             return req.doc.pay()

@@ -3,6 +3,7 @@ var Schema = require('mongoose').Schema;
 module.exports = {
     type: new Schema({
       stripe_id: String,
+      customer_id: String,
       public: String,
       secret: String
     }, {

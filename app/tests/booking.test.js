@@ -10,6 +10,7 @@ var Booking = require('./../models/Booking');
 var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
 var Car = require('./../models/Car');
+var User = require('./../models/User');
 
 describe('Booking schema', function() {
     before(function() {
@@ -658,12 +659,57 @@ describe('bookingController', function() {
             app = server(inject);
         })
 
-        it('should mark booking as paid if charge is successful', function(done) {
-            var b = new Booking();
+        it('should create a new customer entity if needed', function(done) {
+            var u = new User({
+                stripe: {}
+            });
+            var b = new Booking({user: u});
+            var s = b.spot = new Spot({user: u});
             b.price = 123.45;
             b.pay = sinon.spy(function() {
                 return Promise.resolve();
             });
+            app.db.spots = {
+                findById: mockPromise(s)
+            }
+            app.db.users = {
+                findById: mockPromise(u)
+            }
+            app.stripe.createCustomer = sinon.spy(mockPromise({id: 'cus_ some id'}));
+            req.user = {};
+            req.doc = b;
+            req.params.id = b.id;
+            req.body.token = 'sometoken';
+            req.body.useStripeCustomer = true;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(app.stripe.createCustomer.calledOnce).to.be.true;
+                expect(charge.calledOnce).to.be.true;
+                expect(b.pay.calledOnce).to.be.true;
+                done();
+            }
+            app.bookingController.PayForBooking(req, res);
+        })
+
+        it('should mark booking as paid if charge is successful', function(done) {
+            var u = new User({
+                stripe: {
+                    customer_id: 'cus_ some id'
+                }
+            });
+            var b = new Booking({user: u});
+            var s = b.spot = new Spot({user: u});
+            b.price = 123.45;
+            b.pay = sinon.spy(function() {
+                return Promise.resolve();
+            });
+            app.db.spots = {
+                findById: mockPromise(s)
+            }
+            app.db.users = {
+                findById: mockPromise(u)
+            }
             req.user = {};
             req.doc = b;
             req.params.id = b.id;
@@ -679,9 +725,21 @@ describe('bookingController', function() {
         })
 
         it('should attempt to make a charge', function(done) {
-            var b = new Booking();
+            var u = new User({
+                stripe: {
+                    customer_id: 'cus_ some id'
+                }
+            });
+            var b = new Booking({user: u});
+            var s = b.spot = new Spot({user: u});
             b.price = 123.45;
             b.pay = function() { return Promise.resolve() };
+            app.db.spots = {
+                findById: mockPromise(s)
+            }
+            app.db.users = {
+                findById: mockPromise(u)
+            }
             req.user = {};
             req.doc = b;
             req.params.id = b.id;
@@ -697,7 +755,19 @@ describe('bookingController', function() {
         })
 
         it('should fail if booking does not have a price set', function(done) {
-            var b = new Booking();
+            var u = new User({
+                stripe: {
+                    customer_id: 'cus_ some id'
+                }
+            });
+            var b = new Booking({user: u});
+            var s = b.spot = new Spot({user: u});
+            app.db.spots = {
+                findById: mockPromise(s)
+            }
+            app.db.users = {
+                findById: mockPromise(u)
+            }
             req.user = {};
             req.doc = b;
             req.params.id = b.id;
@@ -712,8 +782,20 @@ describe('bookingController', function() {
         })
 
         it('should fail if not passed proper token', function(done) {
-            var b = new Booking();
+            var u = new User({
+                stripe: {
+                    customer_id: 'cus_ some id'
+                }
+            });
+            var b = new Booking({user: u});
+            var s = b.spot = new Spot({user: u});
             b.price = 123.45;
+            app.db.spots = {
+                findById: mockPromise(s)
+            }
+            app.db.users = {
+                findById: mockPromise(u)
+            }
             req.user = {};
             req.doc = b;
             req.params.id = b.id;

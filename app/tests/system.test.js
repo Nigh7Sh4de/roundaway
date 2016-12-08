@@ -50,7 +50,8 @@ _d('the entire app should not explode', function() {
         });
         stripeUser = new User({
             stripe: {
-                stripe_id: 'some stripe id'
+                stripe_id: 'some stripe id',
+                customer_id: 'cus_ some id'
             },
             profile: userProfile,
             authid: userAuth
@@ -494,13 +495,20 @@ _d('the entire app should not explode', function() {
         describe('PUT /api/bookings/:id/pay', function() {
             it('should pay the destination if user has stripe connected', function(done) {
                 var price = 123.45;
+                var user = new User({
+                    stripe: {
+                        stripe_id: 'owner stripe id'
+                    }
+                })
+                var spot = new Spot({user});
                 var booking = new Booking({
                     start: new Date('2000/01/01'),
                     end: new Date('2050/01/01'),
                     price: price,
-                    user: stripeUser
+                    user: stripeUser,
+                    spot: spot
                 })
-                insert(booking, function() {
+                insert(user, spot, booking, function() {
                     request(app).put('/api/bookings/' + booking.id + '/pay')
                         .send({token: 'some token'})
                         .set('Authorization', 'JWT ' + stripe_user_token)
@@ -508,7 +516,7 @@ _d('the entire app should not explode', function() {
                             expect(err).to.not.be.ok;
                             expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.deep.contain(price * 100);
-                            expect(res.text).to.deep.contain(stripeUser.stripe.stripe_id);
+                            expect(res.text).to.deep.contain(user.stripe.stripe_id);
                             done();
                         })
                 });
@@ -516,12 +524,15 @@ _d('the entire app should not explode', function() {
 
             it('should pay the price of the booking', function(done) {
                 var price = 123.45;
+                var user = new User();
+                var spot = new Spot({user});
                 var booking = new Booking({
                     start: new Date('2000/01/01'),
                     end: new Date('2050/01/01'),
-                    price: price
+                    price: price,
+                    spot: spot
                 })
-                insert(booking, function() {
+                insert(user, spot, booking, function() {
                     request(app).put('/api/bookings/' + booking.id + '/pay')
                         .send({token: 'some token'})
                         .set('Authorization', 'JWT ' + token)

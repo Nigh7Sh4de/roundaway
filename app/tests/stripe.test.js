@@ -86,7 +86,22 @@ describe('Stripe', function() {
             })
         })
     })
-
+    describe('createCustomer', function() {
+        it('should create a new customer for the given source', function() {
+            var stripe = new Stripe('some key');
+            stripe.stripe = {
+                customers: {
+                    create: function(opt) {
+                        return Promise.resolve(opt)
+                    }
+                }
+            }
+            var tok = 'some card token'
+            return stripe.createCustomer(tok).then(function(opt) {
+                expect(opt.source).to.equal(tok);
+            })
+        })
+    })
     describe('charge', function() {
         it('should use a destination if provided', function() {
             var stripe = new Stripe('some key');
@@ -102,7 +117,7 @@ describe('Stripe', function() {
                 }
             }
             return stripe.charge(token, destination, amount).then(function(opt) {
-                expect(opt.card).to.equal(token);
+                expect(opt.source).to.equal(token);
                 expect(opt.amount).to.equal(amountInCents);
                 expect(opt.currency).to.equal('cad');
                 expect(opt.destination).to.equal(destination);
@@ -121,7 +136,7 @@ describe('Stripe', function() {
                 }
             }
             return stripe.charge(token, null, amount).then(function(opt) {
-                expect(opt.card).to.equal(token);
+                expect(opt.source).to.equal(token);
                 expect(opt.amount).to.equal(amountInCents);
                 expect(opt.currency).to.equal('cad');
             })
