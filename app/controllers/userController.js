@@ -12,7 +12,8 @@ var controller = function(app) {
     app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetProfileOfUser.bind(this));
     app.patch('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.UpdateProfileOfUser.bind(this));
     app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetProfileOfUser.bind(this));
-    app.get('/api/users/:id/stripe', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeAccountForUser.bind(this));
+    app.get('/api/users/:id/stripe/account', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeAccountForUser.bind(this));
+    app.get('/api/users/:id/stripe/customer', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeCustomerForUser.bind(this));
     app.post('/api/users/:id/stripe', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.UpdateStripeAccountForUser.bind(this));
     app.get('/api/users/:id/stripe/history', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeTransactionsForUser.bind(this));
 }
@@ -104,6 +105,21 @@ controller.prototype = {
         })
         .then(function(account) {
             res.sendGood('Found stripe account for user', account);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+    GetStripeCustomerForUser: function(req, res) {
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            if (!user.stripe || !user.stripe.customer_id)
+                throw new Errors.MissingProperty(user, 'stripe');
+            return app.stripe.getCustomer(user.stripe.customer_id);
+        })
+        .then(function(account) {
+            res.sendGood('Found stripe customer for user', account);
         })
         .catch(function(err) {
             res.sendBad(err);

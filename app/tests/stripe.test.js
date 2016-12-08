@@ -102,6 +102,22 @@ describe('Stripe', function() {
             })
         })
     })
+    describe('getCustomer', function() {
+        it('should get a customer for the given id', function() {
+            var stripe = new Stripe('some key');
+            stripe.stripe = {
+                customers: {
+                    retrieve: function(opt) {
+                        return Promise.resolve(opt)
+                    }
+                }
+            }
+            var id = 'cus_ some id'
+            return stripe.getCustomer(id).then(function(opt) {
+                expect(opt).to.equal(id);
+            })
+        })
+    })
     describe('charge', function() {
         it('should use a destination if provided', function() {
             var stripe = new Stripe('some key');

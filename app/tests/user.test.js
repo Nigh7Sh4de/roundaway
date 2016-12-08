@@ -245,8 +245,13 @@ routeTest('userController', [
         ignoreOwner: true
     }, {
         verb: verbs.GET,
-        route: '/api/users/:id/stripe',
+        route: '/api/users/:id/stripe/account',
         method: 'GetStripeAccountForUser',
+        ignoreOwner: true
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/:id/stripe/customer',
+        method: 'GetStripeCustomerForUser',
         ignoreOwner: true
     }, {
         verb: verbs.POST,
@@ -467,6 +472,46 @@ describe('userController', function() {
                 done();
             }
             app.userController.GetStripeAccountForUser(req, res);
+        })
+
+        it('should error if user does not have a stripe account defined', function(done) {
+            var user = new User()
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
+                done();
+            }
+            app.userController.GetStripeAccountForUser(req, res)
+        })
+    })
+
+    describe('GetStripeCustomerForUser', function() {
+        it('should get stripe customer for user', function(done) {
+            var customer_id = 'cus_ some id';
+            var user = new User()
+            user.stripe = { customer_id }
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            app.stripe = {
+                getCustomer: mockPromise({
+                    id: customer_id,
+                    object: "customer"
+                })
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith({
+                    id: customer_id,
+                    object: "customer"    
+                })).to.be.true;
+                done();
+            }
+            app.userController.GetStripeCustomerForUser(req, res);
         })
 
         it('should error if user does not have a stripe account defined', function(done) {
