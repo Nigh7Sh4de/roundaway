@@ -20,7 +20,25 @@ stripe.prototype = {
             charge.application_fee = amount * (0.1 + 0.029) + 30
         }
         return this.stripe.charges.create(charge);
-    }
+    },
+    createAccount: function(account) {
+        account = Object.assign(account, {
+            managed: true
+        })
+        return this.stripe.accounts.create(account);
+    },
+    updateAccount: function(id, account) {
+        return this.stripe.accounts.update(id, account);
+    },
+    getAccount: function(id) {
+        return this.stripe.accounts.retrieve(id);
+    },
+    getHistory: function(id) {
+        return this.stripe.balance.listTransactions({
+            stripe_account: id,
+            limit: 10
+        });
+    },
 }
 
 module.exports = stripe;

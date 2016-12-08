@@ -452,12 +452,10 @@ describe('userController', function() {
                 findById: mockPromise(user)
             }
             app.stripe = {
-                accounts: {
-                    retrieve: mockPromise({
-                        id: stripe_id,
-                        object: "account"
-                    })
-                }
+                getAccount: mockPromise({
+                    id: stripe_id,
+                    object: "account"
+                })
             }
             res.sendBad = done;
             res.sent = function() {
@@ -500,9 +498,7 @@ describe('userController', function() {
                 findById: mockPromise(user)
             }
             app.stripe = {
-                accounts: {
-                    update: mockPromise(updated_account)
-                }
+                updateAccount: mockPromise(updated_account)
             }
             res.sendBad = done;
             res.sent = function() {
@@ -524,9 +520,7 @@ describe('userController', function() {
                 findById: mockPromise(user)
             }
             app.stripe = {
-                accounts: {
-                    create: mockPromise(updated_account)
-                }
+                createAccount: mockPromise(updated_account)
             }
             res.sendBad = done;
             res.sent = function() {
@@ -550,9 +544,7 @@ describe('userController', function() {
                 findById: mockPromise(user)
             }
             app.stripe = {
-                accounts: {
-                    update: mockPromise(updated_account)
-                }
+                updateAccount: mockPromise(updated_account)
             }
             res.sendBad = done;
             res.sent = function() {
@@ -572,9 +564,7 @@ describe('userController', function() {
             }
             var transactions = [{id: '123'}, {id: '456'}];
             app.stripe = {
-                balance: {
-                    listTransactions: mockPromise(transactions)
-                }
+                getHistory: mockPromise(transactions)
             }
             app.db.users = {
                 findById: mockPromise(user)

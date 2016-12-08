@@ -100,7 +100,7 @@ controller.prototype = {
         .then(function(user) {
             if (!user.stripe || !user.stripe.stripe_id)
                 throw new Errors.MissingProperty(user, 'stripe');
-            return app.stripe.accounts.retrieve(user.stripe.stripe_id);
+            return app.stripe.getAccount(user.stripe.stripe_id);
         })
         .then(function(account) {
             res.sendGood('Found stripe account for user', account);
@@ -115,8 +115,8 @@ controller.prototype = {
         .then(function(user) {
             (
                 !user.stripe || !user.stripe.stripe_id ?
-                app.stripe.accounts.create(req.body) :
-                app.stripe.accounts.update(user.stripe.stripe_id, req.body) 
+                app.stripe.createAccount(req.body) :
+                app.stripe.updateAccount(user.stripe.stripe_id, req.body) 
             ).then(function(account) {
                 res.sendGood('Stripe account successfully created', account)
             })
@@ -134,10 +134,7 @@ controller.prototype = {
         .then(function(user) {
             if (!user.stripe || !user.stripe.stripe_id)
                 throw new Errors.MissingProperty(user, 'stripe')
-            return app.stripe.balance.listTransactions({ 
-                stripe_account: user.stripe.stripe_id,
-                limit: 10 
-            })
+            return app.stripe.getHistory(user.stripe.stripe_id);
         })
         .then(function(transactions) {
             res.sendGood('Found transactions for user', transactions)

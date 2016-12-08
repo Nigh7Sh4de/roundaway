@@ -664,6 +664,7 @@ describe('bookingController', function() {
             b.pay = sinon.spy(function() {
                 return Promise.resolve();
             });
+            req.user = {};
             req.doc = b;
             req.params.id = b.id;
             req.body.token = 'sometoken';
@@ -681,6 +682,7 @@ describe('bookingController', function() {
             var b = new Booking();
             b.price = 123.45;
             b.pay = function() { return Promise.resolve() };
+            req.user = {};
             req.doc = b;
             req.params.id = b.id;
             req.body.token = 'sometoken';
@@ -696,6 +698,7 @@ describe('bookingController', function() {
 
         it('should fail if booking does not have a price set', function(done) {
             var b = new Booking();
+            req.user = {};
             req.doc = b;
             req.params.id = b.id;
             req.body.token = 'sometoken';
@@ -711,6 +714,7 @@ describe('bookingController', function() {
         it('should fail if not passed proper token', function(done) {
             var b = new Booking();
             b.price = 123.45;
+            req.user = {};
             req.doc = b;
             req.params.id = b.id;
             res.sent = function() {
