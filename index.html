@@ -365,6 +365,50 @@ In order to make API calls that are auth protected use the following flow:</p>
 
 <p>Updates the specified fields of the <b>User</b>'s profile.</p>
 
+<h5>
+<a id="get-apiusersuseridstripe" class="anchor" href="#get-apiusersuseridstripe" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/stripe</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Retrieve <b>User</b>'s stripe id and other info.</p>
+
+<h5>
+<a id="post-apiusersuseridstripe" class="anchor" href="#post-apiusersuseridstripe" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>POST <code>/api/users/:userid/stripe</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+  <tr>
+    <td>...</td>
+    <td>Properties will be passed directly to <a href="https://stripe.com/docs/api/node#create_account">stripe</a> to create/connect the account</td>
+  </tr>
+  
+</table>
+
+<p>Add a stripe account to the <b>User</b>.</p>
+
+<h5>
+<a id="get-apiusersuseridstripehistory" class="anchor" href="#get-apiusersuseridstripehistory" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/stripe/history</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Retrieve the stripe account balance history for this <b>User</b>.</p>
+
 <h4>
 <a id="booking-1" class="anchor" href="#booking-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Booking</h4>
 
