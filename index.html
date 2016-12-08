@@ -551,9 +551,14 @@ In order to make API calls that are auth protected use the following flow:</p>
     <td><i>security</i></td>
     <td>owner</td>
   </tr>
+
   <tr>
-    <td>token</td>
+    <td><i>(optional if user has stripe customer entity)</i> token</td>
     <td>The card token to use as the source of payment</td>
+  </tr>
+  <tr>
+    <td><i>(optional)</i> useStripeCustomer</td>
+    <td>True to retrieve existing customer info from stripe or create a new one. False to force single use token.</td>
   </tr>
 </table>
 
