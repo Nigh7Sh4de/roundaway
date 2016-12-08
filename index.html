@@ -366,7 +366,7 @@ In order to make API calls that are auth protected use the following flow:</p>
 <p>Updates the specified fields of the <b>User</b>'s profile.</p>
 
 <h5>
-<a id="get-apiusersuseridstripe" class="anchor" href="#get-apiusersuseridstripe" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/stripe</code>
+<a id="get-apiusersuseridstripeaccount" class="anchor" href="#get-apiusersuseridstripeaccount" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/stripe/account</code>
 </h5>
 
 <table>
@@ -376,7 +376,20 @@ In order to make API calls that are auth protected use the following flow:</p>
   </tr>
 </table>
 
-<p>Retrieve <b>User</b>'s stripe id and other info.</p>
+<p>Retrieve <b>User</b>'s stripe <a href="https://stripe.com/docs/api/node#account">account</a>.</p>
+
+<h5>
+<a id="get-apiusersuseridstripecustomer" class="anchor" href="#get-apiusersuseridstripecustomer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GET <code>/api/users/:userid/stripe/customer</code>
+</h5>
+
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+
+<p>Retrieve <b>User</b>'s stripe <a href="https://stripe.com/docs/api/node#customer_object">customer</a>.</p>
 
 <h5>
 <a id="post-apiusersuseridstripe" class="anchor" href="#post-apiusersuseridstripe" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>POST <code>/api/users/:userid/stripe</code>
