@@ -1,3 +1,7 @@
+var Stripe = require('stripe');
+
+var Errors = require('../errors');
+
 var controller = function(app) {
     this.app = app;
     app.get('/api/users', app.checkAuth, app.checkAdmin.bind(app), this.GetAllUsers.bind(this));
@@ -7,6 +11,10 @@ var controller = function(app) {
     app.get('/api/users/:id/bookings', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetBookingsForUser.bind(this));
     app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetProfileOfUser.bind(this));
     app.patch('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.UpdateProfileOfUser.bind(this));
+    app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetProfileOfUser.bind(this));
+    app.get('/api/users/:id/stripe', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeAccountForUser.bind(this));
+    app.post('/api/users/:id/stripe', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.UpdateStripeAccountForUser.bind(this));
+    app.get('/api/users/:id/stripe/history', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeTransactionsForUser.bind(this));
 }
 
 controller.prototype = {
@@ -81,6 +89,58 @@ controller.prototype = {
         .exec()
         .then(function(user) {
             res.sendGood('Found profile for user', user.profile);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+    GetStripeAccountForUser: function(req, res) {
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            if (!user.stripe || !user.stripe.stripe_id)
+                throw new Errors.MissingProperty(user, 'stripe');
+            return app.stripe.accounts.retrieve(user.stripe.stripe_id);
+        })
+        .then(function(account) {
+            res.sendGood('Found stripe account for user', account);
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+    UpdateStripeAccountForUser: function(req, res) {
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            (
+                !user.stripe || !user.stripe.stripe_id ?
+                app.stripe.accounts.create(req.body) :
+                app.stripe.accounts.update(user.stripe.stripe_id, req.body) 
+            ).then(function(account) {
+                res.sendGood('Stripe account successfully created', account)
+            })
+            .catch(function(err) {
+                res.sendBad(err)
+            })
+        })
+        .catch(function(err) {
+            res.sendBad(err);
+        })
+    },
+    GetStripeTransactionsForUser: function(req, res) {
+        this.app.db.users.findById(req.params.id)
+        .exec()
+        .then(function(user) {
+            if (!user.stripe || !user.stripe.stripe_id)
+                throw new Errors.MissingProperty(user, 'stripe')
+            return app.stripe.balance.listTransactions({ 
+                stripe_account: user.stripe.stripe_id,
+                limit: 10 
+            })
+        })
+        .then(function(transactions) {
+            res.sendGood('Found transactions for user', transactions)
         })
         .catch(function(err) {
             res.sendBad(err);

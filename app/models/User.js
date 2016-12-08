@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var StripeAccount = require('./StripeAccount')
 
 var userSchema = new Schema({
     profile: {
@@ -16,7 +17,8 @@ var userSchema = new Schema({
     attendant: {
         type: Boolean,
         default: false
-    }
+    },
+    stripe: StripeAccount
 }, {
     timestamps: true
 });

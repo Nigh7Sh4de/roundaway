@@ -243,6 +243,21 @@ routeTest('userController', [
         route: '/api/users/:id/profile',
         method: 'UpdateProfileOfUser',
         ignoreOwner: true
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/:id/stripe',
+        method: 'GetStripeAccountForUser',
+        ignoreOwner: true
+    }, {
+        verb: verbs.POST,
+        route: '/api/users/:id/stripe',
+        method: 'UpdateStripeAccountForUser',
+        ignoreOwner: true
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/:id/stripe/history',
+        method: 'GetStripeTransactionsForUser',
+        ignoreOwner: true
     }
 ]);
 
@@ -427,4 +442,151 @@ describe('userController', function() {
             app.userController.GetBookingsForUser(req, res);
         })
     })
+
+    describe('GetStripeAccountForUser', function() {
+        it('should get stripe account for user', function(done) {
+            var stripe_id = 'abcd123';
+            var user = new User()
+            user.stripe = { stripe_id }
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            app.stripe = {
+                accounts: {
+                    retrieve: mockPromise({
+                        id: stripe_id,
+                        object: "account"
+                    })
+                }
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith({
+                    id: stripe_id,
+                    object: "account"    
+                })).to.be.true;
+                done();
+            }
+            app.userController.GetStripeAccountForUser(req, res);
+        })
+
+        it('should error if user does not have a stripe account defined', function(done) {
+            var user = new User()
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            res.sent = function() {
+                expect(res.sendBad.calledOnce).to.be.true;
+                expect(res.sentError(Errors.MissingProperty)).to.be.true;
+                done();
+            }
+            app.userController.GetStripeAccountForUser(req, res)
+        })
+    })
+
+    describe('UpdateStripeAccountForUser', function() {
+
+        it('should update stripe account for user', function(done) {
+            var stripe_id = 'some id'
+            var updated_account = {
+                id: stripe_id,
+                object: "account",
+                country: "US"
+            }
+            var user = new User();
+            user.stripe = { stripe_id }
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            app.stripe = {
+                accounts: {
+                    update: mockPromise(updated_account)
+                }
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(updated_account)).to.be.true;
+                done();
+            }
+            app.userController.UpdateStripeAccountForUser(req, res);
+        })
+
+        it('should create a new stripe account for user if one does not already exist', function(done) {
+            var stripe_id = 'some id'
+            var updated_account = {
+                id: stripe_id,
+                object: "account"
+            }
+            var user = new User();
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            app.stripe = {
+                accounts: {
+                    create: mockPromise(updated_account)
+                }
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(updated_account)).to.be.true;
+                done();
+            }
+            app.userController.UpdateStripeAccountForUser(req, res);
+        })
+
+        it('should update stripe account for user', function(done) {
+            var stripe_id = 'some id'
+            var updated_account = {
+                id: stripe_id,
+                object: "account",
+                country: "US"
+            }
+            var user = new User();
+            user.stripe = { stripe_id }
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            app.stripe = {
+                accounts: {
+                    update: mockPromise(updated_account)
+                }
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(updated_account)).to.be.true;
+                done();
+            }
+            app.userController.UpdateStripeAccountForUser(req, res);
+        })
+    })
+
+    describe('GetStripeTransactionsForUser', function() {
+        it('should get stripe transactions for user', function(done) {
+            var user = new User();
+            user.stripe = {
+                stripe_id: 'some id'
+            }
+            var transactions = [{id: '123'}, {id: '456'}];
+            app.stripe = {
+                balance: {
+                    listTransactions: mockPromise(transactions)
+                }
+            }
+            app.db.users = {
+                findById: mockPromise(user)
+            }
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith(transactions));
+                done();
+            }
+            app.userController.GetStripeTransactionsForUser(req, res);
+        })
+    })
+
 })
