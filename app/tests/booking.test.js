@@ -569,7 +569,7 @@ describe('bookingController', function() {
         it('should mark booking as paid if charge is successful', function(done) {
             var u = new User({
                 stripe: {
-                    customer_id: 'cus_ some id'
+                    cus: 'cus_ some id'
                 }
             });
             var b = new Booking({user: u});
@@ -601,7 +601,7 @@ describe('bookingController', function() {
         it('should attempt to make a charge', function(done) {
             var u = new User({
                 stripe: {
-                    customer_id: 'cus_ some id'
+                    cus: 'cus_ some id'
                 }
             });
             var b = new Booking({user: u});
@@ -631,7 +631,7 @@ describe('bookingController', function() {
         it('should fail if booking does not have a price set', function(done) {
             var u = new User({
                 stripe: {
-                    customer_id: 'cus_ some id'
+                    cus: 'cus_ some id'
                 }
             });
             var b = new Booking({user: u});
@@ -658,7 +658,7 @@ describe('bookingController', function() {
         it('should fail if not passed proper token', function(done) {
             var u = new User({
                 stripe: {
-                    customer_id: 'cus_ some id'
+                    cus: 'cus_ some id'
                 }
             });
             var b = new Booking({user: u});

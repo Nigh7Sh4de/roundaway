@@ -450,15 +450,15 @@ describe('userController', function() {
 
     describe('GetStripeAccountForUser', function() {
         it('should get stripe account for user', function(done) {
-            var stripe_id = 'abcd123';
+            var acct = 'abcd123';
             var user = new User()
-            user.stripe = { stripe_id }
+            user.stripe = { acct }
             app.db.users = {
                 findById: mockPromise(user)
             }
             app.stripe = {
                 getAccount: mockPromise({
-                    id: stripe_id,
+                    id: acct,
                     object: "account"
                 })
             }
@@ -466,7 +466,7 @@ describe('userController', function() {
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({
-                    id: stripe_id,
+                    id: acct,
                     object: "account"    
                 })).to.be.true;
                 done();
@@ -490,15 +490,15 @@ describe('userController', function() {
 
     describe('GetStripeCustomerForUser', function() {
         it('should get stripe customer for user', function(done) {
-            var customer_id = 'cus_ some id';
+            var cus = 'cus_ some id';
             var user = new User()
-            user.stripe = { customer_id }
+            user.stripe = { cus }
             app.db.users = {
                 findById: mockPromise(user)
             }
             app.stripe = {
                 getCustomer: mockPromise({
-                    id: customer_id,
+                    id: cus,
                     object: "customer"
                 })
             }
@@ -506,7 +506,7 @@ describe('userController', function() {
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith({
-                    id: customer_id,
+                    id: cus,
                     object: "customer"    
                 })).to.be.true;
                 done();
@@ -531,14 +531,14 @@ describe('userController', function() {
     describe('UpdateStripeAccountForUser', function() {
 
         it('should update stripe account for user', function(done) {
-            var stripe_id = 'some id'
+            var acct = 'some id'
             var updated_account = {
-                id: stripe_id,
+                id: acct,
                 object: "account",
                 country: "US"
             }
             var user = new User();
-            user.stripe = { stripe_id }
+            user.stripe = { acct }
             app.db.users = {
                 findById: mockPromise(user)
             }
@@ -555,9 +555,9 @@ describe('userController', function() {
         })
 
         it('should create a new stripe account for user if one does not already exist', function(done) {
-            var stripe_id = 'some id'
+            var acct = 'some id'
             var updated_account = {
-                id: stripe_id,
+                id: acct,
                 object: "account"
             }
             var user = new User();
@@ -577,14 +577,14 @@ describe('userController', function() {
         })
 
         it('should update stripe account for user', function(done) {
-            var stripe_id = 'some id'
+            var acct = 'some id'
             var updated_account = {
-                id: stripe_id,
+                id: acct,
                 object: "account",
                 country: "US"
             }
             var user = new User();
-            user.stripe = { stripe_id }
+            user.stripe = { acct }
             app.db.users = {
                 findById: mockPromise(user)
             }
@@ -605,7 +605,7 @@ describe('userController', function() {
         it('should get stripe transactions for user', function(done) {
             var user = new User();
             user.stripe = {
-                stripe_id: 'some id'
+                acct: 'some id'
             }
             var transactions = [{id: '123'}, {id: '456'}];
             app.stripe = {

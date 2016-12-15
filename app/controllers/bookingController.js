@@ -60,12 +60,12 @@ controller.prototype = {
             return app.db.users.findById(spot.user._id || spot.user)
         })
         .then(function(user) {
-            if (user.stripe && user.stripe.stripe_id)
-                destination = user.stripe.stripe_id;
+            if (user.stripe && user.stripe.acct)
+                destination = user.stripe.acct;
             if (!req.body.useStripeCustomer)
                 return Promise.resolve({id: req.body.token});
-            else if (req.user.stripe && req.user.stripe.customer_id)
-                return Promise.resolve({id: req.user.stripe.customer_id});
+            else if (req.user.stripe && req.user.stripe.cus)
+                return Promise.resolve({id: req.user.stripe.cus});
             else return app.stripe.createCustomer(req.body.token)
         })
         .then(function(customer) {

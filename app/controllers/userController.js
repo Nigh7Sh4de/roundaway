@@ -98,9 +98,9 @@ controller.prototype = {
         this.app.db.users.findById(req.params.id)
         .exec()
         .then(function(user) {
-            if (!user.stripe || !user.stripe.stripe_id)
+            if (!user.stripe || !user.stripe.acct)
                 throw new Errors.MissingProperty(user, 'stripe');
-            return app.stripe.getAccount(user.stripe.stripe_id);
+            return app.stripe.getAccount(user.stripe.acct);
         })
         .then(function(account) {
             res.sendGood('Found stripe account for user', account);
@@ -113,9 +113,9 @@ controller.prototype = {
         this.app.db.users.findById(req.params.id)
         .exec()
         .then(function(user) {
-            if (!user.stripe || !user.stripe.customer_id)
+            if (!user.stripe || !user.stripe.cus)
                 throw new Errors.MissingProperty(user, 'stripe');
-            return app.stripe.getCustomer(user.stripe.customer_id);
+            return app.stripe.getCustomer(user.stripe.cus);
         })
         .then(function(account) {
             res.sendGood('Found stripe customer for user', account);
@@ -129,9 +129,9 @@ controller.prototype = {
         .exec()
         .then(function(user) {
             (
-                !user.stripe || !user.stripe.stripe_id ?
+                !user.stripe || !user.stripe.acct ?
                 app.stripe.createAccount(req.body) :
-                app.stripe.updateAccount(user.stripe.stripe_id, req.body) 
+                app.stripe.updateAccount(user.stripe.acct, req.body) 
             ).then(function(account) {
                 res.sendGood('Stripe account successfully created', account)
             })
@@ -147,9 +147,9 @@ controller.prototype = {
         this.app.db.users.findById(req.params.id)
         .exec()
         .then(function(user) {
-            if (!user.stripe || !user.stripe.stripe_id)
+            if (!user.stripe || !user.stripe.acct)
                 throw new Errors.MissingProperty(user, 'stripe')
-            return app.stripe.getHistory(user.stripe.stripe_id);
+            return app.stripe.getHistory(user.stripe.acct);
         })
         .then(function(transactions) {
             res.sendGood('Found transactions for user', transactions)

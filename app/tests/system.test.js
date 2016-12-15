@@ -50,8 +50,8 @@ _d('the entire app should not explode', function() {
         });
         stripeUser = new User({
             stripe: {
-                stripe_id: 'some stripe id',
-                customer_id: 'cus_ some id'
+                acct: 'some stripe id',
+                cus: 'cus_ some id'
             },
             profile: userProfile,
             authid: userAuth
@@ -403,7 +403,7 @@ _d('the entire app should not explode', function() {
                 var price = 123.45;
                 var user = new User({
                     stripe: {
-                        stripe_id: 'owner stripe id'
+                        acct: 'owner stripe id'
                     }
                 })
                 var spot = new Spot({user});
@@ -422,7 +422,7 @@ _d('the entire app should not explode', function() {
                             expect(err).to.not.be.ok;
                             expect(res.status, res.body.errors).to.equal(200);
                             expect(res.text).to.deep.contain(price * 100);
-                            expect(res.text).to.deep.contain(user.stripe.stripe_id);
+                            expect(res.text).to.deep.contain(user.stripe.acct);
                             done();
                         })
                 });
