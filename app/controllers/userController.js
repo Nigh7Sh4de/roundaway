@@ -11,7 +11,6 @@ var controller = function(app) {
     app.get('/api/users/:id/bookings', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetBookingsForUser.bind(this));
     app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetProfileOfUser.bind(this));
     app.patch('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.UpdateProfileOfUser.bind(this));
-    app.get('/api/users/:id/profile', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.GetProfileOfUser.bind(this));
     app.get('/api/users/:id/stripe/account', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeAccountForUser.bind(this));
     app.get('/api/users/:id/stripe/customer', app.checkAuth, app.checkAdmin.bind(app), this.GetStripeCustomerForUser.bind(this));
     app.post('/api/users/:id/stripe', app.checkAuth, app.checkAdmin.bind(app), app.bodyParser.json(), this.UpdateStripeAccountForUser.bind(this));

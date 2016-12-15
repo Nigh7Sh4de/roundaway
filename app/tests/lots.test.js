@@ -15,7 +15,6 @@ describe('Lot schema', function() {
     before(function() {
         sinon.stub(Lot.prototype, 'save', function(cb) { cb(null, this) });
     })
-    
     after(function() {
         Lot.prototype.save.restore();
     })
@@ -31,7 +30,6 @@ describe('Lot schema', function() {
             })
         })
     })
-
     describe('getName', function() {
         it('should get the name of the Lot', function() {
             var l = new Lot();
@@ -40,7 +38,6 @@ describe('Lot schema', function() {
             expect(l.getName()).to.deep.equal(name);
         })
     })
-
     describe('setDescription', function() {
         it('should set the description', function() {
             var l = new Lot();
@@ -50,7 +47,6 @@ describe('Lot schema', function() {
             })
         })
     })
-
     describe('getDescription', function() {
         it('should return the description', function() {
             var l = new Lot();
@@ -59,7 +55,6 @@ describe('Lot schema', function() {
             expect(l.getDescription()).to.deep.equal(d);
         })
     })
-
     describe('addAttendants', function() {
         it('should add the given attendants User objects', function() {
             var l = new Lot();
@@ -91,7 +86,6 @@ describe('Lot schema', function() {
             })
         })
     })
-
     describe('getPrice', function() {
         it('should return null if no price is set', function() {
             var l = new Lot();
@@ -108,7 +102,6 @@ describe('Lot schema', function() {
             });
         })
     })
-
     describe('setPrice', function() {
         it('should set the price', function() {
             var pricePerHour = 123.45;
@@ -121,7 +114,6 @@ describe('Lot schema', function() {
             });
         })
     })
-
     describe('addAvailability', function() {
         it('should be able to parse string', function() {
             var start = '2010/01/01';
@@ -216,7 +208,6 @@ describe('Lot schema', function() {
             })
         })
     })
-    
     describe('removeAvailability', function() {
         it('should be able to parse string', function() {
             var start = '2010/01/01';
@@ -317,7 +308,6 @@ describe('Lot schema', function() {
             })
         })
     })
-    
     describe('getLocation', function() {
         it('should return an array with the lat and long', function() {
             var l = new Lot();
@@ -337,7 +327,6 @@ describe('Lot schema', function() {
             expect(loc.lat).to.equal(coords_t);
         })
     })
-    
     describe('setLocation', function() {
         it('should fail if no address is specified', function(done) {
             var l = new Lot();
@@ -540,7 +529,12 @@ routeTest('lotController', [
         attendantOrOwner: true
     },
     {
-        verb: verbs.PUT,
+        verb: verbs.PATCH,
+        route: '/api/lots/:id',
+        method: 'UpdateLot'
+    },
+    {
+        verb: verbs.POST,
         route: '/api/lots',
         method: 'CreateLot',
         ignoreId: true,
@@ -549,19 +543,8 @@ routeTest('lotController', [
     },
     {
         verb: verbs.GET,
-        route: '/api/lots/:id/location',
-        method: 'GetLocationOfLot'
-    },
-    {
-        verb: verbs.GET,
         route: '/api/lots/:id/spots',
         method: 'GetSpotsForLot',
-        attendantOrOwner: true
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/lots/:id/available',
-        method: 'GetAllAvailabilityOfLot',
         attendantOrOwner: true
     },
     {
@@ -571,25 +554,14 @@ routeTest('lotController', [
         attendantOrOwner: true
     },
     {
-        verb: verbs.PUT,
+        verb: verbs.POST,
         route: '/api/lots/:id/available',
         method: 'AddAvailabilityToLot'
     },
     {
-        verb: verbs.PUT,
+        verb: verbs.POST,
         route: '/api/lots/:id/available/remove',
         method: 'RemoveAvailabilityFromLot'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/lots/:id/price',
-        method: 'GetPriceOfLot',
-        attendantOrOwner: true
-    },
-    {
-        verb: verbs.PUT,
-        route: '/api/lots/:id/price',
-        method: 'SetPriceOfLot'
     },
     {
         verb: verbs.GET,
@@ -597,31 +569,9 @@ routeTest('lotController', [
         method: 'GetAttendantsForLot'
     },
     {
-        verb: verbs.PUT,
+        verb: verbs.POST,
         route: '/api/lots/:id/attendants', 
         method: 'AddAttendantsToLot'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/lots/:id/name',
-        method: 'GetNameOfLot',
-        attendantOrOwner: true
-    },
-    {
-        verb: verbs.PUT,
-        route: '/api/lots/:id/name',
-        method: 'SetNameOfLot'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/lots/:id/description',
-        method: 'GetDescriptionOfLot',
-        attendantOrOwner: true
-    },
-    {
-        verb: verbs.PUT,
-        route: '/api/lots/:id/description',
-        method: 'SetDescriptionOfLot'
     }
 ])
 
@@ -634,7 +584,6 @@ describe('lotController', function() {
         req = expressExtensions.mockRequest();
         res = expressExtensions.mockResponse();
     })
-    
     describe('GetAllLots', function() {
         it('should return all lots', function(done) {
             var lots = [new Lot(), new Lot()];
@@ -651,7 +600,6 @@ describe('lotController', function() {
             app.lotController.GetAllLots(req, res);
         })
     })
-    
     describe('GetLot', function() {
         it('should get lot with specified id', function(done) {
             var lot = new Lot();
@@ -665,7 +613,67 @@ describe('lotController', function() {
             app.lotController.GetLot(req, res);
         })
     })
-    
+    describe('UpdateLot', function() {
+        it('should be able to update name', function(done) {
+            var lot = new Lot();
+            var name = 'some name';
+            req.body.name = name;
+            req.doc = lot;
+            req.params.id = lot.id;
+            sinon.stub(lot, 'setName', function(name) {
+                this.name = name;
+                return mockPromise(this)()
+            })
+            res.sendBad = done;
+            res.sent = function() {
+                expect(lot.setName.calledOnce).to.be.true;
+                lot.name = name;
+                expect(res.sentWith(lot.toJSON({getters: true}))).to.be.true;
+                done();
+            }
+            app.lotController.UpdateLot(req, res);
+        })
+
+        it('should be able to update description', function(done) {
+            var lot = new Lot();
+            var description = 'some description';
+            req.body.description = description;
+            req.doc = lot;
+            req.params.id = lot.id;
+            sinon.stub(lot, 'setDescription', function(description) {
+                this.description = description;
+                return mockPromise(this)()
+            })
+            res.sendBad = done;
+            res.sent = function() {
+                expect(lot.setDescription.calledOnce).to.be.true;
+                lot.description = description;
+                expect(res.sentWith(lot.toJSON({getters: true}))).to.be.true;
+                done();
+            }
+            app.lotController.UpdateLot(req, res);
+        })
+
+        it('should be able to update price', function(done) {
+            var lot = new Lot();
+            var price = { perHour: 123 };
+            req.body.price = price;
+            req.doc = lot;
+            req.params.id = lot.id;
+            sinon.stub(lot, 'setPrice', function(price) {
+                this.price = price;
+                return mockPromise(this)()
+            })
+            res.sendBad = done;
+            res.sent = function() {
+                expect(lot.setPrice.calledOnce).to.be.true;
+                lot.price = price;
+                expect(res.sentWith(lot.toJSON({getters: true}))).to.be.true;
+                done();
+            }
+            app.lotController.UpdateLot(req, res);
+        })
+    })
     describe('CreateLot', function() {
         var emptyLot;
         
@@ -902,27 +910,6 @@ describe('lotController', function() {
             app.lotController.CreateLot(req, res);
         })
     })
-    
-
-
-
-    
-    describe('GetLocationOfLot', function() {
-        it('should return the lot\'s location', function(done) {
-            var l = new Lot();
-            l.location.address = '123 fake st';
-            l.location.coordinates = [123, 456];
-            req.doc = l;
-            req.params.id = l.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(JSON.parse(JSON.stringify(l.location))), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(l.location)).to.be.true;
-                done();
-            }
-            app.lotController.GetLocationOfLot(req, res);
-        });
-    })
-    
     describe('GetSpotsForLot', function(done) {
         it('should return an empty array if no spots are assigned', function(done) {
             var l = new Lot();
@@ -961,7 +948,6 @@ describe('lotController', function() {
             app.lotController.GetSpotsForLot(req, res);
         });
     })
-
     describe('CheckAvailabilityOfLot', function() {
         it('should return the spot if availability is available', function(done) {
             var range = {
@@ -1013,7 +999,6 @@ describe('lotController', function() {
             app.lotController.CheckAvailabilityOfLot(req, res);
         })
     })
-
     describe('AddAvailabilityToLot', function() {
         it('should fail if given bad input', function(done) {
             var l = new Lot();
@@ -1077,7 +1062,6 @@ describe('lotController', function() {
             app.lotController.AddAvailabilityToLot(req, res);
         })
     })
-    
     describe('RemoveAvailabilityFromLot', function() {
         it('should fail if given bad input', function(done) {
             var l = new Lot();
@@ -1141,57 +1125,6 @@ describe('lotController', function() {
             app.lotController.RemoveAvailabilityFromLot(req, res);
         })
     })
-
-    describe('GetPriceOfLot', function() {
-        it('should error if price is not set', function(done) {
-            var l = new Lot();
-            var price = 123.45;
-            req.doc = l;
-            req.params.id = l.id;
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentError(Errors.MissingProperty)).to.be.true;
-                done();
-            }
-            app.lotController.GetPriceOfLot(req, res);
-        })
-
-        it('should return the price of the lot', function(done) {
-            var l = new Lot();
-            var price = 123.45;
-            l.price.perHour = price;
-            req.doc = l;
-            req.params.id = l.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith({
-                    perHour: price
-                })).to.be.true;
-                done();
-            }
-            app.lotController.GetPriceOfLot(req, res);
-        })
-    })
-    
-    describe('SetPriceOfLot', function() {
-        it('should set the price of the lot', function(done) {
-            var l = new Lot();
-            var pricePerHour = 123.45;
-            sinon.stub(l, 'setPrice', mockPromise());
-            app.db.spots = {
-                find: mockPromise([])
-            }
-            req.doc = l;
-            req.params.id = l.id;
-            req.body.perHour = pricePerHour;
-            res.sent = function() {
-                expect(l.setPrice.calledOnce).to.be.true;
-                done();
-            }
-            app.lotController.SetPriceOfLot(req, res);
-        })
-    })
-
     describe('GetAttendantsForLot', function() {
         it('should get the attendants for the spot', function(done) {
             var l = new Lot();
@@ -1210,8 +1143,7 @@ describe('lotController', function() {
             }
             app.lotController.GetAttendantsForLot(req, res);
         })
-    });
-
+    })
     describe('AddAttendantsToLot', function() {
         it('should add the attendants to the lot', function(done) {
             var l = new Lot();
@@ -1259,71 +1191,5 @@ describe('lotController', function() {
             }
             app.lotController.AddAttendantsToLot(req, res);
         })
-    });
-
-    describe('GetNameOfLot', function() {
-        it('should get the name of the lot', function(done) {
-            var l = new Lot();
-            var name = l.name = 'some name';
-            req.doc = l;
-            req.params.id = l.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(name)).to.be.true;
-                done();
-            }
-            app.lotController.GetNameOfLot(req, res);
-        });
-    })
-
-    describe('SetNameOfLot', function() {
-        it('should set the name of the lot', function(done) {
-            var l = new Lot();
-            sinon.stub(l, 'setName', mockPromise());
-            var name = 'some name';
-            req.doc = l;
-            req.params.id = l.id;
-            req.body.name = name;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(l.setName.calledOnce).to.be.true;
-                expect(l.setName.calledWith(name)).to.be.true;
-                done();
-            }
-            app.lotController.SetNameOfLot(req, res);
-        });
-    })
-
-    describe('GetDescriptionOfLot', function() {
-        it('should get the description of the lot', function(done) {
-            var l = new Lot();
-            var description = l.description = 'some description';
-            req.doc = l;
-            req.params.id = l.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(description)).to.be.true;
-                done();
-            }
-            app.lotController.GetDescriptionOfLot(req, res);
-        });
-    })
-
-    describe('SetDescriptionOfLot', function() {
-        it('should set the description of the lot', function(done) {
-            var l = new Lot();
-            sinon.stub(l, 'setDescription', mockPromise());
-            var description = 'some description';
-            req.doc = l;
-            req.params.id = l.id;
-            req.body.description = description;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(l.setDescription.calledOnce).to.be.true;
-                expect(l.setDescription.calledWith(description)).to.be.true;
-                done();
-            }
-            app.lotController.SetDescriptionOfLot(req, res);
-        });
     })
 })

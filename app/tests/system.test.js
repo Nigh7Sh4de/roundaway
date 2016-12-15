@@ -127,11 +127,11 @@ _d('the entire app should not explode', function() {
     }
 
     describe('Util Controller', function() {
-        describe('POST /api/util/location/geocode', function() {
+        describe('PUT /api/util/location/geocode', function() {
             it.external('should return formattedAddress for address', function(done) {
                 var address = "49 Wellington St W, Toronto, ON";
                 var fullAddress = '49 Wellington St W, Toronto, ON M5J 2T6, Canada';
-                request(app).post('/api/util/location/geocode')
+                request(app).put('/api/util/location/geocode')
                     .send({address: address})
                     .end(function(err, res) {
                         expect(res.text).to.contain(fullAddress);
@@ -398,100 +398,6 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('GET /api/bookings/:id/start', function() {
-            it('should get the start of the booking', function(done) {
-                var start = new Date();
-                var booking = new Booking({
-                    start: start
-                })
-                insert(booking, function() {
-                    request(app).get('/api/bookings/' + booking.id + '/start')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.deep.equal(booking.start.toISOString());
-                            done();
-                        })
-                });
-            })
-        })
-
-        describe('GET /api/bookings/:id/end', function() {
-            it('should get the end of the booking', function(done) {
-                var booking = new Booking({
-                    end: new Date()
-                });
-                insert(booking, function() {
-                    request(app).get('/api/bookings/' + booking.id + '/end')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.deep.equal(booking.end.toISOString());
-                            done();
-                        })
-                })
-            })
-        })
-        describe('GET /api/bookings/:id/duration', function() {
-            it('should get the duration of the booking', function(done) {
-                var booking = new Booking({
-                    start: new Date('2000/01/01'),
-                    end: new Date('2050/01/01')
-                })
-                insert(booking, function() {
-                    request(app).get('/api/bookings/' + booking.id + '/duration')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.deep.equal(booking.getDuration());
-                            done();
-                        })
-                })
-            })
-        })
-        describe('GET /api/bookings/:id/time', function() {
-            it('should get the time of the booking', function(done) {
-                var booking = new Booking({
-                    start: new Date('2000/01/01'),
-                    end: new Date('2050/01/01')
-                })
-                insert(booking, function() {
-                    request(app).get('/api/bookings/' + booking.id + '/time')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.be.ok;
-                            expect(res.body.data.start).to.deep.equal(booking.start.toISOString());
-                            expect(res.body.data.end).to.deep.equal(booking.end.toISOString());
-                            done();
-                        })
-                });
-            })
-        })
-        describe('GET /api/bookings/:id/price', function() {
-            it('should get the price of the booking', function(done) {
-                var price = 123.45;
-                var booking = new Booking({
-                    start: new Date('2000/01/01'),
-                    end: new Date('2050/01/01'),
-                    price: price
-                })
-                insert(booking, function() {
-                    request(app).get('/api/bookings/' + booking.id + '/price')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.equal(price);
-                            done();
-                        })
-                });
-            })
-        })
         describe('PUT /api/bookings/:id/pay', function() {
             it('should pay the destination if user has stripe connected', function(done) {
                 var price = 123.45;
@@ -545,24 +451,6 @@ _d('the entire app should not explode', function() {
                 });
             })
         })
-        describe('GET /api/bookings/:id/status', function() {
-            it('should get the status of the booking', function(done) {
-                var booking = new Booking({
-                    start: new Date('2000/01/01'),
-                    end: new Date('2050/01/01')
-                })
-                insert(booking, function() {
-                    request(app).get('/api/bookings/' + booking.id + '/status')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.equal('unpaid');
-                            done();
-                        })
-                });
-            })
-        })
     })
 
     describe('Lot Controller', function() {
@@ -600,9 +488,9 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/lots', function() {
+        describe('POST /api/lots', function() {
             it.external('should create a new lot', function(done) {
-                request(app).put('/api/lots')
+                request(app).post('/api/lots')
                     .set('Authorization', 'JWT ' + admin_token)
                     .send({lot: {
                         location: {
@@ -624,22 +512,6 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe('GET /api/lots/:id/location', function() {
-            it('should return location for the lot', function(done) {
-                var lot = new Lot();
-                lot.location.coordinates = [12, 34];
-                insert(lot, function() {
-                    request(app).get('/api/lots/' + lot.id + '/location')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain(lot.location.coordinates.toString());
-                            done();
-                        });
-                })
-            })
-        })
         describe('GET /api/lots/:id/spots', function() {
             it('should return spot for the lot', function(done) {
                 var lot = new Lot()
@@ -655,28 +527,6 @@ _d('the entire app should not explode', function() {
                             expect(res.text).to.contain.all(spot.id, spot.id);
                             done();
                         });
-                })
-            })
-        })
-        describe('GET /api/lots/:id/available', function() {
-            it('should get availability', function(done) {
-                var _av = {
-                    start: new Date('2010/01/01'),
-                    end: new Date('2030/01/01')
-                }
-                var lot = new Lot({
-                    available: [_av]
-                });
-                insert(lot, function() {
-                    request(app).get('/api/lots/' + lot.id + '/available')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain.all(_av.start.toISOString(), 
-                                                            _av.end.toISOString());
-                            done();
-                        })
                 })
             })
         })
@@ -723,7 +573,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/lots/:id/available', function() {
+        describe('POST /api/lots/:id/available', function() {
             it('should add availability', function(done) {
                 var _av = {
                     start: new Date('2010/01/01'),
@@ -734,7 +584,7 @@ _d('the entire app should not explode', function() {
                     lot: lot.id
                 });
                 insert(lot, spot, function() {
-                    request(app).put('/api/lots/' + lot.id + '/available')
+                    request(app).post('/api/lots/' + lot.id + '/available')
                         .send(_av)
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
@@ -752,7 +602,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/lots/:id/available/remove', function() {
+        describe('POST /api/lots/:id/available/remove', function() {
             it('should remove availability', function(done) {
                 var _av = {
                     start: new Date('2010/01/01'),
@@ -766,7 +616,7 @@ _d('the entire app should not explode', function() {
                     available: [_av]
                 })
                 insert(lot, spot, function() {
-                    request(app).put('/api/lots/' + lot.id + '/available/remove')
+                    request(app).post('/api/lots/' + lot.id + '/available/remove')
                     .send(_av)
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
@@ -779,49 +629,6 @@ _d('the entire app should not explode', function() {
                                     expect(spot.available.checkRange(_av.start, _av.end)).to.be.false;
                                     done();
                                 })
-                            })
-                        })
-                })
-            })
-        })
-
-        describe('GET /api/lots/:id/name', function() {
-            it('should get the lot name', function(done) {
-                var name = 'some name';
-                var lot = new Lot({
-                    name: name
-                });
-                insert(lot, function() {
-                    request(app).get('/api/lots/' + lot.id + '/name')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.deep.equal(name);
-                            done();
-                        })
-                })
-            })
-        })
-
-        describe('PUT /api/lots/:id/name', function() {
-            it('should get the lot name', function(done) {
-                var lot = new Lot();
-                var name = 'some name';
-                insert(lot, function() {
-                    request(app).put('/api/lots/' + lot.id + '/name')
-                        .send({
-                            name: name
-                        })
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            app.db.lots.findById(lot.id, function(err, doc) {
-                                expect(err).to.not.be.ok;
-                                expect(doc).to.be.ok;
-                                expect(doc.getName()).to.deep.equal(name);
-                                done();
                             })
                         })
                 })
@@ -864,9 +671,9 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/spots', function() {
+        describe('POST /api/spots', function() {
             it.external('should create a new spot', function(done) {
-                request(app).put('/api/spots')
+                request(app).post('/api/spots')
                     .set('Authorization', 'JWT ' + admin_token)
                     .send({spot: {
                         location: {
@@ -891,22 +698,6 @@ _d('the entire app should not explode', function() {
                     })
             })
         })
-        describe('GET /api/spots/:id/location', function() {
-            it('should return location for the spot', function(done) {
-                var spot = new Spot();
-                spot.location.coordinates = [12, 34];
-                insert(spot, function() {
-                    request(app).get('/api/spots/' + spot.id + '/location')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain(spot.location.coordinates.toString());
-                            done();
-                        });
-                })
-            })
-        })
         describe('GET /api/spots/:id/bookings', function() {
             it('should get bookings', function(done) {
                 var spot = new Spot();
@@ -925,7 +716,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/spots/:id/bookings', function() {
+        describe('POST /api/spots/:id/bookings', function() {
             it('should add bookings', function(done) {
                 var spot = new Spot();
                 spot.available.addRange(
@@ -941,7 +732,7 @@ _d('the entire app should not explode', function() {
                     license: license 
                 };
                 insert(spot, function() {
-                    request(app).put('/api/spots/' + spot.id + '/bookings')
+                    request(app).post('/api/spots/' + spot.id + '/bookings')
                     .send({bookings: booking, createCarIfNotInSystem: true})
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
@@ -956,7 +747,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/spots/:id/bookings/remove', function() {
+        describe('POST /api/spots/:id/bookings/remove', function() {
             it('should remove bookings', function(done) {
                 var spot = new Spot();
                 var booking = new Booking({
@@ -965,7 +756,7 @@ _d('the entire app should not explode', function() {
                     end: new Date('2000/01/02')
                 });
                 insert(booking, spot, function() {
-                    request(app).put('/api/spots/' + spot.id + '/bookings/remove')
+                    request(app).post('/api/spots/' + spot.id + '/bookings/remove')
                     .send({id: booking.id})
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
@@ -986,29 +777,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('GET /api/spots/:id/available', function() {
-            it('should get availability', function(done) {
-                var _av = {
-                    start: new Date('2010/01/01'),
-                    end: new Date('2030/01/01')
-                }
-                var spot = new Spot({
-                    available: [_av]
-                });
-                insert(spot, function() {
-                    request(app).get('/api/spots/' + spot.id + '/available')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain.all(_av.start.toISOString(), 
-                                                            _av.end.toISOString());
-                            done();
-                        })
-                })
-            })
-        })
-        describe('PUT /api/spots/:id/available', function() {
+        describe('POST /api/spots/:id/available', function() {
             it('should add availability', function(done) {
                 var _av = {
                     start: new Date('2010/01/01'),
@@ -1016,7 +785,7 @@ _d('the entire app should not explode', function() {
                 }
                 var spot = new Spot();
                 insert(spot, function() {
-                    request(app).put('/api/spots/' + spot.id + '/available')
+                    request(app).post('/api/spots/' + spot.id + '/available')
                         .send(_av)
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
@@ -1031,7 +800,7 @@ _d('the entire app should not explode', function() {
                 })
             })
         })
-        describe('PUT /api/spots/:id/available/remove', function() {
+        describe('POST /api/spots/:id/available/remove', function() {
             it('should remove availability', function(done) {
                 var _av = {
                     start: new Date('2010/01/01'),
@@ -1041,7 +810,7 @@ _d('the entire app should not explode', function() {
                     available: [_av]
                 });
                 insert(spot, function() {
-                    request(app).put('/api/spots/' + spot.id + '/available/remove')
+                    request(app).post('/api/spots/' + spot.id + '/available/remove')
                     .send(_av)
                         .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
@@ -1050,150 +819,6 @@ _d('the entire app should not explode', function() {
                             app.db.spots.findById(spot.id, function(err, doc) {
                                 expect(err).to.not.be.ok;
                                 expect(doc.available.checkRange(_av.start, _av.end)).to.be.false;
-                                done();
-                            })
-                        })
-                })
-            })
-        })
-        describe('GET /api/spots/:id/booked', function() {
-            it('should get booked schedule', function(done) {
-                var _bk = {
-                    start: new Date('2070/01/01'),
-                    end: new Date('2070/01/02')
-                }
-                var spot = new Spot({
-                    booked: [_bk]
-                });
-                insert(spot, function() {
-                    request(app).get('/api/spots/' + spot.id + '/booked')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.text).to.contain.all(
-                                _bk.start.toISOString(), 
-                                _bk.end.toISOString());
-                            done();    
-                        })
-                })
-            });
-        })
-        describe('GET /api/spots/:id/schedule', function() {
-            it('should get booked and available schedule', function(done) {
-                var _av = {
-                    start: new Date('2010/01/01'),
-                    end: new Date('2030/01/01')
-                }
-                var _bk = {
-                    start: new Date('2070/01/01'),
-                    end: new Date('2070/01/02')
-                }
-                var spot = new Spot({
-                    available: [_av],
-                    booked: [_bk]
-                });
-                insert(spot, function() {
-                    request(app).get('/api/spots/' + spot.id + '/schedule')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data.booked).to.be.ok;
-                            expect(res.body.data.available).to.be.ok;
-                            expect(res.text).to.contain.all(
-                                _av.start.toISOString(), 
-                                _av.end.toISOString(),
-                                _bk.start.toISOString(), 
-                                _bk.end.toISOString());
-                            done();    
-                        })
-                })
-            });
-        })
-
-        describe('GET /api/spots/:id/price', function() {
-            it('should get the spot price', function(done) {
-                var pricePerHour = 123.45;
-                var spot = new Spot();
-                spot.price.perHour = pricePerHour;
-                insert(spot, function() {
-                    request(app).get('/api/spots/' + spot.id + '/price')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.deep.equal({
-                                perHour: pricePerHour
-                            });
-                            done();
-                        })
-                })
-            })
-        })
-
-        describe('PUT /api/spots/:id/price', function() {
-            it('should get the spot price', function(done) {
-                var pricePerHour = 123.45;
-                var spot = new Spot();
-                insert(spot, function() {
-                    request(app).put('/api/spots/' + spot.id + '/price')
-                        .send({
-                            perHour: pricePerHour
-                        })
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            app.db.spots.findById(spot.id, function(err, doc) {
-                                expect(err).to.not.be.ok;
-                                expect(doc).to.be.ok;
-                                expect(doc.getPrice()).to.deep.equal({
-                                    perHour: pricePerHour
-                                });
-                                done();
-                            })
-                        })
-                })
-            })
-        })
-
-        describe('GET /api/spots/:id/name', function() {
-            it('should get the spot name', function(done) {
-                var name = 'some name';
-                var spot = new Spot({
-                    name: name
-                });
-                insert(spot, function() {
-                    request(app).get('/api/spots/' + spot.id + '/name')
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            expect(res.body.data).to.deep.equal(name);
-                            done();
-                        })
-                })
-            })
-        })
-
-        describe('PUT /api/spots/:id/name', function() {
-            it('should get the spot name', function(done) {
-                var spot = new Spot();
-                var name = 'some name';
-                insert(spot, function() {
-                    request(app).put('/api/spots/' + spot.id + '/name')
-                        .send({
-                            name: name
-                        })
-                        .set('Authorization', 'JWT ' + token)
-                        .end(function(err, res) {
-                            expect(err).to.not.be.ok;
-                            expect(res.status, res.body.errors).to.equal(200);
-                            app.db.spots.findById(spot.id, function(err, doc) {
-                                expect(err).to.not.be.ok;
-                                expect(doc).to.be.ok;
-                                expect(doc.getName()).to.deep.equal(name);
                                 done();
                             })
                         })

@@ -11,7 +11,7 @@ var jwt = require('jsonwebtoken');
 
 routeTest('authController', [
     {
-        verb: verbs.POST,
+        verb: verbs.PUT,
         route: '/auth/google',
         method: 'Authenticate',
         ignoreAdmin: true,
@@ -20,7 +20,7 @@ routeTest('authController', [
         ignoreOwner: true
     },
     {
-        verb: verbs.POST,
+        verb: verbs.PUT,
         route: '/auth/facebook',
         method: 'Authenticate',
         ignoreAdmin: true,

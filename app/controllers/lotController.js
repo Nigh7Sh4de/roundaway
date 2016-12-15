@@ -5,22 +5,15 @@ var Lot = require('./../models/Lot');
 var controller = function(app) {
     this.app = app;
     app.get('/api/lots', app.checkAuth, app.checkAttendant.bind(app), this.GetAllLots.bind(this));
-    app.put('/api/lots', app.checkAuth, app.bodyParser.json(), this.CreateLot.bind(this));
+    app.post('/api/lots', app.checkAuth, app.bodyParser.json(), this.CreateLot.bind(this));
     app.get('/api/lots/:id', app.checkAuth, app.checkAttendant.bind(app), this.GetLot.bind(this));
-    app.get('/api/lots/:id/location', app.checkAuth, app.checkOwner.bind(app), this.GetLocationOfLot.bind(this));
+    app.patch('/api/lots/:id', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.UpdateLot.bind(this));
     app.get('/api/lots/:id/spots', app.checkAuth, app.checkAttendant.bind(app), this.GetSpotsForLot.bind(this));
     app.get('/api/lots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), this.GetAttendantsForLot.bind(this));
-    app.put('/api/lots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAttendantsToLot.bind(this));
-    app.get('/api/lots/:id/available', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.GetAllAvailabilityOfLot.bind(this));
+    app.post('/api/lots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAttendantsToLot.bind(this));
     app.put('/api/lots/:id/available/check', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.CheckAvailabilityOfLot.bind(this));
-    app.put('/api/lots/:id/available', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
-    app.put('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
-    app.get('/api/lots/:id/price', app.checkAuth, app.checkAttendant.bind(app), this.GetPriceOfLot.bind(this));
-    app.put('/api/lots/:id/price', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetPriceOfLot.bind(this));
-    app.get('/api/lots/:id/name', app.checkAuth, app.checkAttendant.bind(app), this.GetNameOfLot.bind(this));
-    app.put('/api/lots/:id/name', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetNameOfLot.bind(this));
-    app.get('/api/lots/:id/description', app.checkAuth, app.checkAttendant.bind(app), this.GetDescriptionOfLot.bind(this));
-    app.put('/api/lots/:id/description', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetDescriptionOfLot.bind(this));
+    app.post('/api/lots/:id/available', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAvailabilityToLot.bind(this));
+    app.post('/api/lots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromLot.bind(this));
 }
 
 controller.prototype = {
@@ -31,6 +24,20 @@ controller.prototype = {
     },
     GetLot: function(req, res) {
         res.sendGood('Found lot', req.doc);
+    },
+    UpdateLot: function(req, res) {
+        var updates = [];
+        if (req.body.price) updates.push(req.doc.setPrice(req.body.price));
+        if (req.body.name) updates.push(req.doc.setName(req.body.name));
+        if (req.body.description) updates.push(req.doc.setDescription(req.body.description));
+
+        Promise.all(updates)
+        .then(function() {
+            res.sendGood('Updated lot', arguments[updates.length-1][0].toJSON({getters: true}))
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        })
     },
     CreateLot: function(req, res) {
         var app = this.app;
@@ -75,9 +82,6 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    GetLocationOfLot: function(req, res) {
-        res.sendGood('Found location of lot', JSON.parse(JSON.stringify(req.doc.location)));
-    },
     GetSpotsForLot: function(req, res) {
         var app = this.app;
         app.db.spots.find({lot: req.doc.id})
@@ -89,9 +93,6 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err);
         })
-    },
-    GetAllAvailabilityOfLot: function(req, res) {
-        res.sendGood('Found availability for lot', {available: req.doc.available.ranges});
     },
     CheckAvailabilityOfLot: function(req, res) {
         if (!req.body || !req.body.start || !req.body.end)
@@ -184,32 +185,6 @@ controller.prototype = {
             res.sendBad(err)
         })
     },
-    GetPriceOfLot: function(req, res) {
-        var price = req.doc.getPrice();
-        if (!price) return res.sendBad(new Errors.MissingProperty(req.doc, 'price', req.doc.getPrice()));
-        res.sendGood('Found price for lot', price);
-    },
-    SetPriceOfLot: function(req, res) {
-        var app = this.app;
-        app.db.spots.find({lot: req.doc.id})
-        .exec()
-        .then(function(spots) {
-            return Promise.all([
-                req.doc.setPrice(req.body)
-            ].concat(spots.map(function(spot) {
-                return spot.setPrice(req.body);
-            })))
-        })
-        .then(function(lot) {
-            res.sendGood('Set price for lot and all of the lot\'s spots', {
-                lot: results.shift(),
-                spots: results
-            })
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
-    },
     GetAttendantsForLot: function(req, res) {
         this.app.db.users.find({id: {$in: req.doc.attendants}})
         .then(function(attendants) {
@@ -251,34 +226,6 @@ controller.prototype = {
         .catch(function(err) {
             return res.sendBad(err);
         })
-    },
-    GetNameOfLot: function(req, res) {
-        var name = req.doc.getName();
-        if (!name) return res.sendBad(new Errors.MissingProperty(req.doc, 'name', req.doc.getName()));
-        res.sendGood('Found name for lot', name);
-    },
-    SetNameOfLot: function(req, res) {
-        req.doc.setName(req.body.name)
-        .then(function(lot) {
-            res.sendGood('Set name for lot', lot);
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
-    },
-    GetDescriptionOfLot: function(req, res) {
-        var description = req.doc.getDescription();
-        if (!description) return res.sendBad(new Errors.MissingProperty(req.doc, 'description', req.doc.getDescription()));
-        res.sendGood('Found description for lot', description);
-    },
-    SetDescriptionOfLot: function(req, res) {
-        req.doc.setDescription(req.body.description)
-        .then(function(lot) {
-            res.sendGood('Set description for lot', lot);
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
     }
 }
 

@@ -8,7 +8,7 @@ var expressExtensions = require('./../express');
 
 routeTest('utilController', [
         {
-            verb: verbs.POST,
+            verb: verbs.PUT,
             route: '/api/util/location/geocode',
             method: 'Geocode',
             ignoreId: true,

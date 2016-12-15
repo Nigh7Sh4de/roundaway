@@ -3,7 +3,7 @@ var URL = require('url');
 
 var authController = function(app) {
     this.app = app;
-    app.post('/auth/:strat', app.bodyParser.json(), this.Authenticate.bind(this));
+    app.put('/auth/:strat', app.bodyParser.json(), this.Authenticate.bind(this));
 }
 
 authController.prototype = {

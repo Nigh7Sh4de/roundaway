@@ -356,39 +356,9 @@ routeTest('bookingController', [
         method: 'GetCarForBooking'
     },
     {
-        verb: verbs.GET,
-        route: '/api/bookings/:id/start',
-        method: 'GetStartOfBooking'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/bookings/:id/duration',
-        method: 'GetDurationForBooking'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/bookings/:id/end',
-        method: 'GetEndOfBooking'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/bookings/:id/time',
-        method: 'GetTimeOfBooking'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/bookings/:id/price',
-        method: 'GetPriceOfBooking'
-    },
-    {
         verb: verbs.PUT,
         route: '/api/bookings/:id/pay',
         method: 'PayForBooking'
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/bookings/:id/status',
-        method: 'GetStatusOfBooking'
     }
 ])
 
@@ -549,102 +519,6 @@ describe('bookingController', function() {
         })
     })
     
-    describe('GetStartOfBooking', function() {
-        it('should return the booking start time', function(done) {
-            var b = new Booking();
-            var start = new Date();
-            b.start = start;
-            req.doc = b;
-            req.params.id = b.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(start)).to.be.true;
-                done();
-            }
-            app.bookingController.GetStartOfBooking(req, res);
-            
-        });
-    })
-    
-    describe('GetDurationForBooking', function() {
-        it('should return the booking duration', function(done) {
-            var b = new Booking();
-            b.start = new Date('2016/01/01');
-            b.end = new Date();
-            var dur = b.end - b.start;
-            req.doc = b;
-            req.params.id = b.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(dur), res.send.firstCall.args[0]).to.be.true;
-                done();
-            }
-            app.bookingController.GetDurationForBooking(req, res);
-        });
-        
-        it('should return error if no duration is set', function(done) {
-            var b = new Booking();
-            req.doc = b;
-            req.params.id = b.id;
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentError(Errors.MissingProperty)).to.be.true;
-                done();
-            }
-            app.bookingController.GetDurationForBooking(req, res);
-        })
-    })
-    
-    describe('GetEndOfBooking', function() {
-        it('should return the booking end time', function(done) {
-            var b = new Booking();
-            var end = new Date();
-            b.end = end;
-            req.doc = b;
-            req.params.id = b.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(end)).to.be.true;
-                done();
-            }
-            app.bookingController.GetEndOfBooking(req, res);
-        });
-    })
-    
-    describe('GetTimeOfBooking', function() {
-        it('should return the booking start and end time', function(done) {
-            var b = new Booking();
-            var start = new Date('2016/01/01');
-            var end = new Date('2016/01/01');
-            b.end = end;
-            b.start = start;
-            req.doc = b;
-            req.params.id = b.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith({start: start, end: end})).to.be.true;
-                done();
-            }
-            app.bookingController.GetTimeOfBooking(req, res);
-        });
-    })
-
-    describe('GetPriceOfBooking', function() {
-        it('should return the price of the booking', function(done) {
-            var b = new Booking();
-            var price = 123.45;
-            b.price = price;
-            req.doc = b;
-            req.params.id = b.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(price)).to.be.true;
-                done();
-            }
-            app.bookingController.GetPriceOfBooking(req, res);
-        });
-    })
-
     describe('PayForBooking', function() {
         var stripeResponse,
             charge;
@@ -807,22 +681,5 @@ describe('bookingController', function() {
             }
             app.bookingController.PayForBooking(req, res);
         })
-    })
-
-    describe('GetStatusOfBooking', function() {
-        it('should return the status of the booking', function(done) {
-            var b = new Booking();
-            var status = 'paid';
-            b.status = status;
-            req.doc = b;
-            req.params.id = b.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(status)).to.be.true;
-                done();
-            }
-            app.bookingController.GetStatusOfBooking(req, res);
-        });
-        
     })
 })

@@ -2,7 +2,7 @@ var Errors = require('./../errors');
 
 var utilController = function(app) {
     this.app = app;
-    app.post('/api/util/location/geocode', app.bodyParser.json(), this.Geocode.bind(this));
+    app.put('/api/util/location/geocode', app.bodyParser.json(), this.Geocode.bind(this));
 }
 
 utilController.prototype = {

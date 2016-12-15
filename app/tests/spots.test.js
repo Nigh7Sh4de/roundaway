@@ -764,7 +764,7 @@ routeTest('spotController', [
             attendantOrOwner: true
         },
         {
-            verb: verbs.PUT,
+            verb: verbs.POST,
             route: '/api/spots',
             method: 'CreateSpot',
             ignoreId: true,
@@ -787,25 +787,14 @@ routeTest('spotController', [
             attendantOrOwner: true
         },
         {
+            verb: verbs.PATCH,
+            route: '/api/spots/:id',
+            method: 'UpdateSpot'
+        },
+        {
             verb: verbs.GET,
             route: '/api/spots/:id/lot',
             method: 'GetLotForSpot',
-            attendantOrOwner: true
-        },
-        {
-            verb: verbs.PUT,
-            route: '/api/spots/:id/lot',
-            method: 'SetLotForSpot'
-        },
-        {
-            verb: verbs.PUT,
-            route: '/api/spots/:id/lot/remove',
-            method: 'RemoveLotFromSpot'
-        },
-        {
-            verb: verbs.GET,
-            route: '/api/spots/:id/location',
-            method: 'GetLocationOfSpot',
             attendantOrOwner: true
         },
         {
@@ -815,77 +804,26 @@ routeTest('spotController', [
             attendantOrOwner: true
         },
         {
-            verb: verbs.PUT,
+            verb: verbs.POST,
             route: '/api/spots/:id/bookings',
             method: 'AddBookingsToSpot',
             attendantOrOwner: true
         },
         {
-            verb: verbs.PUT,
+            verb: verbs.POST,
             route: '/api/spots/:id/bookings/remove',
             method: 'RemoveBookingsFromSpot',
             attendantOrOwner: true
         },
         {
-            verb: verbs.GET,
-            route: '/api/spots/:id/available',
-            method: 'GetAllAvailabilityOfSpot',
-            attendantOrOwner: true
-        },
-        {
-            verb: verbs.PUT,
+            verb: verbs.POST,
             route: '/api/spots/:id/available',
             method: 'AddAvailabilityToSpot'
         },
         {
-            verb: verbs.PUT,
+            verb: verbs.POST,
             route: '/api/spots/:id/available/remove',
             method: 'RemoveAvailabilityFromSpot'
-        },
-        {
-            verb: verbs.GET,
-            route: '/api/spots/:id/booked',
-            method: 'GetAllBookedTimeOfSpot',
-            attendantOrOwner: true
-        },
-        {
-            verb: verbs.GET,
-            route: '/api/spots/:id/schedule',
-            method: 'GetEntireScheduleOfSpot',
-            attendantOrOwner: true
-        },
-        {
-            verb: verbs.GET,
-            route: '/api/spots/:id/price',
-            method: 'GetPriceOfSpot',
-            attendantOrOwner: true
-        },
-        {
-            verb: verbs.PUT,
-            route: '/api/spots/:id/price',
-            method: 'SetPriceOfSpot'
-        },
-        {
-            verb: verbs.GET,
-            route: '/api/spots/:id/name',
-            method: 'GetNameOfSpot',
-            attendantOrOwner: true
-        },
-        {
-            verb: verbs.PUT,
-            route: '/api/spots/:id/name',
-            method: 'SetNameOfSpot'
-        },
-        {
-            verb: verbs.GET,
-            route: '/api/spots/:id/description',
-            method: 'GetDescriptionOfSpot',
-            attendantOrOwner: true
-        },
-        {
-            verb: verbs.PUT,
-            route: '/api/spots/:id/description',
-            method: 'SetDescriptionOfSpot'
         },
         {
             verb: verbs.GET,
@@ -893,7 +831,7 @@ routeTest('spotController', [
             method: 'GetAttendantsForSpot'
         },
         {
-            verb: verbs.PUT,
+            verb: verbs.POST,
             route: '/api/spots/:id/attendants', 
             method: 'AddAttendantsToSpot'
         }
@@ -961,6 +899,88 @@ describe('spotController', function() {
         })
         
         
+    })
+
+    describe('UpdateSpot', function() {
+        it('should be able to update reserved', function(done) {
+            var spot = new Spot();
+            var reserved = true;
+            req.body.reserved = reserved;
+            req.doc = spot;
+            req.params.id = spot.id;
+            sinon.stub(spot, 'setReserved', function(reserved) {
+                this.reserved = reserved;
+                return mockPromise(this)()
+            })
+            res.sendBad = done;
+            res.sent = function() {
+                expect(spot.setReserved.calledOnce).to.be.true;
+                spot.reserved = reserved;
+                expect(res.sentWith(spot.toJSON({getters: true}))).to.be.true;
+                done();
+            }
+            app.spotController.UpdateSpot(req, res);
+        })
+
+        it('should be able to update name', function(done) {
+            var spot = new Spot();
+            var name = 'some name';
+            req.body.name = name;
+            req.doc = spot;
+            req.params.id = spot.id;
+            sinon.stub(spot, 'setName', function(name) {
+                this.name = name;
+                return mockPromise(this)()
+            })
+            res.sendBad = done;
+            res.sent = function() {
+                expect(spot.setName.calledOnce).to.be.true;
+                spot.name = name;
+                expect(res.sentWith(spot.toJSON({getters: true}))).to.be.true;
+                done();
+            }
+            app.spotController.UpdateSpot(req, res);
+        })
+
+        it('should be able to update description', function(done) {
+            var lot = new Spot();
+            var description = 'some description';
+            req.body.description = description;
+            req.doc = lot;
+            req.params.id = lot.id;
+            sinon.stub(lot, 'setDescription', function(description) {
+                this.description = description;
+                return mockPromise(this)()
+            })
+            res.sendBad = done;
+            res.sent = function() {
+                expect(lot.setDescription.calledOnce).to.be.true;
+                lot.description = description;
+                expect(res.sentWith(lot.toJSON({getters: true}))).to.be.true;
+                done();
+            }
+            app.spotController.UpdateSpot(req, res);
+        })
+
+        it('should be able to update price', function(done) {
+            var lot = new Spot();
+            var price = { perHour: 123 };
+            req.body.price = price;
+            req.doc = lot;
+            req.params.id = lot.id;
+            sinon.stub(lot, 'setPrice', function(price) {
+                this.price = price;
+                return mockPromise(this)()
+            })
+            res.sendBad = done;
+            res.sent = function() {
+                expect(lot.setPrice.calledOnce).to.be.true;
+                lot.price = price;
+                expect(res.sentWith(lot.toJSON({getters: true}))).to.be.true;
+                done();
+            }
+            app.spotController.UpdateSpot(req, res);
+        })
     })
     
     describe('CreateSpot', function() {
@@ -1478,68 +1498,6 @@ describe('spotController', function() {
             app.spotController.GetLotForSpot(req, res);
         })
     })
-
-    describe('RemoveLotFromSpot', function() {
-        it('shouldremove the lot from the spot', function(done) {
-            var s = new Spot({
-                lot: new Lot()
-            });
-            sinon.stub(s, 'removeLot', mockPromise());
-            req.doc = s;
-            req.params.id = s.id;
-            res.sendBad = done;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(s.removeLot.calledOnce).to.be.true;
-                done();                
-            }
-            app.spotController.RemoveLotFromSpot(req, res);
-        })
-    })
-    
-    describe('SetLotForSpot', function() {
-        it('should set the lot of the spot', function(done) {
-            var s = new Spot();
-            var l = new Lot();
-            sinon.stub(s, 'setLot');
-            req.doc = s;
-            app.db.lots = {
-                findById: mockPromise(l)
-            }
-            req.params.id = s.id;
-            req.body = l.toJSON();
-            res.sendBad = done;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(s.setLot.calledOnce).to.be.true;
-                expect(s.setLot.calledWith(l)).to.be.true;
-                done();                
-            }
-            app.spotController.SetLotForSpot(req, res);
-        })
-    })
-    
-    describe('GetLocationOfSpot', function() {
-        it('should return the spot\'s location', function(done) {
-            var s = new Spot();
-            s.location = {
-                address: '123 fake st',
-                coordinates: [123, 456]
-            }
-            var expected = {
-                address: s.getAddress(),
-                coordinates: s.getLocation()
-            }
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith({location: expected}), JSON.stringify(res.send.firstCall.args[0]) + '\n' + JSON.stringify(expected)).to.be.true;
-                done();
-            }
-            app.spotController.GetLocationOfSpot(req, res);
-        });
-    })
     
     describe('GetAllBookingsForSpot', function() {
         it('should return an empty array if no bookings are assigned', function(done) {
@@ -1855,23 +1813,6 @@ describe('spotController', function() {
         
     })
     
-    describe('GetAllAvailabilityOfSpot', function() {
-        it('should return the available ranges for the spot', function(done) {
-            var s = new Spot();
-            s.available.addRange(new Date('2016/01/01'), new Date());
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith({available: s.available.ranges})).to.be.true;
-                done();
-            }
-            app.spotController.GetAllAvailabilityOfSpot(req, res);
-        })
-        
-        
-    })
-    
     describe('AddAvailabilityToSpot', function() {
         it('should add the entire request body as a schedule if no shedules are specified', function(done) {
             var s = new Spot();
@@ -1962,192 +1903,6 @@ describe('spotController', function() {
         })
         
         
-    })
-    
-    describe('GetAllBookedTimeOfSpot', function() {
-        it('should return the available ranges for the spot', function(done) {
-            var s = new Spot();
-            s.booked.addRange(new Date('2016/01/01'), new Date());
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith({booked: s.booked.ranges})).to.be.true;
-                done();
-            }
-            app.spotController.GetAllBookedTimeOfSpot(req, res);
-        })
-        
-        
-    })
-    
-    describe('GetEntireScheduleOfSpot', function() {
-        it('should return the available ranges for the spot', function(done) {
-            var s = new Spot();
-            s.booked.addRange(new Date('2016/01/01'), new Date());
-            s.available.addRange(new Date('2016/01/01'), new Date());
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith({
-                        booked: s.booked.ranges,
-                        available: s.available.ranges
-                    })).to.be.true;
-                done();
-            }
-            app.spotController.GetEntireScheduleOfSpot(req, res);
-        })
-        
-        
-    })
-    
-    describe('GetPriceOfSpot', function() {
-        it('should error if price is not set', function(done) {
-            var s = new Spot();
-            var price = 123.45;
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendBad.calledOnce).to.be.true;
-                expect(res.sentError(Errors.MissingProperty)).to.be.true;
-                done();
-            }
-            app.spotController.GetPriceOfSpot(req, res);
-        })
-
-        it('should return the price of the spot', function(done) {
-            var s = new Spot();
-            var price = 123.45;
-            s.price.perHour = price;
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith({
-                    perHour: price
-                })).to.be.true;
-                done();
-            }
-            app.spotController.GetPriceOfSpot(req, res);
-        })
-        
-        
-    })
-    
-    describe('SetPriceOfSpot', function() {
-        it('should set the price of the spot', function(done) {
-            var s = new Spot();
-            var pricePerHour = 123.45;
-            sinon.stub(s, 'setPrice', mockPromise());
-            req.doc = s;
-            req.params.id = s.id;
-            req.body.perHour = pricePerHour;
-            res.sent = function() {
-                expect(s.setPrice.calledOnce).to.be.true;
-                done();
-            }
-            app.spotController.SetPriceOfSpot(req, res);
-        })
-    })
-
-    describe('GetNameOfSpot', function() {
-        it('should get the name of the spot', function(done) {
-            var s = new Spot();
-            var name = s.name = 'some name';
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(name)).to.be.true;
-                done();
-            }
-            app.spotController.GetNameOfSpot(req, res);
-        });
-    })
-
-    describe('SetNameOfSpot', function() {
-        it('should set the name of the spot', function(done) {
-            var s = new Spot();
-            sinon.stub(s, 'setName', mockPromise());
-            var name = 'some name';
-            req.doc = s;
-            req.params.id = s.id;
-            req.body.name = name;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(s.setName.calledOnce).to.be.true;
-                expect(s.setName.calledWith(name)).to.be.true;
-                done();
-            }
-            app.spotController.SetNameOfSpot(req, res);
-        });
-    })
-
-    describe('GetIfSpotIsReserved', function() {
-        it('should get if the spot is reserved', function(done) {
-            var s = new Spot();
-            var reserved = s.reserved = true;
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(reserved)).to.be.true;
-                done();
-            }
-            app.spotController.GetIfSpotIsReserved(req, res);
-        });
-    })
-
-    describe('SetIfSpotIsReserved', function() {
-        it('should set if the spot is reserved', function(done) {
-            var s = new Spot();
-            sinon.stub(s, 'setReserved', mockPromise());
-            var reserved = true;
-            req.doc = s;
-            req.params.id = s.id;
-            req.body.reserved = reserved;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(s.setReserved.calledOnce).to.be.true;
-                expect(s.setReserved.calledWith(reserved)).to.be.true;
-                done();
-            }
-            app.spotController.SetIfSpotIsReserved(req, res);
-        });
-    })
-
-    describe('GetDescriptionOfSpot', function() {
-        it('should get the description of the spot', function(done) {
-            var s = new Spot();
-            var description = s.description = 'some description';
-            req.doc = s;
-            req.params.id = s.id;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(description)).to.be.true;
-                done();
-            }
-            app.spotController.GetDescriptionOfSpot(req, res);
-        });
-    })
-
-    describe('SetDescriptionOfSpot', function() {
-        it('should set the description of the spot', function(done) {
-            var s = new Spot();
-            sinon.stub(s, 'setDescription', mockPromise());
-            var description = 'some description';
-            req.doc = s;
-            req.params.id = s.id;
-            req.body.description = description;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(s.setDescription.calledOnce).to.be.true;
-                expect(s.setDescription.calledWith(description)).to.be.true;
-                done();
-            }
-            app.spotController.SetDescriptionOfSpot(req, res);
-        });
     })
 
     describe('GetAttendantsForSpot', function() {

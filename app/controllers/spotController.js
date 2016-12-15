@@ -7,31 +7,18 @@ var Car = require('./../models/Car');
 var controller = function(app) {
     this.app = app;
     app.get('/api/spots', app.checkAuth, app.checkAttendant.bind(app), this.GetAllSpots.bind(this));
-    app.put('/api/spots', app.checkAuth, app.bodyParser.json(), this.CreateSpot.bind(this));
+    app.post('/api/spots', app.checkAuth, app.bodyParser.json(), this.CreateSpot.bind(this));
     app.get('/api/spots/near', this.GetNearestSpot.bind(this));
     app.get('/api/spots/:id', app.checkAuth, app.checkAttendant.bind(app), this.GetSpot.bind(this));
+    app.patch('/api/spots/:id', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.UpdateSpot.bind(this));
     app.get('/api/spots/:id/lot', app.checkAuth, app.checkAttendant.bind(app), this.GetLotForSpot.bind(this));
-    app.put('/api/spots/:id/lot', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetLotForSpot.bind(this));
-    app.put('/api/spots/:id/lot/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveLotFromSpot.bind(this));
-    app.get('/api/spots/:id/location', app.checkAuth, app.checkAttendant.bind(app), this.GetLocationOfSpot.bind(this));
-    app.get('/api/spots/:id/price', app.checkAuth, app.checkAttendant.bind(app), this.GetPriceOfSpot.bind(this));
-    app.put('/api/spots/:id/price', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetPriceOfSpot.bind(this));
-    app.get('/api/spots/:id/name', app.checkAuth, app.checkAttendant.bind(app), this.GetNameOfSpot.bind(this));
-    app.put('/api/spots/:id/name', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetNameOfSpot.bind(this));
-    app.get('/api/spots/:id/reserved', app.checkAuth, app.checkAttendant.bind(app), this.GetIfSpotIsReserved.bind(this));
-    app.put('/api/spots/:id/reserved', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetIfSpotIsReserved.bind(this));
-    app.get('/api/spots/:id/description', app.checkAuth, app.checkAttendant.bind(app), this.GetDescriptionOfSpot.bind(this));
-    app.put('/api/spots/:id/description', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SetDescriptionOfSpot.bind(this));
     app.get('/api/spots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), this.GetAttendantsForSpot.bind(this));
-    app.put('/api/spots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAttendantsToSpot.bind(this));
+    app.post('/api/spots/:id/attendants', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAttendantsToSpot.bind(this));
     app.get('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant.bind(app), this.GetAllBookingsForSpot.bind(this));
-    app.put('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
-    app.put('/api/spots/:id/bookings/remove', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.RemoveBookingsFromSpot.bind(this));
-    app.get('/api/spots/:id/available', app.checkAuth, app.checkAttendant.bind(app), this.GetAllAvailabilityOfSpot.bind(this));
-    app.put('/api/spots/:id/available', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAvailabilityToSpot.bind(this));
-    app.put('/api/spots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromSpot.bind(this));
-    app.get('/api/spots/:id/booked', app.checkAuth, app.checkAttendant.bind(app), this.GetAllBookedTimeOfSpot.bind(this));
-    app.get('/api/spots/:id/schedule', app.checkAuth, app.checkAttendant.bind(app), this.GetEntireScheduleOfSpot.bind(this));
+    app.post('/api/spots/:id/bookings', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.AddBookingsToSpot.bind(this));
+    app.post('/api/spots/:id/bookings/remove', app.checkAuth, app.checkAttendant.bind(app), app.bodyParser.json(), this.RemoveBookingsFromSpot.bind(this));
+    app.post('/api/spots/:id/available', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.AddAvailabilityToSpot.bind(this));
+    app.post('/api/spots/:id/available/remove', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.RemoveAvailabilityFromSpot.bind(this));
 }
 
 controller.prototype = {
@@ -130,6 +117,21 @@ controller.prototype = {
     GetSpot: function(req, res) {
         res.sendGood('Found spot', req.doc.toJSON({getters: true}));
     },
+    UpdateSpot: function(req, res) {
+        var updates = [];
+        if (req.body.price) updates.push(req.doc.setPrice(req.body.price));
+        if (req.body.name) updates.push(req.doc.setName(req.body.name));
+        if (req.body.reserved) updates.push(req.doc.setReserved(req.body.reserved));
+        if (req.body.description) updates.push(req.doc.setDescription(req.body.description));
+
+        Promise.all(updates)
+        .then(function() {
+            res.sendGood('Updated lot', arguments[updates.length-1][0].toJSON({getters: true}))
+        })
+        .catch(function(err) {
+            res.sendBad(err)
+        })
+    },
     GetLotForSpot: function(req, res) {
         if (!req.doc.lot)
             return res.sendBad(new Errors.MissingProperty(req.doc, 'lot'));
@@ -142,36 +144,6 @@ controller.prototype = {
         .catch(function(err) {
             res.sendBad(err)
         });
-    },
-    RemoveLotFromSpot: function(req, res) {
-        req.doc.removeLot()
-        .then(function(spot) {
-            res.sendGood('Removed lot from spot', spot);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        })
-    },
-    SetLotForSpot: function(req, res) {
-        this.app.db.lots.findById(req.body.id)
-        .exec()
-        .then(function(lot) {
-            if (!lot) throw new Errors.NotFound('Lot', req.body.id);
-            return req.doc.setLot(lot);
-        })
-        .then(function(b) {
-            res.sendGood('Set lot for spot', b);
-        })
-        .catch(function(err) {
-            res.sendBad(err);
-        });
-    },
-    GetLocationOfSpot: function(req, res) {
-        var loc = {
-            address: req.doc.getAddress(),
-            coordinates: req.doc.getLocation()
-        }
-        res.sendGood('Got location for spot', {location: loc});
     },
     GetAllBookingsForSpot: function(req, res) {
         this.app.db.bookings.find({spot: req.doc.id})
@@ -305,9 +277,6 @@ controller.prototype = {
             res.sendBad(err);
         })
     },
-    GetAllAvailabilityOfSpot: function(req, res) {
-        res.sendGood('Found availability for spot', {available: req.doc.available.ranges});
-    },
     AddAvailabilityToSpot: function(req, res) {
         req.doc.addAvailability(req.body.schedules || req.body)
         .then(function(spot) {
@@ -321,71 +290,6 @@ controller.prototype = {
         req.doc.removeAvailability(req.body.schedules || req.body)
         .then(function(spot) {
             res.sendGood('Availability removed from spot');
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
-    },
-    GetAllBookedTimeOfSpot: function(req, res) {
-        res.sendGood('Found booked time for spot', {booked: req.doc.booked.ranges});
-    },
-    GetEntireScheduleOfSpot: function(req, res) {
-        res.sendGood('Found schedules for spot', {
-            available: req.doc.available.ranges,
-            booked: req.doc.booked.ranges
-        });
-    },
-    GetPriceOfSpot: function(req, res) {
-        var price = req.doc.getPrice();
-        if (!price) return res.sendBad(new Errors.MissingProperty(req.doc, 'price', req.doc.getPrice()));
-        res.sendGood('Found price for spot', price);
-    },
-    SetPriceOfSpot: function(req, res) {
-        req.doc.setPrice(req.body)
-        .then(function(spot) {
-            res.sendGood('Set price for spot', spot);
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
-    },
-    GetNameOfSpot: function(req, res) {
-        var name = req.doc.getName();
-        if (!name) return res.sendBad(new Errors.MissingProperty(req.doc, 'name', req.doc.getName()));
-        res.sendGood('Found name for spot', name);
-    },
-    SetNameOfSpot: function(req, res) {
-        req.doc.setName(req.body.name)
-        .then(function(spot) {
-            res.sendGood('Set name for spot', spot);
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
-    },
-    GetIfSpotIsReserved: function(req, res) {
-        var reserved = req.doc.getReserved();
-        if (!reserved) return res.sendBad(new Errors.MissingProperty(req.doc, 'reserved', req.doc.getReserved()));
-        res.sendGood('Found reserved for spot', reserved);
-    },
-    SetIfSpotIsReserved: function(req, res) {
-        req.doc.setReserved(req.body.reserved)
-        .then(function(spot) {
-            res.sendGood('Set reserved for spot', spot);
-        })
-        .catch(function(err) {
-            res.sendBad(err)
-        });
-    },
-    GetDescriptionOfSpot: function(req, res) {
-        var description = req.doc.getDescription();
-        if (!description) return res.sendBad(new Errors.MissingProperty(req.doc, 'description', req.doc.getDescription()));
-        res.sendGood('Found description for spot', description);
-    },
-    SetDescriptionOfSpot: function(req, res) {
-        req.doc.setDescription(req.body.description)
-        .then(function(spot) {
-            res.sendGood('Set description for spot', spot);
         })
         .catch(function(err) {
             res.sendBad(err)
