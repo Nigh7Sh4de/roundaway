@@ -254,7 +254,7 @@ routeTest('userController', [
         method: 'GetStripeCustomerForUser',
         ignoreOwner: true
     }, {
-        verb: verbs.POST,
+        verb: verbs.PUT,
         route: '/api/users/:id/stripe',
         method: 'UpdateStripeAccountForUser',
         ignoreOwner: true
