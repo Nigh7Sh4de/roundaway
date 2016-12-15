@@ -6,31 +6,45 @@ Roundaway
 ## Backend Objects
 *These are object definitions used in the backend models*
 
+
 #### Location `{}`
     address: String,
     coordinates: [Number]
 
+
 #### Price `{}`
     perHour: Number
+
 
 #### Range (Type) `{}`
     start: Type,
     end: Type
 
+
 #### Ranger `[]`
     [Range(Date)]
     next: Range(Date)
+
 
 #### BookingStatus `enum`
     unpaid,
     paid,
     archived
 
+
 #### Profile `{}`
     name: String
 
+
+#### StripeAccount `{}`
+    acct: String,
+    cus: String,
+    public: String,
+    secret: String
+
 ## Models
 *All models have a `createdAt` and `updatedAt` field*
+
 
 #### User
 The <b>User</b> object holds basic data about the <b>User</b> including <code>profile</code> and authentication information. All other models reference their owner through a <code>user</code> property.
@@ -40,38 +54,44 @@ The <b>User</b> object holds basic data about the <b>User</b> including <code>pr
         facebook: String,
         google: String
     },
-    admin: Boolean,
-    attendant: Boolean
+    stripe: StripeAccount,
+    admin: Boolean
+
 
 #### Lot
-A <b>Lot</b> is simply a collection of <b>Spot</b>s that share a common <code>profile</code>. The <b>Lot</b>'s **price**, **availability**, and **location** are used as defaults for new <b>Spot</b>s.
+A <b>Lot</b> is simply a collection of <b>Spot</b>s that share a common <code>user</code>. The <b>Lot</b>'s <code>price</code>, <code>availability</code>, and <code>location</code> are used as defaults for new <b>Spot</b>s. The <code>name</code> of a <b>Lot</b> is only shown to the owner (for easy management) while the <code>description</code> will be displayed publicly.
 
     User: User
     attendants: [User]
     location: Location,
     price: Price,
-    available: Ranger
+    available: Ranger,
+    name: String,
+    description: String
+
 
 #### Spot
-A <b>Spot</b> can be booked by users for a set period of time. Once a <b>Spot</b> is created you cannot modify the **location**. Modifying the **price** of a <b>Spot</b> will not modify existing `Booking`s. Associating a <b>Spot</b> with a <b>Lot</b> will overwrite the <b>Spot</b>'s **location** with the one in the <b>Lot</b>. 
+A <b>Spot</b> can be booked by users for a set period of time. Once a <b>Spot</b> is created you cannot modify the <code>location</code>. Modifying the <code>price</code> of a <b>Spot</b> will not modify existing <b>Booking</b>s. Associating a <b>Spot</b> with a <b>Lot</b> will overwrite the <b>Spot</b>'s <code>location</code> with the one in the <b>Lot</b>. The <code>name</code> of a <b>Spot</b> is only shown to the owner (for easy management) while the <code>description</code> will be displayed publicly.
     
     user: User,
     attendants: [User],
     lot: Lot,
     name: String,
-    description: String
     reserved: Boolean,
-    price: Price,
     location: Location,
+    price: Price,
     available: Ranger,
     booked: Ranger,
+    description: String
+
 
 
 #### Booking
-A `Booking` is an immutable object that is used to track bookings on a <b>Spot</b>. Once a `Booking` is created you cannot modify the **spot**, **price**, **start**, nor **end** properties. The status defaults to `unpaid` and will change to `paid` once payment has been succesfuly processed. A `Booking`s price is calculated using it's duration (calculated using it's **start** and **end** properties) multiplied byt he price of the <b>Spot</b> that it is associated with.
+A <b>Booking</b> is an immutable object that is used to track bookings on a <b>Spot</b>. Once a <b>Booking</b> is created you cannot modify the <code>spot</code>, <code>price</code>, <code>start</code>, nor <code>end</code> properties. The status defaults to `unpaid` and will change to `paid` once payment has been succesfuly processed. A <b>Booking</b>'s price is calculated using it's duration (calculated using it's <code>start</code> and <code>end</code> properties) multiplied by the price of the <b>Spot</b> that it is associated with. All <b>Booking</b>s must have a <code>spot</code>. The <code>lot</code> for a <b>Booking</b> must be left empty unless the <b>Spot</b> is <code>generic</code>, then the <b>Booking</b>'s <code>lot</code> must be set.
 
     user: User,
     car: Car,
+    lot: Lot,
     spot: Spot,
     status: BookingStatus,
     price: Price,
@@ -87,11 +107,11 @@ In order to make API calls that are auth protected use the following flow:
 1. Authenticate with a 3rd party authentication server of your choice. Currently supported options:
   - Facebook
   - Google 
-2. Hit `POST /auth/:strat` with an **access_token** as supplied by the social network you are authenticating with
-3. You will receieve a **JWT** in the response if authentication was successful after one of the following operations has completed:
+2. Hit `POST /auth/:strat` with an <code>access_token</code> as supplied by the social network you are authenticating with
+3. You will receieve a <b>JWT</b> in the response if authentication was successful after one of the following operations has completed:
   - A user was found in db
   - A new user was created
-4. Set an `Authorizaton` header with the `JWT` scheme (as in: `Authorization: JWT JWT_STRING...`) in all subsequent requests
+4. Set an `Authorizaton` header with the `JWT` scheme (as in: `Authorization: JWT <jwt string...>`) in all subsequent requests
 5. If a certain user requires elevated privelages (such as *admin*) the db admin must set the appropriate flag in the user collection manually (*note*: changing privelages does not require generating a new JWT, so changing privelages can be done on the fly)
 
 
@@ -147,9 +167,12 @@ Each route has a security policy with one of the following properties:
 
 ### Requests
 
+
+
 #### Util
 
-##### POST `/api/util/location/geocode`
+
+##### PUT `/api/util/location/geocode`
 <table>
   <tr>
     <td><i>Security</i></td>
@@ -162,7 +185,10 @@ Each route has a security policy with one of the following properties:
 </table>
 Retrieve the proper formatted address for a location (as it would be saved in the database)
 
+
+
 #### Authentication
+
 
 ##### GET `/auth/:strat?access_token`
 <table>
@@ -180,7 +206,10 @@ Retrieve the proper formatted address for a location (as it would be saved in th
 </table>
 Once you have authenticated the user elsewhere (client-side or on another server), send the `access_token` here in order to authenticate with this server. Sends back a JWT for subsequent API requests.
 
+
+
 #### User
+
 
 ##### GET `/api/users`
 <table>
@@ -191,6 +220,7 @@ Once you have authenticated the user elsewhere (client-side or on another server
 </table>
 Returns the entire <b>User</b>s collection.
 
+
 ##### GET `/api/users/profile`
 <table>
   <tr>
@@ -199,6 +229,7 @@ Returns the entire <b>User</b>s collection.
   </tr>
 </table>
 Returns the current session <b>User</b>.
+
 
 ##### GET `/api/users/:userid/lots`
 <table>
@@ -209,6 +240,7 @@ Returns the current session <b>User</b>.
 </table>
 Returns the given <b>User</b>'s lots.
 
+
 ##### GET `/api/users/:userid/spots`
 <table>
   <tr>
@@ -217,6 +249,7 @@ Returns the given <b>User</b>'s lots.
   </tr>
 </table>
 Returns the given <b>User</b>'s spots.
+
 
 ##### GET `/api/users/:userid/bookings`
 <table>
@@ -227,6 +260,7 @@ Returns the given <b>User</b>'s spots.
 </table>
 Returns the given <b>User</b>'s bookings.
 
+
 ##### GET `/api/users/:userid/profile`
 <table>
   <tr>
@@ -235,6 +269,7 @@ Returns the given <b>User</b>'s bookings.
   </tr>
 </table>
 Returns the given <b>User</b>'s profile.
+
 
 ##### PATCH `/api/users/:userid/profile`
 <table>
@@ -252,7 +287,50 @@ Returns the given <b>User</b>'s profile.
 </table>
 Updates the specified fields of the <b>User</b>'s profile.
 
+
+##### GET `/api/users/:userid/stripe/account`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+Returns the given <b>User</b>'s <i>Stripe</i> <code>account</code> object.
+
+
+##### GET `/api/users/:userid/stripe/customer`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+Returns the given <b>User</b>'s <i>Stripe</i> <code>customer</code> object.
+
+
+##### PUT `/api/users/:userid/stripe`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+Create or update a <i>Stripe</i> <i>Connect</i> account for the user. Parameters will be passed directly to the <i>Stripe</i> <a href="https://stripe.com/docs/api#update_account">api</a>.
+
+
+##### GET `/api/users/:userid/stripe/history`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>admin</td>
+  </tr>
+</table>
+Returns the given <b>User</b>'s <i>Stripe</i> transaction history.
+
+
+
 #### Booking
+
 
 ##### GET `/api/bookings`
 <table>
@@ -263,6 +341,7 @@ Updates the specified fields of the <b>User</b>'s profile.
 </table>
 Returns the owned <b>Booking</b> or entire collection if admin.
 
+
 ##### GET `/api/bookings/:id`
 <table>
   <tr>
@@ -271,6 +350,7 @@ Returns the owned <b>Booking</b> or entire collection if admin.
   </tr>
 </table>
 Returns the <b>Booking</b> with the specified id.
+
 
 ##### GET `/api/bookings/:id/spot`
 <table>
@@ -281,6 +361,7 @@ Returns the <b>Booking</b> with the specified id.
 </table>
 Returns the spot that is associated with this <b>Booking</b>.
 
+
 ##### GET `/api/bookings/:id/car`
 <table>
   <tr>
@@ -290,59 +371,6 @@ Returns the spot that is associated with this <b>Booking</b>.
 </table>
 Returns the car that is associated with this <b>Booking</b>.
 
-##### GET `/api/bookings/:id/start`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Returns the start of the specified <b>Booking</b>.
-
-##### GET `/api/bookings/:id/duration`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Returns the duration of the specified <b>Booking</b>.
-
-##### GET `/api/bookings/:id/end`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Returns the end of the specified <b>Booking</b>.
-
-##### GET `/api/bookings/:id/time`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Returns the time <code>{start: Date, end: Date}</code> of the specified <b>Booking</b>.
-
-##### GET `/api/bookings/:id/price`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Returns the price of the booking of the specified <b>Booking</b>.
-
-##### GET `/api/bookings/:id/status`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Returns the status of the booking of the specified <b>Booking</b>.
 
 ##### PUT `/api/bookings/:id/pay`
 <table>
@@ -357,7 +385,10 @@ Returns the status of the booking of the specified <b>Booking</b>.
 </table>
 Pay for a <b>Booking</b>.
 
+
+
 #### Lot
+
 
 ##### GET `/api/lots`
 <table>
@@ -368,7 +399,8 @@ Pay for a <b>Booking</b>.
 </table>
 Returns the owned <b>Lot</b>s or entire collection if admin.
 
-##### PUT `/api/lots`
+
+##### POST `/api/lots`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -395,6 +427,7 @@ Returns the owned <b>Lot</b>s or entire collection if admin.
 </table>
 Create a new <b>Lot</b>.
 
+
 ##### GET `/api/lots/:id`
 <table>
   <tr>
@@ -404,14 +437,28 @@ Create a new <b>Lot</b>.
 </table>
 Returns the <b>Lot</b> with the specified id.
 
-##### GET `/api/lots/:id/location`
+
+##### PATCH `/api/lots/:id`
 <table>
   <tr>
     <td><i>security</i></td>
-    <td>attendant</td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>The new name for the lot</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>The new description for the lot</td>
+  </tr>
+  <tr>
+    <td>price</td>
+    <td>The new price object for the lot (only needs to have the price divisions you wish to update)</td>
   </tr>
 </table>
-Returns the location of the <b>Lot</b> with the specified id.
+Update the <b>Lot</b> with the specified id. You only need to use the request body parameters that you wish to update.
+
 
 ##### GET `/api/lots/:id/spots`
 <table>
@@ -432,7 +479,8 @@ Returns the spots associated with the <b>Lot</b>.
 </table>
 Return the attendants associated with the <b>Lot</b>.
 
-##### PUT `/api/lots/:id/attendants`
+
+##### POST `/api/lots/:id/attendants`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -445,16 +493,8 @@ Return the attendants associated with the <b>Lot</b>.
 </table>
 Return the attendants associated with the <b>Lot</b>.
 
-##### GET `/api/lots/:id/available`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns the ranges during which new spots in this <b>Lot</b> would be available in an array where each pair of indices is a start and end time. 
 
-##### PUT `/api/lots/:id/available`
+##### POST `/api/lots/:id/available`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -487,7 +527,8 @@ Returns the ranges during which new spots in this <b>Lot</b> would be available 
 </table>
 Adds availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
 
-##### PUT `/api/lots/:id/available/remove`
+
+##### POST `/api/lots/:id/available/remove`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -520,29 +561,11 @@ Adds availability based on the supplied information. Either <code>count</code> (
 </table>
 Removes availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
 
-##### GET `/api/lots/:id/price`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns an object which which contains details for each price type (such as per hour, etc).
 
-##### GET `/api/lots/:id/price`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-  <tr>
-    <td>...</td>
-    <td>The <code>Price</code> properties you wish to update and their new values</td>
-  </tr>
-</table>
-Set the price of new spots for the <b>Lot</b>. Does not modify existing spots.
+
 
 #### Spot
+
 
 ##### GET `/api/spots`
 <table>
@@ -553,7 +576,8 @@ Set the price of new spots for the <b>Lot</b>. Does not modify existing spots.
 </table>
 Returns the owned <b>Spot</b>s or entire collection if admin.
 
-##### PUT `/api/spots`
+
+##### POST `/api/spots`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -582,6 +606,7 @@ Returns the owned <b>Spot</b>s or entire collection if admin.
 </table>
 Create a new <b>Spot</b>.
 
+
 ##### GET `/api/spots/near?long=LONGITUDE&lat=LATITUDE&available=DATE&count=COUNT`
 <table>
   <tr>
@@ -606,6 +631,7 @@ Create a new <b>Spot</b>.
 </table>
 Returns the required number of <b>Spot</b>s based on the given filters
 
+
 ##### GET `/api/spots/:id`
 <table>
   <tr>
@@ -614,6 +640,29 @@ Returns the required number of <b>Spot</b>s based on the given filters
   </tr>
 </table>
 Returns the <b>Spot</b> with the specified id.
+
+
+##### PATCH `/api/lots/:id`
+<table>
+  <tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+  </tr>
+  <tr>
+    <td>name</td>
+    <td>The new name for the lot</td>
+  </tr>
+  <tr>
+    <td>description</td>
+    <td>The new description for the lot</td>
+  </tr>
+  <tr>
+    <td>price</td>
+    <td>The new price object for the lot (only needs to have the price divisions you wish to update)</td>
+  </tr>
+</table>
+Update the <b>Lot</b> with the specified id. You only need to use the request body parameters that you wish to update.
+
 
 ##### GET `/api/spots/:id/lot`
 <table>
@@ -624,120 +673,6 @@ Returns the <b>Spot</b> with the specified id.
 </table>
 Returns the <b>Lot</b> associated with the <b>Spot</b>
 
-##### PUT `/api/spots/:id/lot`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Associate a <b>Lot</b> with the <b>Spot</b>. This will not transfer over any of the Lot's properties such as <code>price</code>, <code>location</code>, etc.
-
-##### PUT `/api/spots/:id/lot/remove`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-</table>
-Disassociate any lot from this <b>Spot</b>
-
-##### GET `/api/spots/:id/location`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns the location of the <b>Spot</b> with the specified id.
-
-##### GET `/api/spots/:id/price`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns an object which which contains details for each price type (such as per hour, etc).
-
-##### PUT `/api/spots/:id/price`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-  <tr>
-    <td>...</td>
-    <td>The <code>Price</code> properties you wish to update and their new values</td>
-  </tr>
-</table>
-Set the price of a <b>Spot</b>. Does not modify existing bookings.
-
-##### GET `/api/spots/:id/name`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns the name of the <b>Spot</b>
-
-##### PUT `/api/spots/:id/name`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-  <tr>
-    <td>name</td>
-    <td>the name to set for the <b>Spot</b></td>
-  </tr>
-</table>
-Set a name for the <b>Spot</b> that will be used by the owner to identify spots (instead of just by location)
-
-##### GET `/api/spots/:id/reserved`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns the reserved of the <b>Spot</b>
-
-##### PUT `/api/spots/:id/reserved`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-  <tr>
-    <td>reserved</td>
-    <td>the reserved state to set for the <b>Spot</b></td>
-  </tr>
-</table>
-Set the reserved state of the <b>Spot</b>. When true, this <b>Spot</b> will not be booked when booking a generic <b>Spot</b> through a **Lot**.
-
-##### GET `/api/spots/:id/description`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns the description of the <b>Spot</b>
-
-##### PUT `/api/spots/:id/description`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>owner</td>
-  </tr>
-  <tr>
-    <td>description</td>
-    <td>the description to set for the <b>Spot</b></td>
-  </tr>
-</table>
-Set the description of the <b>Spot</b> that will be displayed to users looking to rent the spot (can provide details regarding where to park, type of spot, etc.)
 
 ##### GET `/api/lots/:id/attendants`
 <table>
@@ -748,7 +683,8 @@ Set the description of the <b>Spot</b> that will be displayed to users looking t
 </table>
 Return the attendants associated with the lot.
 
-##### PUT `/api/lots/:id/attendants`
+
+##### POST `/api/lots/:id/attendants`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -761,6 +697,7 @@ Return the attendants associated with the lot.
 </table>
 Return the attendants associated with the lot.
 
+
 ##### GET `/api/spots/:id/bookings`
 <table>
   <tr>
@@ -770,7 +707,8 @@ Return the attendants associated with the lot.
 </table>
 Returns the bookings associated with the <b>Spot</b> with the given id.
 
-##### PUT `/api/spots/:id/bookings`
+
+##### POST `/api/spots/:id/bookings`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -791,7 +729,8 @@ Returns the bookings associated with the <b>Spot</b> with the given id.
 </table>
 Creates a new booking for the <b>Spot</b>
 
-##### PUT `/api/spots/:id/bookings/remove`
+
+##### POST `/api/spots/:id/bookings/remove`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -816,16 +755,8 @@ Creates a new booking for the <b>Spot</b>
 </table>
 Removes the specified booking objects from the <b>Spot</b> and updates schedules.
 
-##### GET `/api/spots/:id/available`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns the ranges during which this <b>Spot</b> is available in an array where each pair of indices is a start and end time. 
 
-##### PUT `/api/spots/:id/available`
+##### POST `/api/spots/:id/available`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -858,7 +789,8 @@ Returns the ranges during which this <b>Spot</b> is available in an array where 
 </table>
 Adds availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
 
-##### PUT `/api/spots/:id/available/remove`
+
+##### POST `/api/spots/:id/available/remove`
 <table>
   <tr>
     <td><i>security</i></td>
@@ -890,21 +822,3 @@ Adds availability based on the supplied information. Either <code>count</code> (
   </tr>
 </table>
 Removes availability based on the supplied information. Either <code>count</code> (of reptitions) or <code>finish</code> (final upper limit) must be set if using a recuring range.
-
-##### GET `/api/spots/:id/booked`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns the ranges during which this <b>Spot</b> is booked in an array where each pair of indices is a start and end time. 
-
-##### GET `/api/spots/:id/schedules`
-<table>
-  <tr>
-    <td><i>security</i></td>
-    <td>attendant</td>
-  </tr>
-</table>
-Returns an object which contains 2 propertes: `booked` and `available` each of which are arrays where each pair of indices is a start and end time.
