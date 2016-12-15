@@ -10,15 +10,11 @@ var userSchema = new Schema({
         facebook: String,
         google: String
     },
+    stripe: StripeAccount,
     admin: {
         type: Boolean,
         default: false
-    },
-    attendant: {
-        type: Boolean,
-        default: false
-    },
-    stripe: StripeAccount
+    }
 }, {
     timestamps: true
 });
