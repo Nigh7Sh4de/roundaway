@@ -61,6 +61,20 @@ The <b>User</b> object holds basic data about the <b>User</b> including <code>pr
     admin: Boolean
 
 
+#### Car
+The <b>Car</b> represents a <b>User</b>'s car in the database and holds basic information about it. When a <b>Car</b> 
+has <code>selected: true</code> it will be used for <b>Booking</b>s (unless the <b>User</b> only has one <b>Car</b>, then that single <b>Car</b> will be used).
+
+    user: User,
+    license: String,
+    make: String,
+    model: String,
+    year: Number,
+    colour: String,
+    description: String,
+    selected: Boolean
+
+
 #### Lot
 A <b>Lot</b> is simply a collection of <b>Spot</b>s that share a common <code>user</code>. The <b>Lot</b>'s <code>price</code>, <code>availability</code>, and <code>location</code> are used as defaults for new <b>Spot</b>s. The <code>name</code> of a <b>Lot</b> is only shown to the owner (for easy management) while the <code>description</code> will be displayed publicly.
 
@@ -344,6 +358,90 @@ Create or update a <i>Stripe</i> <i>Connect</i> account for the user. Parameters
 </tr>
 </table>
 Returns the given <b>User</b>'s <i>Stripe</i> transaction history.
+
+
+<br />
+------------
+#### Car
+
+
+##### GET `/api/cars`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+</tr>
+</table>
+Returns the owned <b>Car</b>s or entire collection if admin.
+
+
+<br />
+##### POST `/api/cars`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>authorized</td>
+</tr>
+<tr>
+    <td>...</td>
+    <td>Any properties as specified in the <b>Car</b> Model</td>
+</tr>
+<tr>
+    <td>car</td>
+    <td>An object containing any properties as specified in the <b>Car</b> Model. If set all other request body properties are ignored.</td>
+</tr>
+</table>
+Creates a <b>Car</b> with the specified properties.
+
+
+<br />
+##### GET `/api/cars/:id`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+</tr>
+</table>
+Returns the <b>Car</b> with the specified id.
+
+
+<br />
+##### PATCH `/api/cars/:id`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+</tr>
+<tr>
+    <td>...</td>
+    <td>Any properties as specified in the <b>Car</b> Model</td>
+</tr>
+</table>
+Updates a <b>Car</b> with the specified properties.
+
+
+<br />
+##### GET `/api/cars/:id/bookings`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+</tr>
+</table>
+Gets the <b>Booking</b>s associated with the <b>Car</b>.
+
+
+<br />
+##### GET `/api/cars/:id/bookings/next`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>attendant</td>
+</tr>
+</table>
+Gets the next <b>Booking</b> associated with the <b>Car</b>.
+
+
 
 
 <br />
