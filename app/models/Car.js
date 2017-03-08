@@ -11,8 +11,25 @@ var carSchema = new Schema({
     model: String,
     year: Number,
     colour: String,
-    description: String
+    description: String,
+    selected: Boolean
 })
+
+carSchema.methods.getSelected = function() {
+    return this.selected || "";
+}
+
+carSchema.methods.setSelected = function(selected) {
+    return new Promise(function(resolve, reject) {
+        if (selected == null || typeof selected !== 'boolean')
+            return reject('Cannot set selected as the provided value is invalid');
+        this.selected = selected;
+        this.save(function(err, car) {
+            if (err) return reject(err);
+            resolve(car);
+        })
+    }.bind(this))
+}
 
 carSchema.methods.getLicense = function() {
     return this.license || "";
@@ -27,7 +44,7 @@ carSchema.methods.setLicense = function(license) {
             if (err) return reject(err);
             resolve(car);
         })
-    })
+    }.bind(this))
 }
 
 carSchema.methods.getMake = function() {
@@ -43,7 +60,7 @@ carSchema.methods.setMake = function(make) {
             if (err) return reject(err);
             resolve(car);
         })
-    })
+    }.bind(this))
 }
 
 carSchema.methods.getModel = function() {
@@ -59,7 +76,7 @@ carSchema.methods.setModel = function(model) {
             if (err) return reject(err);
             resolve(car);
         })
-    })
+    }.bind(this))
 }
 
 carSchema.methods.getYear = function() {
@@ -76,7 +93,7 @@ carSchema.methods.setYear = function(year) {
             if (err) return reject(err);
             resolve(car);
         })
-    })
+    }.bind(this))
 }
 
 carSchema.methods.getColour = function() {
@@ -92,7 +109,7 @@ carSchema.methods.setColour = function(colour) {
             if (err) return reject(err);
             resolve(car);
         })
-    })
+    }.bind(this))
 }
 
 carSchema.methods.getDescription = function() {
@@ -108,7 +125,7 @@ carSchema.methods.setDescription = function(description) {
             if (err) return reject(err);
             resolve(car);
         })
-    })
+    }.bind(this))
 }
 
 var Car = mongoose.model('Car', carSchema);
