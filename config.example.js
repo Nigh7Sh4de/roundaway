@@ -20,7 +20,7 @@ config.prototype = {
     JWT_SECRET_KEY          :   "14g2-Ed34n6ea7r63:M-(12F63wC~<",
     PORT                    :   8081,
     DB_CONNECTION_STRING    :   "mongodb://localhost/dev_roundaway",
-    RUN_ALL_TESTS           :   true,
+    RUN_SYSTEM_TESTS        :   true,
     RUN_EXTERNAL_TESTS      :   true
 }
 
