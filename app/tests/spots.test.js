@@ -943,40 +943,40 @@ describe('spotController', function() {
         })
 
         it('should be able to update description', function(done) {
-            var lot = new Spot();
+            var spot = new Spot();
             var description = 'some description';
             req.body.description = description;
-            req.doc = lot;
-            req.params.id = lot.id;
-            sinon.stub(lot, 'setDescription', function(description) {
+            req.doc = spot;
+            req.params.id = spot.id;
+            sinon.stub(spot, 'setDescription', function(description) {
                 this.description = description;
                 return mockPromise(this)()
             })
             res.sendBad = done;
             res.sent = function() {
-                expect(lot.setDescription.calledOnce).to.be.true;
-                lot.description = description;
-                expect(res.sentWith(lot.toJSON({getters: true}))).to.be.true;
+                expect(spot.setDescription.calledOnce).to.be.true;
+                spot.description = description;
+                expect(res.sentWith(spot.toJSON({getters: true}))).to.be.true;
                 done();
             }
             app.spotController.UpdateSpot(req, res);
         })
 
         it('should be able to update price', function(done) {
-            var lot = new Spot();
+            var spot = new Spot();
             var price = { perHour: 123 };
             req.body.price = price;
-            req.doc = lot;
-            req.params.id = lot.id;
-            sinon.stub(lot, 'setPrice', function(price) {
+            req.doc = spot;
+            req.params.id = spot.id;
+            sinon.stub(spot, 'setPrice', function(price) {
                 this.price = price;
                 return mockPromise(this)()
             })
             res.sendBad = done;
             res.sent = function() {
-                expect(lot.setPrice.calledOnce).to.be.true;
-                lot.price = price;
-                expect(res.sentWith(lot.toJSON({getters: true}))).to.be.true;
+                expect(spot.setPrice.calledOnce).to.be.true;
+                spot.price = price;
+                expect(res.sentWith(spot.toJSON({getters: true}))).to.be.true;
                 done();
             }
             app.spotController.UpdateSpot(req, res);

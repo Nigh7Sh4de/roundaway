@@ -126,7 +126,7 @@ controller.prototype = {
 
         Promise.all(updates)
         .then(function() {
-            res.sendGood('Updated lot', arguments[updates.length-1][0].toJSON({getters: true}))
+            res.sendGood('Updated spot', arguments[updates.length-1][0].toJSON({getters: true}))
         })
         .catch(function(err) {
             res.sendBad(err)
