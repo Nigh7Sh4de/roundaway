@@ -52,7 +52,7 @@ controller.prototype = {
             newLot.user = req.user.id;
         app.geocoder.geocode(address).then(function(loc) {
             return Promise.resolve({
-                coordinates: [loc[0].longitude, loc[0].latitude],
+                coordinates: [loc[0].latitude, loc[0].longitude],
                 address: loc[0].formattedAddress
             })
         })
