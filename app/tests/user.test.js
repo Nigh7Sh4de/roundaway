@@ -210,61 +210,56 @@ routeTest('userController', [
         verb: verbs.GET,
         route: '/api/users',
         method: 'GetAllUsers',
-        auth: auth.ADMIN
+        auth: auth.OWNER
     }, {
         verb: verbs.GET,
         route: '/api/users/profile',
-        method: 'GetProfileOfSessionUser',
-        auth: auth.AUTHORIZED
-    }, {
-        verb: verbs.GET,
-        route: '/api/users/:id/lots',
-        method: 'GetLotsForUser',
-        auth: auth.ADMIN
-    }, {
-        verb: verbs.GET,
-        route: '/api/users/:id/spots',
-        method: 'GetSpotsForUser',
-        auth: auth.ADMIN
-    }, {
-        verb: verbs.GET,
-        route: '/api/users/:id/bookings',
-        method: 'GetBookingsForUser',
-        auth: auth.ADMIN
-    }, {
-        verb: verbs.GET,
-        route: '/api/users/:id/profile',
         method: 'GetProfileOfUser',
-        auth: auth.ADMIN
+        auth: auth.OWNER
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/lots',
+        method: 'GetLotsForUser',
+        auth: auth.OWNER
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/spots',
+        method: 'GetSpotsForUser',
+        auth: auth.OWNER
+    }, {
+        verb: verbs.GET,
+        route: '/api/users/bookings',
+        method: 'GetBookingsForUser',
+        auth: auth.OWNER
     }, {
         verb: verbs.PATCH,
-        route: '/api/users/:id/profile',
+        route: '/api/users/profile',
         method: 'UpdateProfileOfUser',
-        auth: auth.ADMIN
+        auth: auth.OWNER
     }, {
         verb: verbs.GET,
-        route: '/api/users/:id/stripe/account',
+        route: '/api/users/stripe/account',
         method: 'GetStripeAccountForUser',
-        auth: auth.ADMIN
+        auth: auth.OWNER
     }, {
         verb: verbs.GET,
-        route: '/api/users/:id/stripe/customer',
+        route: '/api/users/stripe/customer',
         method: 'GetStripeCustomerForUser',
-        auth: auth.ADMIN
+        auth: auth.OWNER
     }, {
         verb: verbs.PUT,
-        route: '/api/users/:id/stripe',
+        route: '/api/users/stripe',
         method: 'UpdateStripeAccountForUser',
-        auth: auth.ADMIN
+        auth: auth.OWNER
     }, {
         verb: verbs.GET,
-        route: '/api/users/:id/stripe/history',
+        route: '/api/users/stripe/history',
         method: 'GetStripeTransactionsForUser',
-        auth: auth.ADMIN
+        auth: auth.OWNER
     }
 ]);
 
-describe('userController', function() {
+describe.only('userController', function() {
     
     var inject = server.GetDefaultInjection();
     var app;
@@ -283,19 +278,19 @@ describe('userController', function() {
     describe('GetAllUsers', function() {
         it('should return all users', function(done) {
             var users = [new User(), new User()];
-            app.db.users.find = mockPromise(users);
+            req.docs = users
             res.sent = function () {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith(users)).to.be.true;
                 done();
             }
-            app.userController.GetAllUsers(null, res);
+            app.userController.GetAllUsers(req, res);
             
         })
     })
     
-    describe('GetProfileOfSessionUser', function() {
-        it('should return session user profile and authid', function() {
+    describe('GetProfileOfUser', function() {
+        it('should return session user profile and authid', function(done) {
             var user = {
                 profile: {
                     name: 'some name'
@@ -308,17 +303,28 @@ describe('userController', function() {
                 badProp: 'some value'
             }
             user.profile.toJSON = function() {
-                return user.profile;
+                return {
+                    name: user.profile.name
+                }
             }
             user.authid.toJSON = function() {
-                return user.authid;
+                return {
+                    twitter: { someProp: "some value" }
+                }
             }
-            req.user = user;
-            app.userController.GetProfileOfSessionUser(req, res);
-            expect(res.sendGood.calledOnce).to.be.true;
-            var args = res.send.firstCall.args[0].data;
-            expect(args.name).to.equal(user.profile.name);
-            expect(args.authid).to.equal(user.authid);
+            req.doc = user;
+            res.sendBad = done;
+            res.sent = function() {
+                expect(res.sendGood.calledOnce).to.be.true;
+                expect(res.sentWith({
+                    name: user.profile.name,
+                    authid: {
+                        twitter: user.authid.twitter
+                    }
+                })).to.be.true;
+                done();
+            }
+            app.userController.GetProfileOfUser(req, res);
         })
     })
     
@@ -337,9 +343,6 @@ describe('userController', function() {
                 })
             }
             req.doc = user;
-            app.db.users = {
-                findById: mockPromise(user)
-            }
             req.body = updateProfile;
             res.sent = function() {
                 expect(user.updateProfile.calledOnce).to.be.true;
@@ -358,9 +361,6 @@ describe('userController', function() {
                 }
             });
             sinon.stub(user, 'updateProfile', mockPromise(null, new Errors.TestError()));
-            app.db.users = {
-                findById: mockPromise(user)
-            }
             req.doc = user;
             req.body = updateProfile;
             res.sent = function() {
@@ -369,26 +369,6 @@ describe('userController', function() {
                 done();
             }
             app.userController.UpdateProfileOfUser(req, res);
-        })
-    })
-    
-    describe('GetProfileOfUser', function() {
-        it('should return user profile', function(done) {
-            var user = {
-                profile: {
-                    someProp: 'some value'
-                }
-            }
-            app.db.users = {
-                findById: mockPromise(user)
-            }
-            res.sendBad = done;
-            res.sent = function() {
-                expect(res.sendGood.calledOnce).to.be.true;
-                expect(res.sentWith(user.profile)).to.be.true;
-                done();
-            }
-            app.userController.GetProfileOfUser(req,res);
         })
     })
     
@@ -401,6 +381,7 @@ describe('userController', function() {
             app.db.lots = {
                 find: mockPromise([lot])
             }
+            req.doc = user
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith([lot])).to.be.true;
@@ -413,6 +394,7 @@ describe('userController', function() {
     describe('GetSpotsForUser', function() {
         it('should return user\'s spots', function(done) {
             var user = new User();
+            req.doc = user
             var spot = new Spot({
                 user: user.id
             })
@@ -431,6 +413,7 @@ describe('userController', function() {
     describe('GetBookingsForUser', function() {
         it('should return user\'s bookings', function(done) {
             var user = new User();
+            req.doc = user
             var booking = new Booking({
                 user: user.id
             })
@@ -451,9 +434,7 @@ describe('userController', function() {
             var acct = 'abcd123';
             var user = new User()
             user.stripe = { acct }
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             app.stripe = {
                 getAccount: mockPromise({
                     id: acct,
@@ -474,9 +455,7 @@ describe('userController', function() {
 
         it('should error if user does not have a stripe account defined', function(done) {
             var user = new User()
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 expect(res.sentError(Errors.MissingProperty)).to.be.true;
@@ -491,9 +470,7 @@ describe('userController', function() {
             var cus = 'cus_ some id';
             var user = new User()
             user.stripe = { cus }
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             app.stripe = {
                 getCustomer: mockPromise({
                     id: cus,
@@ -514,9 +491,7 @@ describe('userController', function() {
 
         it('should error if user does not have a stripe account defined', function(done) {
             var user = new User()
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 expect(res.sentError(Errors.MissingProperty)).to.be.true;
@@ -537,9 +512,7 @@ describe('userController', function() {
             }
             var user = new User();
             user.stripe = { acct }
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             app.stripe = {
                 updateAccount: mockPromise(updated_account)
             }
@@ -559,9 +532,7 @@ describe('userController', function() {
                 object: "account"
             }
             var user = new User();
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             app.stripe = {
                 createAccount: mockPromise(updated_account)
             }
@@ -583,9 +554,7 @@ describe('userController', function() {
             }
             var user = new User();
             user.stripe = { acct }
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             app.stripe = {
                 updateAccount: mockPromise(updated_account)
             }
@@ -609,9 +578,7 @@ describe('userController', function() {
             app.stripe = {
                 getHistory: mockPromise(transactions)
             }
-            app.db.users = {
-                findById: mockPromise(user)
-            }
+            req.doc = user
             res.sendBad = done;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
