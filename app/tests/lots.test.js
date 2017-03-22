@@ -5,6 +5,7 @@ var mockPromise = require('./mockPromise');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var auth = routeTest.auth;
 var server = require('./../server');
 var Lot = require('./../models/Lot');
 var Spot = require('./../models/Spot');
@@ -518,60 +519,61 @@ routeTest('lotController', [
         verb: verbs.GET,
         route: '/api/lots',
         method: 'GetAllLots',
-        ignoreAdmin: true,
-        ignoreId: true,
-        attendantOrOwner: true
-    },
-    {
-        verb: verbs.GET,
-        route: '/api/lots/:id',
-        method: 'GetLot',
-        attendantOrOwner: true
-    },
-    {
-        verb: verbs.PATCH,
-        route: '/api/lots/:id',
-        method: 'UpdateLot'
+        auth: auth.ATTENDANT
     },
     {
         verb: verbs.POST,
         route: '/api/lots',
         method: 'CreateLot',
-        ignoreId: true,
-        ignoreOwner: true,
-        ignoreAdmin: true
+        auth: auth.AUTHORIZED
+    },
+    {
+        verb: verbs.GET,
+        route: '/api/lots/:id',
+        method: 'GetLot',
+        auth: auth.ATTENDANT
+    },
+    {
+        verb: verbs.PATCH,
+        route: '/api/lots/:id',
+        method: 'UpdateLot',
+        auth: auth.OWNER
     },
     {
         verb: verbs.GET,
         route: '/api/lots/:id/spots',
         method: 'GetSpotsForLot',
-        attendantOrOwner: true
+        auth: auth.ATTENDANT
     },
     {
         verb: verbs.PUT,
         route: '/api/lots/:id/available/check',
         method: 'CheckAvailabilityOfLot',
-        attendantOrOwner: true
+        auth: auth.ATTENDANT
     },
     {
         verb: verbs.POST,
         route: '/api/lots/:id/available',
-        method: 'AddAvailabilityToLot'
+        method: 'AddAvailabilityToLot',
+        auth: auth.OWNER
     },
     {
         verb: verbs.POST,
         route: '/api/lots/:id/available/remove',
-        method: 'RemoveAvailabilityFromLot'
+        method: 'RemoveAvailabilityFromLot',
+        auth: auth.OWNER
     },
     {
         verb: verbs.GET,
         route: '/api/lots/:id/attendants', 
-        method: 'GetAttendantsForLot'
+        method: 'GetAttendantsForLot',
+        auth: auth.OWNER
     },
     {
         verb: verbs.POST,
         route: '/api/lots/:id/attendants', 
-        method: 'AddAttendantsToLot'
+        method: 'AddAttendantsToLot',
+        auth: auth.OWNER
     }
 ])
 

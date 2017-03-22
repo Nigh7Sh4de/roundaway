@@ -3,6 +3,7 @@ var sinon = require('sinon');
 var server = require('./../server');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var auth = routeTest.auth;
 var mockPromise = require('./mockPromise');
 var expressExtensions = require('./../express');
 
@@ -11,10 +12,7 @@ routeTest('utilController', [
             verb: verbs.PUT,
             route: '/api/util/location/geocode',
             method: 'Geocode',
-            ignoreId: true,
-            ignoreAuth: true,
-            ignoreAdmin: true,
-            ignoreOwner: true
+            auth: auth.PUBLIC
         }
 ]);
 

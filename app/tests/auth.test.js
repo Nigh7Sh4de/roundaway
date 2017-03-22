@@ -4,6 +4,7 @@ var User = require('./../models/User');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var auth = routeTest.auth;
 var request = require('supertest');
 var sinon = require('sinon');
 var server = require('./../server');
@@ -14,19 +15,13 @@ routeTest('authController', [
         verb: verbs.PUT,
         route: '/auth/google',
         method: 'Authenticate',
-        ignoreAdmin: true,
-        ignoreAuth: true,
-        ignoreId: true,
-        ignoreOwner: true
+        auth: auth.PUBLIC
     },
     {
         verb: verbs.PUT,
         route: '/auth/facebook',
         method: 'Authenticate',
-        ignoreAdmin: true,
-        ignoreAuth: true,
-        ignoreId: true,
-        ignoreOwner: true
+        auth: auth.PUBLIC
     }
 ])
 

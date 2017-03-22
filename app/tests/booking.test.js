@@ -5,6 +5,7 @@ var expressExtensions = require('./../express');
 var mockPromise = require('./mockPromise');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var auth = routeTest.auth;
 var server = require('./../server');
 var Booking = require('./../models/Booking');
 var Spot = require('./../models/Spot');
@@ -338,27 +339,31 @@ routeTest('bookingController', [
         verb: verbs.GET,
         route: '/api/bookings',
         method: 'GetAllBookings',
-        ignoreId: true,
+        auth: auth.OWNER
     },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id',
-        method: 'GetBooking'
+        method: 'GetBooking',
+        auth: auth.OWNER
     },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/spot',
-        method: 'GetSpotForBooking'
+        method: 'GetSpotForBooking',
+        auth: auth.OWNER
     },
     {
         verb: verbs.GET,
         route: '/api/bookings/:id/car',
-        method: 'GetCarForBooking'
+        method: 'GetCarForBooking',
+        auth: auth.OWNER
     },
     {
         verb: verbs.PUT,
         route: '/api/bookings/:id/pay',
-        method: 'PayForBooking'
+        method: 'PayForBooking',
+        auth: auth.OWNER
     }
 ])
 

@@ -2,6 +2,7 @@ var expect = require('chai').expect;
 var sinon = require('sinon');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var auth = routeTest.auth;
 var mockPromise = require('./mockPromise');
 
 var server = require('./../server');
@@ -155,34 +156,37 @@ routeTest('carController', [
         verb: verbs.GET,
         route: '/api/cars',
         method: 'GetAllCars',
-        ignoreId: true,
-        attendantOrOwner: true
+        auth: auth.ATTENDANT
     },
     {
         verb: verbs.POST,
         route: '/api/cars',
         method: 'CreateCar',
-        ignoreAdmin: true,
-        ignoreId: true,
-        ignoreOwner: true
+        auth: auth.AUTHORIZED
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id',
         method: 'GetCar',
-        attendantOrOwner: true
+        auth: auth.ATTENDANT
+    },
+    {
+        verb: verbs.PATCH,
+        route: '/api/cars/:id',
+        method: 'UpdateCar',
+        auth: auth.OWNER
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/bookings',
         method: 'GetAllBookingsForCar',
-        attendantOrOwner: true
+        auth: auth.ATTENDANT
     },
     {
         verb: verbs.GET,
         route: '/api/cars/:id/bookings/next',
         method: 'GetNextBookingForCar',
-        attendantOrOwner: true
+        auth: auth.ATTENDANT
     }
 ])
 

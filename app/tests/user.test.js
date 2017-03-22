@@ -4,6 +4,7 @@ var Errors = require('./../errors');
 var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var verbs = routeTest.verbs;
+var auth = routeTest.auth;
 var mockPromise = require('./mockPromise');
 var server = require('./../server');
 var User = require('./../models/User');
@@ -209,60 +210,57 @@ routeTest('userController', [
         verb: verbs.GET,
         route: '/api/users',
         method: 'GetAllUsers',
-        ignoreId: true,
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.GET,
         route: '/api/users/profile',
         method: 'GetProfileOfSessionUser',
-        ignoreId: true,
-        ignoreAdmin: true,
-        ignoreOwner: true
+        auth: auth.AUTHORIZED
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/lots',
         method: 'GetLotsForUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/spots',
         method: 'GetSpotsForUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/bookings',
         method: 'GetBookingsForUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/profile',
         method: 'GetProfileOfUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.PATCH,
         route: '/api/users/:id/profile',
         method: 'UpdateProfileOfUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/stripe/account',
         method: 'GetStripeAccountForUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/stripe/customer',
         method: 'GetStripeCustomerForUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.PUT,
         route: '/api/users/:id/stripe',
         method: 'UpdateStripeAccountForUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }, {
         verb: verbs.GET,
         route: '/api/users/:id/stripe/history',
         method: 'GetStripeTransactionsForUser',
-        ignoreOwner: true
+        auth: auth.ADMIN
     }
 ]);
 

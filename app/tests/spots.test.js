@@ -6,6 +6,7 @@ var expressExtensions = require('./../express');
 var routeTest = require('./routeTestBase');
 var mockPromise = require('./mockPromise');
 var verbs = routeTest.verbs;
+var auth = routeTest.auth;
 var server = require('./../server');
 var Spot = require('./../models/Spot');
 var Lot = require('./../models/Lot');
@@ -760,80 +761,79 @@ routeTest('spotController', [
             verb: verbs.GET,
             route: '/api/spots',
             method: 'GetAllSpots',
-            ignoreId: true,
-            attendantOrOwner: true
+            auth: auth.ATTENDANT
         },
         {
             verb: verbs.POST,
             route: '/api/spots',
             method: 'CreateSpot',
-            ignoreId: true,
-            ignoreAdmin: true,
-            ignoreOwner: true
+            auth: auth.AUTHORIZED
         },
         {
             verb: verbs.GET,
             route: '/api/spots/near',
             method: 'GetNearestSpot',
-            ignoreId: true,
-            ignoreAuth: true,
-            ignoreAdmin: true,
-            ignoreOwner: true
+            auth: auth.PUBLIC
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id',
             method: 'GetSpot',
-            attendantOrOwner: true
+            auth: auth.ATTENDANT
         },
         {
             verb: verbs.PATCH,
             route: '/api/spots/:id',
-            method: 'UpdateSpot'
+            method: 'UpdateSpot',
+            auth: auth.OWNER
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/lot',
             method: 'GetLotForSpot',
-            attendantOrOwner: true
+            auth: auth.ATTENDANT            
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/bookings',
             method: 'GetAllBookingsForSpot',
-            attendantOrOwner: true
+            auth: auth.ATTENDANT            
         },
         {
             verb: verbs.POST,
             route: '/api/spots/:id/bookings',
             method: 'AddBookingsToSpot',
-            attendantOrOwner: true
+            auth: auth.ATTENDANT
         },
         {
             verb: verbs.POST,
             route: '/api/spots/:id/bookings/remove',
             method: 'RemoveBookingsFromSpot',
-            attendantOrOwner: true
+            auth: auth.ATTENDANT
         },
         {
             verb: verbs.POST,
             route: '/api/spots/:id/available',
-            method: 'AddAvailabilityToSpot'
+            method: 'AddAvailabilityToSpot',
+            auth: auth.OWNER
         },
         {
             verb: verbs.POST,
             route: '/api/spots/:id/available/remove',
-            method: 'RemoveAvailabilityFromSpot'
+            method: 'RemoveAvailabilityFromSpot',
+            auth: auth.OWNER
         },
         {
             verb: verbs.GET,
             route: '/api/spots/:id/attendants', 
-            method: 'GetAttendantsForSpot'
+            method: 'GetAttendantsForSpot',
+            auth: auth.OWNER
         },
         {
             verb: verbs.POST,
             route: '/api/spots/:id/attendants', 
-            method: 'AddAttendantsToSpot'
+            method: 'AddAttendantsToSpot',
+            auth: auth.OWNER
         }
     
     ])
