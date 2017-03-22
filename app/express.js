@@ -41,7 +41,7 @@ var exts = {
                     return err.toString();
                 else return JSON.stringify(err);
             });
-        return this.status(opt.status || 500)
+        return this.status(opt.code || 500)
                 .send({
                     status: opt.status || 'ERROR',
                     errors: errs, 
