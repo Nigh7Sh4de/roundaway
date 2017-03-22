@@ -211,7 +211,7 @@ Retrieve the proper formatted address for a location (as it would be saved in th
 #### Authentication
 
 
-##### GET `/auth/:strat?access_token`
+##### PUT `/auth/:strat?access_token`
 <table>
 <tr>
     <td><i>Security</i></td>
