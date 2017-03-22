@@ -186,5 +186,24 @@ describe('helper', function() {
             }
             new helper().findResource(req, res, expect.fail)
         })
+
+        it('returns current user if not admin', function(done) {
+            var userId = '123abc'
+            var user = {
+                id: userId
+            }
+            prepareReqDoc([user], null, 'users')
+            req.user = {
+                id: userId
+            }
+            res.sendBad = done
+            req.url = '/api/users'
+            new helper().findResource(req, res, function() {
+                expect(req.docs).to.deep.include(user)
+                done()
+            }, {
+                owner: true
+            })
+        })
     })
 })

@@ -39,15 +39,6 @@ helper.prototype = {
     findResource: function(req, res, next, authRequirements) {
         if (!req.user)
             return res.sendBad(new Errors.Unauthorized());
-
-        var search = [];
-        authRequirements = authRequirements || {};
-        if (authRequirements.owner)
-            search.push({user: req.user.id});
-        if (authRequirements.attendant)
-            search.push({attendants: req.user.id});
-        if (!search.length && !req.user.admin)
-            return res.sendBad(new Errors.Unauthorized(Object.keys(authRequirements)));
         
         var slash_api = '/api/'.length;
         var slash = req.url.indexOf('/', slash_api);
@@ -62,6 +53,19 @@ helper.prototype = {
         else
             collection = req.url.substring(slash_api);
 
+        var search = [];
+        authRequirements = authRequirements || {};
+        if (authRequirements.owner) {
+            if (collection === 'users')
+                search.push({_id: req.user.id})
+            else
+                search.push({user: req.user.id})
+        }
+        if (authRequirements.attendant)
+            search.push({attendants: req.user.id});
+        if (!search.length && !req.user.admin)
+            return res.sendBad(new Errors.Unauthorized(Object.keys(authRequirements)));
+
         var query = app.db[collection].find(uniqueResource ? {_id: id} : {});
         if (!req.user.admin)
             query.and([{$or: search}]);
@@ -70,7 +74,7 @@ helper.prototype = {
         query.exec()
         .then(function(docs) {
             if (!docs || !docs.length && !uniqueResource)
-                throw new Errors.NotFound(collection, {$or: search});
+                throw new Errors.NotFound(collection, {query: [...search, req.query]});
             else if (uniqueResource)
                 req.doc = docs[0];
             else
