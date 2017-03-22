@@ -1,6 +1,6 @@
 {
   "name": "roundaway",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "dependencies": {
     "body-parser": "1.15.0",
     "chai": "3.5.0",
