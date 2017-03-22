@@ -134,6 +134,12 @@ In order to make API calls that are auth protected use the following flow:
 
 ------------
 
+## Payment
+
+Payment for bookings on Roundaway are entirely handled through <a href="https://stripe.com/docs">Stripe</a>. You can make a payment using either a **Card** or a **Customer** token. Currently a **Customer** token can only be created by paying for a **Booking** and setting the parameter `userStripeCustomer: true`. In this case either the existing **Customer** data of the authenticated user will be used (in which case no `token: String` is required) or a new <a href="https://stripe.com/docs/api/node#customers">Stripe Customer</a> will be created (and the passed `token: String` will be interpreted as a **Card** token for the creation process). 
+
+------------
+
 ## API
 
 *All api calls are on the `/api` route*
@@ -500,11 +506,15 @@ Returns the car that is associated with this <b>Booking</b>.
     <td>owner</td>
 </tr>
 <tr>
+<td>useStripeCustomer</td>
+<td>When true the user's <a href="https://stripe.com/docs/api/node#customers">Stripe Customer</a> data will be used and the `token` is not needed (unless the data does not yet exist, in which case it will be created using the <b>Card</b> <code>token</code>).
+</tr>
+<tr>
     <td>token</td>
     <td>The card token to use as the source of payment</td>
 </tr>
 </table>
-Pay for a <b>Booking</b>.
+Pay for a <b>Booking</b>. See *Payment* section defined earlier in this document.
 
 
 <br />
