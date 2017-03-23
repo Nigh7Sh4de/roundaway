@@ -243,10 +243,10 @@ Once you have authenticated the user elsewhere (client-side or on another server
 <table>
 <tr>
     <td><i>security</i></td>
-    <td>admin</td>
+    <td>owner</td>
 </tr>
 </table>
-Returns the entire <b>User</b>s collection.
+Returns the <b>User</b> object for the active user (or all for admins).
 
 
 <br />
@@ -254,62 +254,18 @@ Returns the entire <b>User</b>s collection.
 <table>
 <tr>
     <td><i>security</i></td>
-    <td>authorized</td>
+    <td>owner</td>
 </tr>
 </table>
-Returns the current session <b>User</b>.
+Returns the <b>User</b>'s profile for the active user (or all for admins).
 
 
 <br />
-##### GET `/api/users/:userid/lots`
+##### PATCH `/api/users/profile`
 <table>
 <tr>
     <td><i>security</i></td>
-    <td>admin</td>
-</tr>
-</table>
-Returns the given <b>User</b>'s lots.
-
-
-<br />
-##### GET `/api/users/:userid/spots`
-<table>
-<tr>
-    <td><i>security</i></td>
-    <td>admin</td>
-</tr>
-</table>
-Returns the given <b>User</b>'s spots.
-
-
-<br />
-##### GET `/api/users/:userid/bookings`
-<table>
-<tr>
-    <td><i>security</i></td>
-    <td>admin</td>
-</tr>
-</table>
-Returns the given <b>User</b>'s bookings.
-
-
-<br />
-##### GET `/api/users/:userid/profile`
-<table>
-<tr>
-    <td><i>security</i></td>
-    <td>admin</td>
-</tr>
-</table>
-Returns the given <b>User</b>'s profile.
-
-
-<br />
-##### PATCH `/api/users/:userid/profile`
-<table>
-<tr>
-    <td><i>security</i></td>
-    <td>admin</td>
+    <td>owner</td>
 </tr>
 <tr>
     <td colspan="2">Profile properties</td>
@@ -323,47 +279,80 @@ Updates the specified fields of the <b>User</b>'s profile.
 
 
 <br />
-##### GET `/api/users/:userid/stripe/account`
+##### GET `/api/users/lots`
 <table>
 <tr>
     <td><i>security</i></td>
-    <td>admin</td>
+    <td>owner</td>
 </tr>
 </table>
-Returns the given <b>User</b>'s <i>Stripe</i> <code>account</code> object.
+Returns the <b>User</b>'s <b>Lot</b>s for the active user (<code>_id</code> query parameter is required for for admins).
 
 
 <br />
-##### GET `/api/users/:userid/stripe/customer`
+##### GET `/api/users/spots`
 <table>
 <tr>
     <td><i>security</i></td>
-    <td>admin</td>
+    <td>owner</td>
 </tr>
 </table>
-Returns the given <b>User</b>'s <i>Stripe</i> <code>customer</code> object.
+Returns the <b>User</b>'s <b>Spot</b>s for the active user (<code>_id</code> query parameter is required for for admins).
 
 
 <br />
-##### PUT `/api/users/:userid/stripe`
+##### GET `/api/users/bookings`
 <table>
 <tr>
     <td><i>security</i></td>
-    <td>admin</td>
+    <td>owner</td>
 </tr>
 </table>
-Create or update a <i>Stripe</i> <i>Connect</i> account for the user. Parameters will be passed directly to the <i>Stripe</i> <a href="https://stripe.com/docs/api#update_account">api</a>.
+Returns the <b>User</b>'s <b>Booking</b>s for the active user (<code>_id</code> query parameter is required for for admins).
 
 
 <br />
-##### GET `/api/users/:userid/stripe/history`
+##### GET `/api/users/stripe/account`
 <table>
 <tr>
     <td><i>security</i></td>
-    <td>admin</td>
+    <td>owner</td>
 </tr>
 </table>
-Returns the given <b>User</b>'s <i>Stripe</i> transaction history.
+Returns the <b>User</b>'s <i>Stripe</i> <code>account</code> object for the active user (<code>_id</code> query parameter is required for for admins).
+
+
+<br />
+##### GET `/api/users/stripe/customer`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+</tr>
+</table>
+Returns the <b>User</b>'s <i>Stripe</i> <code>customer</code> object for the active user (<code>_id</code> query parameter is required for for admins).
+
+
+<br />
+##### PUT `/api/users/stripe`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+</tr>
+</table>
+Create or update a <i>Stripe</i> <i>Connect</i> account for the active user (<code>_id</code> query parameter is required for for admins). Parameters will be passed directly to the <i>Stripe</i> <a href="https://stripe.com/docs/api#update_account">api</a>.
+
+
+<br />
+##### GET `/api/users/stripe/history`
+<table>
+<tr>
+    <td><i>security</i></td>
+    <td>owner</td>
+</tr>
+</table>
+Returns the <b>User</b>'s <i>Stripe</i> transaction history (<code>_id</code> query parameter is required for for admins).
 
 
 <br />
