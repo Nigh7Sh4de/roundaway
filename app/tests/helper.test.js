@@ -98,7 +98,10 @@ describe('helper', function() {
             _app = global.app;
             req = {
                 url: '/api/collection/123456789012345678901234',
-                user: {}
+                user: {},
+                route: {
+                    path: '/api/collection/:id'
+                }
             },
             res = {};
         })
@@ -198,6 +201,7 @@ describe('helper', function() {
             }
             res.sendBad = done
             req.url = '/api/users'
+            req.route.path = '/api/users'
             new helper().findResource(req, res, function() {
                 expect(req.docs).to.deep.include(user)
                 done()

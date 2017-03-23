@@ -43,7 +43,7 @@ helper.prototype = {
         var slash_api = '/api/'.length;
         var slash = req.url.indexOf('/', slash_api);
         var question = req.url.indexOf('?');
-        var uniqueResource = slash >= 0;
+        var uniqueResource = req.route.path.indexOf(':id') >= 0;
         var id = req.url.substr(slash+1, 24);
         var collection;
         if (slash >= 0)
@@ -56,7 +56,7 @@ helper.prototype = {
         var search = [];
         authRequirements = authRequirements || {};
         if (authRequirements.owner) {
-            if (collection === 'users')
+            if (collection === 'users') 
                 search.push({_id: req.user.id})
             else
                 search.push({user: req.user.id})
