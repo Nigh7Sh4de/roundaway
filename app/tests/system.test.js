@@ -170,14 +170,14 @@ _d('the entire app should not explode', function() {
 
             })
         })
-        describe('GET /api/users/:id/lots', function() {
+        describe('GET /api/users/lots', function() {
             it('should return lots for the user', function(done) {
                 var lot = new Lot({
                     user: sessionUser.id
                 });
                 insert(lot, function() {
-                    request(app).get('/api/users/' + sessionUser.id + '/lots')
-                        .set('Authorization', 'JWT ' + admin_token)
+                    request(app).get('/api/users/lots')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(lot.id);
                             expect(res.status, res.body.errors).to.equal(200);
@@ -186,14 +186,14 @@ _d('the entire app should not explode', function() {
                 });
             })
         })
-        describe('GET /api/users/:id/spots', function() {
+        describe('GET /api/users/spots', function() {
             it('should return spots for the user', function(done) {
                 var spot = new Spot({
                     user: sessionUser.id
                 });
                 insert(spot, function() {
-                    request(app).get('/api/users/' + sessionUser.id + '/spots')
-                        .set('Authorization', 'JWT ' + admin_token)
+                    request(app).get('/api/users/spots')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(spot.id);
                             expect(res.status, res.body.errors).to.equal(200);
@@ -202,14 +202,14 @@ _d('the entire app should not explode', function() {
                 });
             })
         })
-        describe('GET /api/users/:id/bookings', function() {
+        describe('GET /api/users/bookings', function() {
             it('should return bookings for the user', function(done) {
                 var booking = new Booking({
                     user: sessionUser.id
                 });
                 insert(booking, function() {
-                    request(app).get('/api/users/' + sessionUser.id + '/bookings')
-                        .set('Authorization', 'JWT ' + admin_token)
+                    request(app).get('/api/users/bookings')
+                        .set('Authorization', 'JWT ' + token)
                         .end(function(err, res) {
                             expect(res.text).to.contain(booking.id);
                             expect(res.status, res.body.errors).to.equal(200);
@@ -218,26 +218,16 @@ _d('the entire app should not explode', function() {
                 });
             })
         })
-        describe('GET /api/users/:id/profile', function() {
-            it('should return profile for the user', function(done) {
-                request(app).get('/api/users/' + sessionUser.id + '/profile')
-                    .set('Authorization', 'JWT ' + admin_token)
-                    .end(function(err, res) {
-                        expect(res.body.data).to.deep.equal(userProfile);
-                        expect(res.status, res.body.errors).to.equal(200);
-                        done();
-                    });
-            })
-        })
-        describe('PATCH /api/users/:id/profile', function() {
+        describe('PATCH /api/users/profile', function() {
             it('should return profile for the user', function(done) {
                 var user = new User({
                     profile: userProfile
                 })
+                var new_token = jwt.sign({id:user.id}, inject.config.JWT_SECRET_KEY);
                 insert(user, function() {
-                    request(app).patch('/api/users/' + user.id + '/profile')
+                    request(app).patch('/api/users/profile')
                         .send({name: 'Sh4de'})
-                        .set('Authorization', 'JWT ' + admin_token)
+                        .set('Authorization', 'JWT ' + new_token)
                         .end(function(err, res) {
                             expect(res.status, res.body.errors).to.equal(200);
                             app.db.users.findById(user.id, function(err, doc) {

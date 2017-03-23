@@ -259,7 +259,7 @@ routeTest('userController', [
     }
 ]);
 
-describe.only('userController', function() {
+describe('userController', function() {
     
     var inject = server.GetDefaultInjection();
     var app;
@@ -312,7 +312,7 @@ describe.only('userController', function() {
                     twitter: { someProp: "some value" }
                 }
             }
-            req.doc = user;
+            req.docs = [user];
             res.sendBad = done;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
@@ -342,7 +342,7 @@ describe.only('userController', function() {
                     return mockPromise(user)();
                 })
             }
-            req.doc = user;
+            req.docs = [user];
             req.body = updateProfile;
             res.sent = function() {
                 expect(user.updateProfile.calledOnce).to.be.true;
@@ -361,7 +361,7 @@ describe.only('userController', function() {
                 }
             });
             sinon.stub(user, 'updateProfile', mockPromise(null, new Errors.TestError()));
-            req.doc = user;
+            req.docs = [user];
             req.body = updateProfile;
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
@@ -381,7 +381,7 @@ describe.only('userController', function() {
             app.db.lots = {
                 find: mockPromise([lot])
             }
-            req.doc = user
+            req.docs = [user]
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;
                 expect(res.sentWith([lot])).to.be.true;
@@ -394,7 +394,7 @@ describe.only('userController', function() {
     describe('GetSpotsForUser', function() {
         it('should return user\'s spots', function(done) {
             var user = new User();
-            req.doc = user
+            req.docs = [user]
             var spot = new Spot({
                 user: user.id
             })
@@ -413,7 +413,7 @@ describe.only('userController', function() {
     describe('GetBookingsForUser', function() {
         it('should return user\'s bookings', function(done) {
             var user = new User();
-            req.doc = user
+            req.docs = [user]
             var booking = new Booking({
                 user: user.id
             })
@@ -434,7 +434,7 @@ describe.only('userController', function() {
             var acct = 'abcd123';
             var user = new User()
             user.stripe = { acct }
-            req.doc = user
+            req.docs = [user]
             app.stripe = {
                 getAccount: mockPromise({
                     id: acct,
@@ -455,7 +455,7 @@ describe.only('userController', function() {
 
         it('should error if user does not have a stripe account defined', function(done) {
             var user = new User()
-            req.doc = user
+            req.docs = [user]
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 expect(res.sentError(Errors.MissingProperty)).to.be.true;
@@ -470,7 +470,7 @@ describe.only('userController', function() {
             var cus = 'cus_ some id';
             var user = new User()
             user.stripe = { cus }
-            req.doc = user
+            req.docs = [user]
             app.stripe = {
                 getCustomer: mockPromise({
                     id: cus,
@@ -491,7 +491,7 @@ describe.only('userController', function() {
 
         it('should error if user does not have a stripe account defined', function(done) {
             var user = new User()
-            req.doc = user
+            req.docs = [user]
             res.sent = function() {
                 expect(res.sendBad.calledOnce).to.be.true;
                 expect(res.sentError(Errors.MissingProperty)).to.be.true;
@@ -512,7 +512,7 @@ describe.only('userController', function() {
             }
             var user = new User();
             user.stripe = { acct }
-            req.doc = user
+            req.docs = [user]
             app.stripe = {
                 updateAccount: mockPromise(updated_account)
             }
@@ -532,7 +532,7 @@ describe.only('userController', function() {
                 object: "account"
             }
             var user = new User();
-            req.doc = user
+            req.docs = [user]
             app.stripe = {
                 createAccount: mockPromise(updated_account)
             }
@@ -554,7 +554,7 @@ describe.only('userController', function() {
             }
             var user = new User();
             user.stripe = { acct }
-            req.doc = user
+            req.docs = [user]
             app.stripe = {
                 updateAccount: mockPromise(updated_account)
             }
@@ -578,7 +578,7 @@ describe.only('userController', function() {
             app.stripe = {
                 getHistory: mockPromise(transactions)
             }
-            req.doc = user
+            req.docs = [user]
             res.sendBad = done;
             res.sent = function() {
                 expect(res.sendGood.calledOnce).to.be.true;

@@ -21,14 +21,20 @@ controller.prototype = {
         return res.sendGood('Found users', req.docs);
     },
     GetProfileOfUser: function(req, res) {
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
         return res.sendGood('Found profile for current session user', Object.assign({}, 
-            req.doc.profile.toJSON(),
-            {authid: req.doc.authid.toJSON()}
+            user.profile.toJSON(),
+            {authid: user.authid.toJSON()}
         ))
     },
     GetLotsForUser: function(req, res) {
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
         this.app.db.lots.find({
-            user: req.doc.id
+            user: user.id
         })
         .exec()
         .then(function(lots) {
@@ -39,8 +45,11 @@ controller.prototype = {
         })
     },
     GetSpotsForUser: function(req, res) {
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
         this.app.db.spots.find({
-            user: req.doc.id
+            user: user.id
         })
         .exec()
         .then(function(spots) {
@@ -51,8 +60,11 @@ controller.prototype = {
         })
     },
     GetBookingsForUser: function(req, res) {
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
         this.app.db.bookings.find({
-            user: req.doc.id
+            user: user.id
         })
         .exec()
         .then(function(bookings) {
@@ -63,7 +75,11 @@ controller.prototype = {
         })
     },
     UpdateProfileOfUser: function(req, res) {
-        req.doc.updateProfile(req.body)
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
+
+        user.updateProfile(req.body)
         .then(function(user) {
             res.sendGood('Profile updated', user.profile)
         })
@@ -72,9 +88,13 @@ controller.prototype = {
         })
     },
     GetStripeAccountForUser: function(req, res) {
-        if (!req.doc.stripe || !req.doc.stripe.acct)
-            return res.sendBad(new Errors.MissingProperty(req.doc, 'stripe'));
-        app.stripe.getAccount(req.doc.stripe.acct)
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
+        
+        if (!user.stripe || !user.stripe.acct)
+            return res.sendBad(new Errors.MissingProperty(user, 'stripe'));
+        app.stripe.getAccount(user.stripe.acct)
         .then(function(account) {
             res.sendGood('Found stripe account for user', account);
         })
@@ -83,9 +103,13 @@ controller.prototype = {
         })
     },
     GetStripeCustomerForUser: function(req, res) {
-        if (!req.doc.stripe || !req.doc.stripe.cus)
-            return res.sendBad(new Errors.MissingProperty(req.doc, 'stripe'));
-        app.stripe.getCustomer(req.doc.stripe.cus)
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
+
+        if (!user.stripe || !user.stripe.cus)
+            return res.sendBad(new Errors.MissingProperty(user, 'stripe'));
+        app.stripe.getCustomer(user.stripe.cus)
         .then(function(account) {
             res.sendGood('Found stripe customer for user', account);
         })
@@ -94,10 +118,14 @@ controller.prototype = {
         })
     },
     UpdateStripeAccountForUser: function(req, res) {
-        (
-            !req.doc.stripe || !req.doc.stripe.acct ?
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
+
+        ;(
+            !user.stripe || !user.stripe.acct ?
             app.stripe.createAccount(req.body) :
-            app.stripe.updateAccount(req.doc.stripe.acct, req.body) 
+            app.stripe.updateAccount(user.stripe.acct, req.body) 
         ).then(function(account) {
             res.sendGood('Stripe account successfully created', account)
         })
@@ -106,9 +134,13 @@ controller.prototype = {
         })
     },
     GetStripeTransactionsForUser: function(req, res) {
-        if (!req.doc.stripe || !req.doc.stripe.acct)
-            throw new Errors.MissingProperty(req.doc, 'stripe')
-        app.stripe.getHistory(req.doc.stripe.acct)
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
+        
+        if (!user.stripe || !user.stripe.acct)
+            throw new Errors.MissingProperty(user, 'stripe')
+        app.stripe.getHistory(user.stripe.acct)
         .then(function(transactions) {
             res.sendGood('Found transactions for user', transactions)
         })
