@@ -21,7 +21,7 @@ controller.prototype = {
     CreateCar: function(req, res) {
         var car = new Car(req.body.car || req.body);
         if (!car.license)
-            return res.sendError(new Errors.BadInput('license'));
+            return res.sendBad(new Errors.BadInput('license'));
         if (!car.user)
             car.user = req.user;
         car.save(function(err, car) {
