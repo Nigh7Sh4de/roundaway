@@ -35,14 +35,17 @@ controller.prototype = {
     },
     UpdateCar: function(req, res) {
         var updates = [];
-        if (req.body.selected) updates.push(req.doc.setSelected(req.body.selected));
-        if (req.body.license) updates.push(req.doc.setLicense(req.body.license));
-        if (req.body.make) updates.push(req.doc.setMake(req.body.make));
-        if (req.body.model) updates.push(req.doc.setModel(req.body.model));
-        if (req.body.year) updates.push(req.doc.setYear(req.body.year));
-        if (req.body.colour) updates.push(req.doc.setColour(req.body.colour));
-        if (req.body.description) updates.push(req.doc.setDescription(req.body.description));
+        if (req.body.selected !== undefined) updates.push(req.doc.setSelected(req.body.selected));
+        if (req.body.license !== undefined) updates.push(req.doc.setLicense(req.body.license));
+        if (req.body.make !== undefined) updates.push(req.doc.setMake(req.body.make));
+        if (req.body.model !== undefined) updates.push(req.doc.setModel(req.body.model));
+        if (req.body.year !== undefined) updates.push(req.doc.setYear(req.body.year));
+        if (req.body.colour !== undefined) updates.push(req.doc.setColour(req.body.colour));
+        if (req.body.description !== undefined) updates.push(req.doc.setDescription(req.body.description));
 
+        if (!updates.length)
+            res.sendBad(new Errors.BadInput())
+            
         Promise.all(updates)
         .then(function() {
             res.sendGood('Updated car', arguments[updates.length-1][0].toJSON({getters: true}))
