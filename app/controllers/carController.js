@@ -7,6 +7,7 @@ var controller = function(app) {
     app.post('/api/cars', app.checkAuth, app.bodyParser.json(), this.CreateCar.bind(this));
     app.get('/api/cars/:id', app.checkAuth, app.checkAttendant.bind(app), this.GetCar.bind(this));
     app.patch('/api/cars/:id', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.UpdateCar.bind(this));
+    app.put('/api/cars/:id/select', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.SelectCar.bind(this));
     app.get('/api/cars/:id/bookings', app.checkAuth, app.checkAttendant.bind(app), this.GetAllBookingsForCar.bind(this));
     app.get('/api/cars/:id/bookings/next', app.checkAuth, app.checkAttendant.bind(app), this.GetNextBookingForCar.bind(this));
 }
@@ -35,7 +36,6 @@ controller.prototype = {
     },
     UpdateCar: function(req, res) {
         var updates = [];
-        if (req.body.selected !== undefined) updates.push(req.doc.setSelected(req.body.selected));
         if (req.body.license !== undefined) updates.push(req.doc.setLicense(req.body.license));
         if (req.body.make !== undefined) updates.push(req.doc.setMake(req.body.make));
         if (req.body.model !== undefined) updates.push(req.doc.setModel(req.body.model));
@@ -52,6 +52,31 @@ controller.prototype = {
         })
         .catch(function(err) {
             res.sendBad(err)
+        })
+    },
+    SelectCar: function(req, res) {
+        app.db.cars.find({user: req.user.id})
+        .then(function(cars) {
+            var tasks = []
+            if (!req.doc.selected)
+                tasks.push(req.doc.setSelected(true))
+            cars.forEach(function(car) {
+                if (car.id !== req.doc.id && car.selected)
+                    tasks.push(car.setSelected(false))
+            })
+            ;(
+                tasks.length ?
+                Promise.all(tasks) :
+                Promise.reject(new Errors.MissingProperty(req.doc, 'selected'))
+            )
+            .then(function(results) {
+                return res.sendGood('Car updated', req.doc)
+            })
+            .catch(function(err) {
+                res.sendBad(err)
+            })
+
+
         })
     },
     GetAllBookingsForCar: function(req, res) {

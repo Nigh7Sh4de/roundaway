@@ -177,6 +177,12 @@ routeTest('carController', [
         auth: auth.OWNER
     },
     {
+        verb: verbs.PUT,
+        route: '/api/cars/:id/select',
+        method: 'SelectCar',
+        auth: auth.OWNER
+    },
+    {
         verb: verbs.GET,
         route: '/api/cars/:id/bookings',
         method: 'GetAllBookingsForCar',
@@ -272,26 +278,6 @@ describe('carController', function() {
         })    
     })
     describe('UpdateCar', function() {
-        it('should be able to update selected', function(done) {
-            var car = new Car();
-            var selected = true;
-            req.body.selected = selected;
-            req.doc = car;
-            req.params.id = car.id;
-            sinon.stub(car, 'setSelected', function(selected) {
-                this.selected = selected;
-                return mockPromise(this)()
-            })
-            res.sendBad = done;
-            res.sent = function() {
-                expect(car.setSelected.calledOnce).to.be.true;
-                car.selected = selected;
-                expect(res.sentWith(car.toJSON({getters: true}))).to.be.true;
-                done();
-            }
-            app.carController.UpdateCar(req, res);
-        })
-
         it('should be able to update license', function(done) {
             var car = new Car();
             var license = 'some license';
@@ -410,6 +396,48 @@ describe('carController', function() {
                 done();
             }
             app.carController.UpdateCar(req, res);
+        })
+    })
+    describe('SelectCar', function() {
+        it('selects the car', function(done) {
+            var car = new Car()
+            sinon.stub(car, 'setSelected', mockPromise(car))
+            app.db.cars = {
+                find: mockPromise([car])
+            }
+            req.user = {
+                id: '123abc'
+            }
+            req.doc = car
+            res.sendBad = done
+            res.sent = function() {
+                expect(car.setSelected.calledOnce).to.be.true;
+                done()
+            }
+            app.carController.SelectCar(req, res)
+        })
+
+        it('deselects existing cars', function(done) {
+            var car = new Car(),
+                car2 = new Car({
+                    selected: true
+                })
+            sinon.stub(car, 'setSelected', mockPromise(car))
+            sinon.stub(car2, 'setSelected', mockPromise(car2))
+            app.db.cars = {
+                find: mockPromise([car, car2])
+            }
+            req.user = {
+                id: '123abc'
+            }
+            req.doc = car
+            res.sendBad = done
+            res.sent = function() {
+                expect(car2.setSelected.calledOnce).to.be.true;
+                expect(car2.setSelected.calledWith(false)).to.be.true;
+                done();
+            }
+            app.carController.SelectCar(req, res)
         })
     })
     describe('GetAllBookingsForCar', function() {
