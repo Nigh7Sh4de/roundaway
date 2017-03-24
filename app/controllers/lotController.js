@@ -27,10 +27,13 @@ controller.prototype = {
     },
     UpdateLot: function(req, res) {
         var updates = [];
-        if (req.body.price) updates.push(req.doc.setPrice(req.body.price));
-        if (req.body.name) updates.push(req.doc.setName(req.body.name));
-        if (req.body.description) updates.push(req.doc.setDescription(req.body.description));
+        if (req.body.price !== undefined) updates.push(req.doc.setPrice(req.body.price));
+        if (req.body.name !== undefined) updates.push(req.doc.setName(req.body.name));
+        if (req.body.description !== undefined) updates.push(req.doc.setDescription(req.body.description));
 
+        if (!updates.length)
+            res.sendBad(new Errors.BadInput())
+            
         Promise.all(updates)
         .then(function() {
             res.sendGood('Updated lot', arguments[updates.length-1][0].toJSON({getters: true}))
