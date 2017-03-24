@@ -21,7 +21,9 @@ var errors = {
 
     MissingProperty: function(obj, propText, propValue) {
         this.stack = (new Error()).stack;
-        var name = obj.constructor.modelName;
+        var name = obj instanceof Array ?
+            obj[0].constructor.modelName + ' array' :
+            obj.constructor.modelName;
         this.message = 'This ' + name + 
                        ' does not have a ' + propText +
                        ' set.';
