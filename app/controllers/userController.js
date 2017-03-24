@@ -21,61 +21,47 @@ controller.prototype = {
         return res.sendGood('Found users', req.docs);
     },
     GetProfileOfUser: function(req, res) {
-        if (req.docs.length > 1)
-            return res.sendBad(new Errors.BadInput('_id'))
-        var user = req.docs[0]
-        return res.sendGood('Found profile for current session user', Object.assign({}, 
-            user.profile.toJSON(),
-            {authid: user.authid.toJSON()}
-        ))
+        var simplifyProfile = function(user) {
+            return Object.assign({}, 
+                user.profile.toJSON(),
+                {authid: user.authid.toJSON()}
+            )
+        }
+        var result = req.docs.length === 1 ? 
+            simplifyProfile(req.docs[0]):
+            req.docs.map(simplifyProfile)
+
+        return res.sendGood('Found profile for current session user', result)
     },
     GetLotsForUser: function(req, res) {
-        if (req.docs.length > 1)
-            return res.sendBad(new Errors.BadInput('_id'))
-        var user = req.docs[0]
-        this.app.db.lots.find({
-            user: user.id
-        })
-        .exec()
+        Promise.all(req.docs.map(user => this.app.db.lots.find({user: user.id})))
         .then(function(lots) {
-            res.sendGood('Found lots', lots);
+            res.sendGood('Found lots', lots.reduce((a, b) => a.concat(b), []));
         })
         .catch(function(err) {
             res.sendBad(err);
         })
     },
     GetSpotsForUser: function(req, res) {
-        if (req.docs.length > 1)
-            return res.sendBad(new Errors.BadInput('_id'))
-        var user = req.docs[0]
-        this.app.db.spots.find({
-            user: user.id
-        })
-        .exec()
+        Promise.all(req.docs.map(user => this.app.db.spots.find({user: user.id})))
         .then(function(spots) {
-            res.sendGood('Found spots', spots);
+            res.sendGood('Found spots', spots.reduce((a, b) => a.concat(b), []));
         })
         .catch(function(err) {
             res.sendBad(err);
         })
     },
     GetBookingsForUser: function(req, res) {
-        if (req.docs.length > 1)
-            return res.sendBad(new Errors.BadInput('_id'))
-        var user = req.docs[0]
-        this.app.db.bookings.find({
-            user: user.id
-        })
-        .exec()
+        Promise.all(req.docs.map(user => this.app.db.bookings.find({user: user.id})))
         .then(function(bookings) {
-            res.sendGood('Found bookings', bookings);
+            res.sendGood('Found bookings', bookings.reduce((a, b) => a.concat(b), []));
         })
         .catch(function(err) {
             res.sendBad(err);
         })
     },
     UpdateProfileOfUser: function(req, res) {
-        if (req.docs.length > 1)
+         if (req.docs.length > 1)
             return res.sendBad(new Errors.BadInput('_id'))
         var user = req.docs[0]
 
@@ -88,30 +74,26 @@ controller.prototype = {
         })
     },
     GetStripeAccountForUser: function(req, res) {
-        if (req.docs.length > 1)
-            return res.sendBad(new Errors.BadInput('_id'))
-        var user = req.docs[0]
-        
-        if (!user.stripe || !user.stripe.acct)
-            return res.sendBad(new Errors.MissingProperty(user, 'stripe'));
-        app.stripe.getAccount(user.stripe.acct)
-        .then(function(account) {
-            res.sendGood('Found stripe account for user', account);
+        var users = req.docs.filter(user => user.stripe && user.stripe.acct)
+        if (!users.length)
+            return res.sendBad(new Errors.MissingProperty(req.docs, 'stripe'));
+
+        Promise.all(users.map(user => app.stripe.getAccount(user.stripe.acct)))
+        .then(function(accounts) {
+            res.sendGood('Found stripe account for user', accounts.length > 1 ? accounts : accounts[0]);
         })
         .catch(function(err) {
             res.sendBad(err);
         })
     },
     GetStripeCustomerForUser: function(req, res) {
-        if (req.docs.length > 1)
-            return res.sendBad(new Errors.BadInput('_id'))
-        var user = req.docs[0]
+        var users = req.docs.filter(user => user.stripe && user.stripe.cus)
+        if (!users.length)
+            return res.sendBad(new Errors.MissingProperty(req.docs, 'stripe'));
 
-        if (!user.stripe || !user.stripe.cus)
-            return res.sendBad(new Errors.MissingProperty(user, 'stripe'));
-        app.stripe.getCustomer(user.stripe.cus)
-        .then(function(account) {
-            res.sendGood('Found stripe customer for user', account);
+        Promise.all(users.map(user => app.stripe.getCustomer(user.stripe.cus)))
+        .then(function(accounts) {
+            res.sendGood('Found stripe customer for user', accounts.length > 1 ? accounts : accounts[0]);
         })
         .catch(function(err) {
             res.sendBad(err);
@@ -134,13 +116,13 @@ controller.prototype = {
         })
     },
     GetStripeTransactionsForUser: function(req, res) {
-        if (req.docs.length > 1)
-            return res.sendBad(new Errors.BadInput('_id'))
-        var user = req.docs[0]
+        Promise.all(req.docs.map(user => this.app.db.lots.find({user: user.id})))
         
-        if (!user.stripe || !user.stripe.acct)
-            throw new Errors.MissingProperty(user, 'stripe')
-        app.stripe.getHistory(user.stripe.acct)
+        var users = req.docs.filter(user => user.stripe && user.stripe.acct)
+        if (!users.length)
+            return res.sendBad(new Errors.MissingProperty(req.docs, 'stripe'));
+
+        Promise.all(users.map(user => app.stripe.getHistory(user.stripe.acct)))
         .then(function(transactions) {
             res.sendGood('Found transactions for user', transactions)
         })

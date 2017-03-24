@@ -430,7 +430,7 @@ describe('userController', function() {
     })
 
     describe('GetStripeAccountForUser', function() {
-        it('should get stripe account for user', function(done) {
+        it.only('should get stripe account for user', function(done) {
             var acct = 'abcd123';
             var user = new User()
             user.stripe = { acct }
