@@ -125,7 +125,7 @@ controller.prototype = {
         if (req.body.description !== undefined) updates.push(req.doc.setDescription(req.body.description));
 
         if (!updates.length)
-            res.sendBad(new Errors.BadInput())
+            res.sendBad(new Errors.BadInput('property'))
 
         Promise.all(updates)
         .then(function() {
