@@ -11,8 +11,9 @@ var controller = function(app) {
     app.get('/api/users/spots', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.GetSpotsForUser.bind(this));
     app.get('/api/users/bookings', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.GetBookingsForUser.bind(this));
     app.get('/api/users/stripe/account', app.checkAuth, app.checkOwner.bind(app), this.GetStripeAccountForUser.bind(this));
+    app.put('/api/users/stripe/account', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.UpdateStripeAccountForUser.bind(this));
     app.get('/api/users/stripe/customer', app.checkAuth, app.checkOwner.bind(app), this.GetStripeCustomerForUser.bind(this));
-    app.put('/api/users/stripe', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.UpdateStripeAccountForUser.bind(this));
+    app.put('/api/users/stripe/customer', app.checkAuth, app.checkOwner.bind(app), app.bodyParser.json(), this.UpdateStripeCustomerForUser.bind(this));
     app.get('/api/users/stripe/history', app.checkAuth, app.checkOwner.bind(app), this.GetStripeTransactionsForUser.bind(this));
 }
 
@@ -97,6 +98,22 @@ controller.prototype = {
         })
         .catch(function(err) {
             res.sendBad(err);
+        })
+    },
+    UpdateStripeCustomerForUser: function(req, res) {
+        if (req.docs.length > 1)
+            return res.sendBad(new Errors.BadInput('_id'))
+        var user = req.docs[0]
+
+        ;(
+            !user.stripe || !user.stripe.cus ?
+            app.stripe.createCustomer(req.body) :
+            app.stripe.updateCustomer(user.stripe.cus, req.body) 
+        ).then(function(account) {
+            res.sendGood('Stripe account successfully created', account)
+        })
+        .catch(function(err) {
+            res.sendBad(err)
         })
     },
     UpdateStripeAccountForUser: function(req, res) {

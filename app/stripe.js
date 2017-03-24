@@ -45,6 +45,9 @@ stripe.prototype = {
     createCustomer: function(source) {
         return this.stripe.customers.create({ source });
     },
+    updateCustomer: function(id, account) {
+        return this.stripe.customers.update(id, account);
+    },
     getCustomer: function(id) {
         return this.stripe.customers.retrieve(id);
     }
