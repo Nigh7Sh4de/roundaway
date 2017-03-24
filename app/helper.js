@@ -67,7 +67,7 @@ helper.prototype = {
             return res.sendBad(new Errors.Unauthorized(Object.keys(authRequirements)));
 
         var query = app.db[collection].find(uniqueResource ? {_id: id} : {});
-        if (!req.user.admin)
+        if (!req.user.admin || !req.query.all)
             query.and([{$or: search}]);
         if (req.query)
             query.and([req.query]);

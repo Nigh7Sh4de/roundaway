@@ -146,9 +146,10 @@ _d('the entire app should not explode', function() {
         describe('GET /api/users', function() {
         it('should return users in db', function(done) {
                 var user = new User();
+                var new_token = jwt.sign({id:user.id}, inject.config.JWT_SECRET_KEY);
                 insert(user, function() {
                     request(app).get('/api/users')
-                        .set('Authorization', 'JWT ' + admin_token)
+                        .set('Authorization', 'JWT ' + new_token)
                         .end(function(err, res) {
                         expect(res.text).to.contain(user.id);
                         expect(res.status, res.body.errors).to.equal(200);

@@ -99,6 +99,7 @@ describe('helper', function() {
             req = {
                 url: '/api/collection/123456789012345678901234',
                 user: {},
+                query: {},
                 route: {
                     path: '/api/collection/:id'
                 }
